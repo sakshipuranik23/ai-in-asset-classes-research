@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI in Financial Markets — Equity Use Case Matrix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --border: #e4e1da;
+    --text-primary: #1a1814;
+    --text-secondary: #6b6760;
+    --text-muted: #9e9b96;
+    --navy: #1c3557;
+    --navy-light: #2a4f7c;
+
+    /* Quadrant colours — soft, professional */
+    --stars-fill: #fff8e6;
+    --stars-border: #e8b84b;
+    --stars-dot: #d4930a;
+
+    --priority-fill: #edf4ff;
+    --priority-border: #5b8fd4;
+    --priority-dot: #2a5faa;
+
+    --stakes-fill: #eef7f0;
+    --stakes-border: #6dba80;
+    --stakes-dot: #3a8c52;
+
+    --monitor-fill: #faf5f5;
+    --monitor-border: #d49090;
+    --monitor-dot: #a04040;
+
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── NAV ────────────────────────────────────────────────────────────── */
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    height: 52px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
+  }
+  .nav-brand {
+    font-family: 'DM Serif Display', serif;
+    font-size: 15px;
+    color: var(--navy);
+    margin-right: 36px;
+    white-space: nowrap;
+    letter-spacing: -0.01em;
+  }
+  .nav-brand span { color: var(--text-muted); font-style: italic; }
+  .nav-tabs {
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-tab {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .nav-tab:hover { background: var(--bg); color: var(--text-primary); }
+  .nav-tab.active {
+    background: var(--navy);
+    color: #fff;
+  }
+  .nav-tab.soon {
+    color: var(--text-muted);
+    cursor: default;
+  }
+  .nav-tab.soon::after {
+    content: ' ·';
+    color: var(--text-muted);
+  }
+
+  /* ── PAGE LAYOUT ─────────────────────────────────────────────────────── */
+  .page { max-width: 1240px; margin: 0 auto; padding: 24px 24px 32px; }
+
+  /* ── HEADER ──────────────────────────────────────────────────────────── */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 24px;
+  }
+  .header-left h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: var(--navy);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .header-left p {
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 400;
+  }
+  .header-stats {
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .stat-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-chip .num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--navy);
+    line-height: 1;
+  }
+  .stat-chip .lbl {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+  }
+
+  /* ── LEGEND ──────────────────────────────────────────────────────────── */
+  .legend {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .legend-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+  .legend-items { display: flex; gap: 16px; flex-wrap: wrap; }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  .legend-dot {
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .legend-size {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-left: 8px;
+    padding-left: 20px;
+    border-left: 1px solid var(--border);
+  }
+  .size-demo {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .size-demo span {
+    border-radius: 50%;
+    background: #999;
+    display: block;
+    opacity: 0.5;
+  }
+
+  /* ── MATRIX WRAPPER ──────────────────────────────────────────────────── */
+  .matrix-wrapper {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .y-axis-label {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    padding: 8px 0;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .matrix-col { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+  .x-axis-label {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 8px 0 0;
+  }
+
+  /* ── MATRIX GRID ─────────────────────────────────────────────────────── */
+  .matrix-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 6px;
+    background: var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+  }
+
+  .quadrant {
+    position: relative;
+    min-height: 310px;
+    padding: 14px;
+    overflow: hidden;
+    cursor: default;
+  }
+  .quadrant.stars     { background: var(--stars-fill); }
+  .quadrant.priority  { background: var(--priority-fill); }
+  .quadrant.stakes    { background: var(--stakes-fill); }
+  .quadrant.monitor   { background: var(--monitor-fill); }
+
+  .q-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.7;
+    margin-bottom: 2px;
+  }
+  .q-desc {
+    font-size: 11px;
+    opacity: 0.55;
+    font-weight: 400;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+  .stars .q-label    { color: #8a5e00; }
+  .priority .q-label { color: #1a3f7a; }
+  .stakes .q-label   { color: #1f5c35; }
+  .monitor .q-label  { color: #7a2020; }
+
+  /* ── DOTS ────────────────────────────────────────────────────────────── */
+  .dots-area {
+    position: absolute;
+    inset: 46px 10px 10px 10px;
+    min-height: 240px;
+  }
+  .dot-wrapper {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    z-index: 10;
+  }
+  .dot {
+    border-radius: 50%;
+    border: 2.5px solid rgba(255,255,255,0.9);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.95);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    position: relative;
+  }
+  .dot-wrapper:hover .dot {
+    transform: scale(1.18);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.28);
+    z-index: 20;
+  }
+  .dot-wrapper:hover .dot-tip { opacity: 1; pointer-events: none; transform: translateY(0); }
+
+  .dot-tip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    background: var(--navy);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 5px 9px;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.15s, transform 0.15s;
+    pointer-events: none;
+    z-index: 50;
+    max-width: 200px;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.3;
+    box-shadow: var(--shadow-md);
+  }
+  .dot-tip::after {
+    content: '';
+    position: absolute;
+    top: 100%; left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--navy);
+  }
+
+  .stars .dot    { background: var(--stars-dot); }
+  .priority .dot { background: var(--priority-dot); }
+  .stakes .dot   { background: var(--stakes-dot); }
+  .monitor .dot  { background: var(--monitor-dot); }
+
+  /* ── MODAL ───────────────────────────────────────────────────────────── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20,18,14,0.45);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    backdrop-filter: blur(3px);
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--surface);
+    border-radius: 14px;
+    width: 480px;
+    max-width: calc(100vw - 32px);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(12px) scale(0.98);
+    transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+    overflow: hidden;
+  }
+  .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+
+  .modal-header {
+    padding: 20px 22px 16px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .modal-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 3px 9px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+  }
+  .modal-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--navy);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+    padding-right: 28px;
+  }
+  .modal-meta {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .meta-tag {
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-weight: 500;
+  }
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 16px;
+    line-height: 1;
+    transition: background 0.12s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .modal-close:hover { background: var(--border); }
+
+  .modal-body { padding: 18px 22px 22px; display: flex; flex-direction: column; gap: 12px; }
+
+  .info-block {
+    border-radius: 8px;
+    padding: 12px 14px;
+    border-left: 3px solid transparent;
+  }
+  .info-block .block-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+  .info-block .block-text {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--text-primary);
+    font-weight: 400;
+  }
+
+  .block-gap { background: #fff5f5; border-left-color: #d06060; }
+  .block-gap .block-label { color: #c04040; }
+
+  .block-solution { background: #f2faf4; border-left-color: #5aaa72; }
+  .block-solution .block-label { color: #2e7a46; }
+
+  .block-value { background: #f0f5ff; border-left-color: #4a7fd4; }
+  .block-value .block-label { color: #2a4faa; }
+  .block-value .block-text { font-weight: 600; font-size: 14px; color: var(--navy); }
+
+  .modal-scores {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-top: 2px;
+  }
+  .score-cell {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .score-cell .sc-val {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--navy);
+    line-height: 1;
+  }
+  .score-cell .sc-lbl {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+  }
+
+  /* Dot size bar */
+  .size-bar { display: flex; gap: 3px; margin-top: 4px; justify-content: center; }
+  .size-pip {
+    width: 10px; height: 4px; border-radius: 2px;
+    background: var(--border);
+    transition: background 0.1s;
+  }
+  .size-pip.filled { background: var(--navy); }
+
+  /* Quadrant badge colours */
+  .badge-stars    { background: #fff3cc; color: #8a5e00; }
+  .badge-priority { background: #ddeeff; color: #1a3f7a; }
+  .badge-stakes   { background: #ddf3e6; color: #1f5c35; }
+  .badge-monitor  { background: #fde8e8; color: #7a2020; }
+
+  /* ── SECTION FILTER ──────────────────────────────────────────────────── */
+  .filter-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .filter-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+  .filter-btn {
+    padding: 4px 11px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.12s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .filter-btn:hover { border-color: var(--navy); color: var(--navy); }
+  .filter-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+  /* ── FOOTER NOTE ─────────────────────────────────────────────────────── */
+  .footer-note {
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">AI in Financial Markets <span>/ Hexaware FS</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active">Equity</button>
+    <button class="nav-tab soon" title="Coming soon">Fixed Income</button>
+    <button class="nav-tab soon" title="Coming soon">Forex</button>
+    <button class="nav-tab soon" title="Coming soon">Commodities</button>
+    <button class="nav-tab soon" title="Coming soon">Cross-Asset</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>Equity Markets — AI Use Case Matrix</h1>
+      <p>Click any dot to explore the gap, AI solution, and value created &nbsp;·&nbsp; Dot size = number of market participants affected</p>
+    </div>
+    <div class="header-stats">
+      <div class="stat-chip"><div class="num">34</div><div class="lbl">Use Cases</div></div>
+      <div class="stat-chip"><div class="num">12</div><div class="lbl">Deployed Today</div></div>
+      <div class="stat-chip"><div class="num">6</div><div class="lbl">Transformative</div></div>
+    </div>
+  </div>
+
+  <!-- FILTER -->
+  <div class="filter-row">
+    <span class="filter-label">Filter by section:</span>
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="Pre-Trade">Pre-Trade</button>
+    <button class="filter-btn" data-filter="Execution">Execution</button>
+    <button class="filter-btn" data-filter="Post-Trade">Post-Trade</button>
+    <button class="filter-btn" data-filter="Compliance">Compliance</button>
+    <button class="filter-btn" data-filter="Client-Facing">Client-Facing</button>
+    <button class="filter-btn" data-filter="Infrastructure">Infrastructure</button>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <span class="legend-label">Quadrant:</span>
+    <div class="legend-items">
+      <div class="legend-item"><span class="legend-dot" style="background:var(--stars-dot)"></span>Strategic Bets</div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--priority-dot)"></span>Immediate Priorities</div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--stakes-dot)"></span>Table Stakes</div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--monitor-dot)"></span>Monitor &amp; Deprioritise</div>
+    </div>
+    <div class="legend-size">
+      <span style="font-size:11px;color:var(--text-muted);font-weight:500;">Reach:</span>
+      <div class="size-demo">
+        <span style="width:10px;height:10px;background:#888;opacity:0.4"></span>
+        <span style="width:16px;height:16px;background:#888;opacity:0.5"></span>
+        <span style="width:22px;height:22px;background:#888;opacity:0.6"></span>
+      </div>
+      <span style="font-size:11px;color:var(--text-muted)">Fewer → More participants</span>
+    </div>
+  </div>
+
+  <!-- MATRIX -->
+  <div class="matrix-wrapper">
+    <div class="y-axis-label">Strategic Impact &nbsp;▲</div>
+    <div class="matrix-col">
+      <div class="matrix-grid" id="matrixGrid">
+        <!-- TL: Strategic Bets (High Y, Low X) -->
+        <div class="quadrant stars" data-quad="stars">
+          <div class="q-label">⭐ Strategic Bets</div>
+          <div class="q-desc">High impact · harder to execute</div>
+          <div class="dots-area" id="quad-stars"></div>
+        </div>
+        <!-- TR: Immediate Priorities (High Y, High X) -->
+        <div class="quadrant priority" data-quad="priority">
+          <div class="q-label">🎯 Immediate Priorities</div>
+          <div class="q-desc">High impact · ready to build</div>
+          <div class="dots-area" id="quad-priority"></div>
+        </div>
+        <!-- BL: Monitor & Deprioritise (Low Y, Low X) -->
+        <div class="quadrant monitor" data-quad="monitor">
+          <div class="q-label">👁 Monitor &amp; Deprioritise</div>
+          <div class="q-desc">Lower impact · harder to execute</div>
+          <div class="dots-area" id="quad-monitor"></div>
+        </div>
+        <!-- BR: Table Stakes (Low Y, High X) -->
+        <div class="quadrant stakes" data-quad="stakes">
+          <div class="q-label">✅ Table Stakes</div>
+          <div class="q-desc">Already common · proven value</div>
+          <div class="dots-area" id="quad-stakes"></div>
+        </div>
+      </div>
+      <div class="x-axis-label">Implementation Readiness &nbsp;▶</div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Hexaware Financial Services · AI in Equity Markets · Preliminary Research 2026 · Scores based on Business Value, Novelty, Technical Feasibility & Data Readiness
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-badge" id="modalBadge"></div>
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-meta" id="modalMeta"></div>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="info-block block-gap">
+        <div class="block-label">The Gap</div>
+        <div class="block-text" id="modalGap"></div>
+      </div>
+      <div class="info-block block-solution">
+        <div class="block-label">AI Solution</div>
+        <div class="block-text" id="modalSolution"></div>
+      </div>
+      <div class="info-block block-value">
+        <div class="block-label">Value Created</div>
+        <div class="block-text" id="modalValue"></div>
+      </div>
+      <div id="modalViewMore" style="display:none; margin-bottom:4px;">
+        <a id="viewMoreLink" href="#" target="_blank" style="display:flex; align-items:center; justify-content:center; gap:8px; background:var(--navy); color:#fff; border-radius:8px; padding:10px 16px; font-size:13px; font-weight:600; text-decoration:none; font-family:'DM Sans',sans-serif; transition:opacity 0.15s;" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
+          View Process Flow &amp; Research &nbsp;→
+        </a>
+      </div>
+      <div class="modal-scores">
+        <div class="score-cell">
+          <div class="sc-val" id="scoreX"></div>
+          <div class="sc-lbl">Implementation</div>
+          <div class="size-bar" id="barX"></div>
+        </div>
+        <div class="score-cell">
+          <div class="sc-val" id="scoreY"></div>
+          <div class="sc-lbl">Strategic Impact</div>
+          <div class="size-bar" id="barY"></div>
+        </div>
+        <div class="score-cell">
+          <div class="sc-val" id="scoreSize"></div>
+          <div class="sc-lbl">Participant Reach</div>
+          <div class="size-bar" id="barSize"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+// quad: stars=Strategic Bets(highY,lowX), priority=Immediate Priorities(highY,highX)
+//       stakes=Table Stakes(lowY,highX), monitor=Monitor(lowY,lowX)
+// x, y: 1-10 scores. size: 1-5 participant reach
+// gap, solution, value: one sentence each
+
+const USE_CASES = [
+  // PRE-TRADE
+  {
+    id:1, name:"Dynamic Pre-Trade Risk Checks", section:"Pre-Trade",
+    quad:"stakes", x:8, y:5, size:3,
+    ai:"ML / Agentic AI", deployed:"Yes",
+    gap:"Most firms still rely on fixed, rules-based risk limits that don't adapt when markets become volatile.",
+    solution:"ML models continuously monitor market conditions and automatically tighten or relax risk limits in real time — no human intervention needed.",
+    value:"Fewer missed trades in normal markets; automatic risk containment during stress events."
+  },
+  {
+    id:2, name:"Autonomous Execution Strategy & Algo Selection", section:"Pre-Trade",
+    quad:"stakes", x:8, y:5, size:3,
+    ai:"Reinforcement Learning", deployed:"Yes",
+    gap:"Traders manually choose an execution algorithm before submitting an order and it runs on fixed rules regardless of how the market changes mid-execution.",
+    solution:"RL agents observe live market conditions and continuously switch between execution strategies to minimise cost throughout the order's lifetime.",
+    value:"10–30 basis point improvement in execution cost reported by RL-based systems versus static algo selection."
+  },
+  {
+    id:3, name:"Auction Equilibrium Price (IEP) Prediction", section:"Pre-Trade",
+    quad:"priority", x:9, y:9, size:3,
+    ai:"ML (Gradient Boosting / Deep Learning)", deployed:"Partial",
+    gap:"Institutional traders estimate open and close auction prices manually using heuristics — a slow, imprecise process that is heavily dependent on individual experience.",
+    solution:"ML models ingest the real-time pre-auction order book and live news sentiment to predict the final equilibrium price before the auction crosses.",
+    value:"Better auction fill prices for large institutional blocks, reducing the cost of misjudging open or close auction outcomes."
+  },
+  {
+    id:4, name:"Liquidity Wall Detection (Level 2 Order Book)", section:"Pre-Trade",
+    quad:"stakes", x:9, y:5, size:3,
+    ai:"ML / Real-Time Signal Processing", deployed:"Yes",
+    gap:"Human traders can spot obvious large order clusters in the order book, but cannot monitor hundreds of securities simultaneously in real time.",
+    solution:"ML models scan the full order book depth continuously, flagging large order clusters and automatically adjusting trading strategy around them.",
+    value:"More precise trade timing; reduces the risk of inadvertently trading through a liquidity wall and receiving a poor fill price."
+  },
+  {
+    id:5, name:"Spoofing & Market Manipulation Detection", section:"Pre-Trade",
+    quad:"stakes", x:9, y:5, size:4,
+    ai:"ML / Anomaly Detection", deployed:"Yes",
+    gap:"Surveillance teams review flagged trades after the fact — by which time a manipulator has already profited and withdrawn their spoof orders.",
+    solution:"ML identifies the fingerprint of spoofing — a large order placed and cancelled within milliseconds — and flags it in real time before the manipulation has its intended effect.",
+    value:"SEBI's programme reduced detection time from hours to seconds, enabling pre-emptive intervention rather than retrospective enforcement."
+  },
+  {
+    id:6, name:"Order Book Imbalance (OBI) Alpha Signal", section:"Pre-Trade",
+    quad:"stakes", x:9, y:5, size:3,
+    ai:"ML / Deep Learning", deployed:"Yes",
+    gap:"The predictive signal embedded in the ratio of buy-side to sell-side order book volume cannot be manually computed fast enough across a portfolio to be actionable.",
+    solution:"ML continuously computes order book imbalance across all tracked securities and triggers directional signals that feed directly into algorithmic strategies.",
+    value:"Statistically significant improvement in short-term price prediction accuracy, translating into better entry and exit timing."
+  },
+  {
+    id:7, name:"Market Impact Prediction (Pre-Order)", section:"Pre-Trade",
+    quad:"priority", x:7, y:8, size:3,
+
+    ai:"ML (Neural Networks)", deployed:"Partial",
+    gap:"Most desks estimate the market impact of a large order using simplified averages — these are often badly wrong for unusual order sizes or volatile conditions.",
+    solution:"Neural networks trained on historical execution data predict exactly how much a specific order will move the market before it is sent, enabling smarter order slicing.",
+    value:"Estimated 10–25% reduction in market impact cost on large institutional orders."
+  },
+  {
+    id:8, name:"AI-Powered Smart Order Router (SOR)", section:"Pre-Trade",
+    quad:"stakes", x:9, y:5, size:4,
+    ai:"Reinforcement Learning / Agentic AI", deployed:"Yes",
+    gap:"Choosing where to route each slice of a large order — across dozens of exchanges and dark pools — is too complex for static rules to handle optimally.",
+    solution:"RL-based routers evaluate all venues in real time and route each order slice to the optimal destination, updating the decision millisecond by millisecond.",
+    value:"15–40% improvement in execution quality metrics reported; significant best execution compliance improvement."
+  },
+  {
+    id:9, name:"Earnings Surprise Prediction", section:"Pre-Trade",
+    quad:"priority", x:7, y:8, size:2,
+    ai:"NLP / ML (Ensemble Models)", deployed:"Partial",
+    gap:"Analyst earnings forecasts rely on structured financial data and ignore the softer signals — management tone, supply chain activity, credit card trends — that often predict surprises earlier.",
+    solution:"NLP models analyse earnings call language, filings, and alternative data to generate a probabilistic beat/miss/meet signal before the announcement.",
+    value:"60–70% directional accuracy reported in academic literature, creating a tradeable alpha signal ahead of earnings."
+  },
+  {
+    id:10, name:"ESG Scoring & AI-Driven Portfolio Screening", section:"Pre-Trade",
+    quad:"priority", x:6, y:7, size:3,
+    ai:"NLP / ML", deployed:"Partial",
+    gap:"ESG ratings from agencies are updated quarterly or annually — fund managers are making portfolio decisions based on data that is months out of date.",
+    solution:"NLP and ML models continuously process news, filings, and satellite data to generate real-time dynamic ESG scores that update the moment a material event occurs.",
+    value:"More responsive ESG portfolio management; reduces the risk of holding a stock through an ESG event that damages its price."
+  },
+  {
+    id:11, name:"Cyclical vs Defensive Rotation via Macro AI Signals", section:"Pre-Trade",
+    quad:"priority", x:8, y:7, size:2,
+    ai:"ML / NLP (Macro Signal Extraction)", deployed:"Partial",
+    gap:"Portfolio rotation decisions are driven by periodic human judgment — by the time macro signals are obvious enough to act on, markets have often already moved.",
+    solution:"ML models continuously monitor macro indicators and generate a real-time economic regime signal that automatically tilts the portfolio toward cyclicals or defensives.",
+    value:"Faster, more systematic portfolio positioning ahead of economic turning points; reduces the lag from signal to action from weeks to hours."
+  },
+  {
+    id:12, name:"AI Macro Scenario Simulation & Portfolio Hedging", section:"Pre-Trade",
+    quad:"stars", x:4, y:9, size:2,
+    ai:"GenAI / Monte Carlo + ML", deployed:"No",
+    gap:"Stress-testing a portfolio against different macro scenarios today is slow and covers only a handful of scenarios — leaving significant tail risks unexamined.",
+    solution:"A GenAI-enhanced simulation engine lets a portfolio manager describe any macro scenario in plain language and instantly receive probabilistic outcomes across thousands of simulated paths.",
+    value:"Dozens of macro scenarios evaluated before a key event instead of one or two — leading to more resilient portfolio construction."
+  },
+  // EXECUTION
+  {
+    id:13, name:"Alternative Data Integration", section:"Execution",
+    quad:"stakes", x:7, y:6, size:3,
+    ai:"ML / NLP / Computer Vision", deployed:"Partial",
+    gap:"Traditional investment analysis relies on public financial data — by the time it is published, it is largely priced in by the market.",
+    solution:"ML and Computer Vision models process satellite imagery, credit card flows, and social sentiment continuously, converting them into structured predictive signals.",
+    value:"1–3% annual alpha generation above benchmark reported by firms using alternative data on relevant strategies."
+  },
+  {
+    id:14, name:"Dark Pool Intelligent Order Routing", section:"Execution",
+    quad:"priority", x:7, y:8, size:3,
+    ai:"Agentic AI / RL", deployed:"Partial",
+    gap:"Routing logic for dark pools is largely rules-based and static — it doesn't adapt to real-time fill probability or activity patterns inside each pool.",
+    solution:"Agentic AI assesses fill probability in each dark pool in real time based on current activity and routes order slices dynamically to maximise execution quality.",
+    value:"Higher fill rates in dark pools; reduces the need to expose large orders on lit markets where they signal intention and drive up price."
+  },
+  {
+    id:15, name:"OTC Trade Confirmation Extraction", section:"Execution",
+    quad:"priority", x:6, y:7, size:2,
+    ai:"Computer Vision / LLM (GenAI)", deployed:"Partial",
+    gap:"OTC equity swap terms are often confirmed via PDFs or emails and must be manually re-keyed into internal systems — a slow, error-prone process.",
+    solution:"Computer Vision and LLMs extract trade terms from confirmation documents and feed them automatically into the booking system, flagging exceptions for human review.",
+    value:"Dramatic reduction in manual entry time and confirmation errors that lead to costly trade breaks."
+  },
+  // POST-TRADE
+  {
+    id:16, name:"Post-Trade Reconciliation via Agentic AI", section:"Post-Trade",
+    quad:"priority", x:8, y:8, size:4,
+    ai:"Agentic AI / ML", deployed:"Partial",
+    gap:"When buyer, seller, and exchange records don't match after a trade, a human ops team must manually investigate each discrepancy — hundreds of these 'breaks' can accumulate daily.",
+    solution:"Agentic AI ingests records from all parties simultaneously, performs automated matching, pinpoints the exact discrepancy, and in many cases resolves it automatically.",
+    value:"Reconciliation time reduced from hours to minutes; significant reduction in failed settlements and associated regulatory penalties."
+  },
+  {
+    id:17, name:"AI-Driven Transaction Cost Analysis (TCA)", section:"Post-Trade",
+    quad:"stakes", x:9, y:5, size:3,
+    ai:"ML (Regression / Deep Learning)", deployed:"Yes",
+    gap:"Traditional TCA tells you what happened after execution but doesn't explain why or prescribe how to improve future trades.",
+    solution:"ML-based TCA identifies the specific causal factors behind execution underperformance and generates actionable recommendations that feed back into future execution strategy.",
+    value:"TCA becomes a learning loop — execution quality measurably improves over time as the system continuously refines routing and algo selection."
+  },
+  {
+    id:18, name:"AI Corporate Actions Processing", section:"Post-Trade",
+    quad:"priority", x:6, y:7, size:3,
+    ai:"ML / NLP / RPA + AI", deployed:"Partial",
+    gap:"Processing dividends, splits, and rights issues requires reading announcements, interpreting terms, and updating positions manually — a process prone to expensive errors.",
+    solution:"NLP models read corporate action announcements, extract relevant terms, and automatically update position records, flagging complex actions for human review.",
+    value:"Processing time for routine corporate actions drops from days to hours; error rates fall sharply, reducing financial and regulatory liability."
+  },
+  {
+    id:19, name:"NAV / Mutual Fund Computation Automation", section:"Post-Trade",
+    quad:"priority", x:7, y:6, size:3,
+    ai:"ML / Agentic AI / RPA", deployed:"Partial",
+    gap:"Daily NAV computation involves aggregating prices, applying corporate actions, and reconciling with the custodian — a heavily manual, deadline-sensitive process where errors carry serious consequences.",
+    solution:"ML and Agentic AI automate the full NAV pipeline and predict likely exceptions before they occur, allowing operations teams to be proactive rather than reactive.",
+    value:"NAV computation time and cost reduced significantly; late publications and errors — which carry regulatory risk — are minimised."
+  },
+  {
+    id:20, name:"Proxy Voting Optimisation", section:"Post-Trade",
+    quad:"priority", x:7, y:6, size:2,
+    ai:"NLP / ML", deployed:"No",
+    gap:"Fund managers must vote on hundreds of shareholder resolutions but lack bandwidth to independently analyse each one — decisions are often delegated wholesale to proxy advisors.",
+    solution:"NLP models analyse each resolution against the fund's stated voting policy and governance principles, generating a recommendation with a plain-language rationale for manager review.",
+    value:"More consistent, policy-aligned voting across the portfolio; reduces reputational risk from votes that contradict stated ESG principles."
+  },
+  // COMPLIANCE
+  {
+    id:21, name:"KYC / AML Automation (OCR to Autonomous)", section:"Compliance",
+    quad:"priority", x:7, y:9, size:4,
+    ai:"OCR / NLP / ML (5-Level Ladder)", deployed:"Partial",
+    gap:"Client onboarding and ongoing counterparty monitoring are largely manual today — consuming significant compliance team capacity and taking days to weeks per client.",
+    solution:"A five-level AI ladder progresses from document digitisation to fully autonomous onboarding — each level reducing manual touch and improving continuous monitoring coverage.",
+    value:"Onboarding time reduced from weeks to hours at higher maturity levels; AI monitors far more counterparties continuously than any human team."
+  },
+  {
+    id:22, name:"Counterparty Credit Risk Prediction", section:"Compliance",
+    quad:"stars", x:5, y:8, size:3,
+    ai:"ML (Gradient Boosting / Graph AI)", deployed:"Partial",
+    gap:"Credit ratings are lagging indicators — agencies often downgrade a counterparty weeks after the market has already priced in their stress, leaving firms over-exposed.",
+    solution:"ML models analyse real-time market signals — CDS spreads, equity moves, alternative data — to flag counterparty stress before official ratings change.",
+    value:"Earlier warning enables risk teams to reduce exposure before a formal downgrade, significantly reducing default risk."
+  },
+  {
+    id:23, name:"Real-Time Collateral & Margin Optimisation", section:"Compliance",
+    quad:"priority", x:8, y:8, size:4,
+    ai:"Agentic AI / Optimisation ML", deployed:"Partial",
+    gap:"Deciding which assets to post as margin across dozens of counterparties and clearing houses simultaneously is a complex real-time optimisation problem that cannot be solved manually.",
+    solution:"Agentic AI continuously re-optimises which assets to pledge as collateral across all counterparties, automatically initiating transfers when margin calls arrive.",
+    value:"Firms estimate 10–20% savings on collateral financing costs; margin call response time drops from hours to minutes."
+  },
+  {
+    id:24, name:"Regulator AI Market Surveillance (SEBI / Exchange)", section:"Compliance",
+    quad:"stakes", x:9, y:5, size:3,
+    ai:"ML / NLP / Anomaly Detection", deployed:"Yes",
+    gap:"Rule-based surveillance generates enormous numbers of false positive alerts, overwhelming investigators and leaving the highest-risk cases buried in noise.",
+    solution:"ML trained on confirmed manipulation cases prioritises alerts by confidence score, and NLP correlates unusual trading with news events to detect potential information leakage.",
+    value:"Detection rates improve and investigation backlogs reduce as false positive rates fall; oversight shifts from reactive to pre-emptive."
+  },
+  {
+    id:25, name:"DRHP / IPO Document AI Screener (Merchant Banker)", section:"Compliance",
+    quad:"stakes", x:9, y:6, size:2,
+    ai:"LLM / NLP (Document Review)", deployed:"Yes",
+    gap:"Reviewing a Draft Red Herring Prospectus is time-consuming for merchant bankers and regulators, and errors caught late significantly delay IPO timelines.",
+    solution:"LLM-based systems parse the DRHP, identify incomplete or inconsistent sections, and generate a pre-check report before formal filing — as already deployed by BSE and SEBI.",
+    value:"IPO timelines shortened; cleaner first-filing submissions reduce costly back-and-forth with regulators."
+  },
+  {
+    id:26, name:"Explainable AI (XAI) for Regulatory Reporting", section:"Compliance",
+    quad:"priority", x:7, y:10, size:4,
+    ai:"XAI (SHAP / LIME frameworks)", deployed:"Partial",
+    gap:"High-performing AI models are opaque — they produce accurate outputs but cannot explain their reasoning in terms a regulator or auditor can evaluate.",
+    solution:"XAI frameworks layer on top of existing AI models to generate human-readable explanations of individual decisions in plain, auditable language.",
+    value:"Regulatory compliance for AI-driven decisions without sacrificing model performance — enabling powerful AI in contexts that previously required simpler, less accurate rules."
+  },
+  {
+    id:27, name:"AI Agents for Regulatory Data Collection & Filing", section:"Compliance",
+    quad:"stars", x:5, y:8, size:3,
+    ai:"Agentic AI / RPA + AI", deployed:"Partial",
+    gap:"Regulatory reporting across multiple jurisdictions requires gathering data from many internal systems, formatting to regulatory specifications, and hitting strict deadlines — all done manually today.",
+    solution:"Agentic AI pulls required data from source systems, validates it against regulatory schemas, and submits reports automatically — escalating only genuine exceptions for human review.",
+    value:"Regulatory errors and late submissions — which attract fines — significantly reduced; compliance teams freed to focus on interpretation rather than data gathering."
+  },
+  // CLIENT-FACING
+  {
+    id:28, name:"Live News Tracker — RM Client Alert Engine", section:"Client-Facing",
+    quad:"priority", x:8, y:8, size:2,
+    ai:"NLP / LLM / Real-Time Event Detection", deployed:"Partial",
+    gap:"Relationship Managers are expected to proactively alert clients about events affecting their portfolios, but manually monitoring news and matching it to each client's holdings is impossible at scale.",
+    solution:"An NLP and LLM system detects material events in real time, identifies affected client portfolios, and auto-generates a personalised alert for the RM to review and send within minutes.",
+    value:"Clients reached with relevant information in near-real time instead of hours later; RMs can manage a larger book without sacrificing proactive service quality."
+  },
+  {
+    id:29, name:"AI-Powered Broker-Client Portfolio Management", section:"Client-Facing",
+    quad:"priority", x:8, y:9, size:3,
+    ai:"ML / GenAI / Robo-Advisory", deployed:"Partial",
+    gap:"Smaller retail and mass-affluent clients receive generic investment products because the economics of personalised advice don't work with human advisors at that scale.",
+    solution:"ML robo-advisory builds and manages personalised portfolios; GenAI generates plain-language commentary explaining performance and recommendations for each client.",
+    value:"Personalised portfolio management accessible to a far wider client segment at a fraction of the cost; improved client retention."
+  },
+  {
+    id:30, name:"AI IPO Intelligence Platform (DRHP Scanner + Document Chatbot)", section:"Client-Facing",
+    quad:"priority", x:8, y:8, size:4,
+    ai:"GenAI / RAG / NLP / Sentiment Analysis", deployed:"Partial",
+    gap:"Retail investors have no systematic way to assess an IPO prospectus, and financial professionals waste hours manually searching dense documents for specific information.",
+    solution:"A unified platform: an LLM sentiment scanner processes the DRHP and public information for retail investors, while a RAG-based chatbot lets professionals query any financial document in plain language.",
+    value:"Retail investors make more informed IPO decisions; analysts cut document review time dramatically and reduce the risk of missing a material disclosure."
+  },
+  {
+    id:31, name:"Personalised Investment Advisory via GenAI (HNW)", section:"Client-Facing",
+    quad:"stars", x:5, y:9, size:2,
+    ai:"GenAI / ML (Personalisation)", deployed:"Partial",
+    gap:"Truly personalised, holistic financial planning is only economically viable for the very largest private banking clients — the majority of HNW clients receive generic products.",
+    solution:"GenAI maintains a continuously updated model of each client's financial situation and generates proactive, personalised recommendations delivered to the private banker as ready-to-present insights.",
+    value:"Private bankers deliver genuinely personalised service to a larger book; client satisfaction and wallet share increase."
+  },
+  {
+    id:32, name:"Retail Investor Behaviour Analytics", section:"Client-Facing",
+    quad:"stakes", x:8, y:5, size:2,
+    ai:"ML (Classification / Clustering)", deployed:"Yes",
+    gap:"Brokers have limited ability to predict which retail clients are about to churn, upgrade, or make poor decisions during market stress — client management is largely reactive.",
+    solution:"ML models analyse each client's trading behaviour and platform engagement to identify churn risk, upgrade readiness, or stress-driven decision patterns for proactive outreach.",
+    value:"Retention improves as at-risk clients are identified before they leave; revenue per client increases through systematic identification of upgrade propensity."
+  },
+  // INFRASTRUCTURE
+  {
+    id:33, name:"NLP Sentiment Analysis (News / Social / Earnings)", section:"Infrastructure",
+    quad:"stakes", x:9, y:5, size:4,
+    ai:"NLP / LLM", deployed:"Yes",
+    gap:"A significant portion of short-term market moves are driven by news and narrative, but processing unstructured text fast enough to act on it has historically been beyond human capacity.",
+    solution:"NLP and LLM models process thousands of news articles, social posts, and earnings transcripts simultaneously, converting them into structured sentiment signals in milliseconds.",
+    value:"Investment models capture a real-time sentiment dimension that pure price-based models miss — adding statistically significant alpha in short-term strategies."
+  },
+  {
+    id:34, name:"AI Equity Research Report Generation (Sell-Side)", section:"Infrastructure",
+    quad:"stars", x:5, y:9, size:3,
+    ai:"GenAI (LLM) / NLP", deployed:"Partial",
+    gap:"Analysts spend significant time on routine, structured components of research reports — financial model updates, earnings recaps, peer comparisons — leaving limited time for the differentiated insight that drives advisory value.",
+    solution:"GenAI automatically generates the data-driven components of a research report using live data feeds, freeing analysts to focus on the investment thesis and client-facing narrative that requires human judgment.",
+    value:"More companies covered in the same time; report turnaround faster; analysts deliver more differentiated insights as routine formatting is automated."
+  },
+];
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+const QUAD_CONTAINERS = {
+  stars:    document.getElementById('quad-stars'),
+  priority: document.getElementById('quad-priority'),
+  stakes:   document.getElementById('quad-stakes'),
+  monitor:  document.getElementById('quad-monitor'),
+};
+
+const DOT_MIN = 14, DOT_MAX = 30;
+// size 1->14px, size 5->30px
+function dotPx(size) { return DOT_MIN + (size - 1) * ((DOT_MAX - DOT_MIN) / 4); }
+
+// Within each quadrant, map the x/y score to a position
+// Quadrant axes go 1-10 within each half
+// stars:   x 1-5 maps left-right (low readiness), y 5-10 maps bottom-top (high impact)
+// priority: x 5-10 maps left-right, y 5-10 maps bottom-top
+// monitor: x 1-5 maps left-right, y 1-5 maps bottom-top
+// stakes:  x 5-10 maps left-right, y 1-5 maps bottom-top
+
+function positionDot(quad, x, y) {
+  // normalise to 0-1 within the quadrant
+  let px, py;
+  const pad = 0.08;
+  const range = 1 - 2 * pad;
+  if (quad === 'stars') {
+    px = pad + ((x - 1) / 5) * range;
+    py = pad + ((10 - y) / 4) * range;
+  } else if (quad === 'priority') {
+    px = pad + ((x - 5) / 5) * range;
+    py = pad + ((10 - y) / 4) * range;
+  } else if (quad === 'monitor') {
+    px = pad + ((x - 1) / 5) * range;
+    py = pad + ((5 - y) / 4) * range;
+  } else {
+    px = pad + ((x - 5) / 5) * range;
+    py = pad + ((5 - y) / 4) * range;
+  }
+  // clamp
+  px = Math.max(0.04, Math.min(0.96, px));
+  py = Math.max(0.04, Math.min(0.96, py));
+  return { left: (px * 100) + '%', top: (py * 100) + '%' };
+}
+
+let activeFilter = 'all';
+
+// ── COLLISION SEPARATION ──────────────────────────────────────────────────────
+// Takes an array of {px, py, r} objects (all in pixels, absolute within container)
+// and iteratively pushes overlapping dots apart until no two overlap.
+function separateDots(dots, containerW, containerH, iterations) {
+  const iters = iterations || 120;
+  for (let iter = 0; iter < iters; iter++) {
+    let moved = false;
+    for (let i = 0; i < dots.length; i++) {
+      for (let j = i + 1; j < dots.length; j++) {
+        const a = dots[i], b = dots[j];
+        const minDist = a.r + b.r + 3; // 3px breathing gap
+        const dx = b.px - a.px;
+        const dy = b.py - a.py;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+        if (dist < minDist) {
+          const overlap = (minDist - dist) / 2;
+          const nx = (dx / dist) * overlap;
+          const ny = (dy / dist) * overlap;
+          a.px -= nx; a.py -= ny;
+          b.px += nx; b.py += ny;
+          moved = true;
+        }
+      }
+    }
+    // Clamp all dots within container bounds
+    dots.forEach(d => {
+      d.px = Math.max(d.r + 2, Math.min(containerW - d.r - 2, d.px));
+      d.py = Math.max(d.r + 2, Math.min(containerH - d.r - 2, d.py));
+    });
+    if (!moved) break;
+  }
+}
+
+function renderDots(filter) {
+  Object.values(QUAD_CONTAINERS).forEach(c => c.innerHTML = '');
+
+  // Group use cases by quadrant
+  const byQuad = { stars: [], priority: [], stakes: [], monitor: [] };
+  USE_CASES.forEach(uc => {
+    if (filter !== 'all' && uc.section !== filter) return;
+    if (byQuad[uc.quad]) byQuad[uc.quad].push(uc);
+  });
+
+  Object.entries(byQuad).forEach(([quad, ucs]) => {
+    const container = QUAD_CONTAINERS[quad];
+    if (!container || ucs.length === 0) return;
+
+    // Measure the dots-area container dimensions
+    const rect = container.getBoundingClientRect();
+    const W = rect.width  || 300;
+    const H = rect.height || 280;
+
+    // Build initial positions in pixels
+    const dots = ucs.map(uc => {
+      const pos = positionDot(uc.quad, uc.x, uc.y);
+      const sz  = dotPx(uc.size);
+      return {
+        uc,
+        px: (parseFloat(pos.left) / 100) * W,
+        py: (parseFloat(pos.top)  / 100) * H,
+        r:  sz / 2,
+        sz
+      };
+    });
+
+    // Run separation
+    separateDots(dots, W, H, 200);
+
+    // Render
+    dots.forEach(d => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'dot-wrapper';
+      wrapper.style.left = d.px + 'px';
+      wrapper.style.top  = d.py + 'px';
+      wrapper.dataset.id = d.uc.id;
+
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      dot.style.width    = d.sz + 'px';
+      dot.style.height   = d.sz + 'px';
+      dot.style.fontSize = Math.max(8, d.sz * 0.32) + 'px';
+      dot.textContent    = d.uc.id;
+
+      const tip = document.createElement('div');
+      tip.className  = 'dot-tip';
+      tip.textContent = d.uc.name;
+
+      wrapper.appendChild(dot);
+      wrapper.appendChild(tip);
+      wrapper.addEventListener('click', () => openModal(d.uc));
+      container.appendChild(wrapper);
+    });
+  });
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+const overlay = document.getElementById('modalOverlay');
+const modalClose = document.getElementById('modalClose');
+
+const QUAD_LABELS = {
+  stars:    ['⭐ Strategic Bet',    'badge-stars'],
+  priority: ['🎯 Immediate Priority','badge-priority'],
+  stakes:   ['✅ Table Stakes',     'badge-stakes'],
+  monitor:  ['👁 Monitor',          'badge-monitor'],
+};
+
+function scorePips(containerId, val, max) {
+  const bar = document.getElementById(containerId);
+  bar.innerHTML = '';
+  for (let i = 1; i <= max; i++) {
+    const pip = document.createElement('div');
+    pip.className = 'size-pip' + (i <= val ? ' filled' : '');
+    bar.appendChild(pip);
+  }
+}
+
+const PROCESS_FLOWS = {
+26: "xai_process_flow.html",
+21: "kyc_aml_process_flow.html",
+29: "broker_portfolio_mgmt.html",
+14: "dark_pool_routing.html",
+30: "ipo_intelligence_platform.html",
+18: "corporate_actions.html",
+20: "proxy_voting.html",
+11: "macro_rotation.html",
+};
+
+function openModal(uc) {
+  const [label, badgeClass] = QUAD_LABELS[uc.quad];
+  document.getElementById('modalBadge').textContent = label;
+  document.getElementById('modalBadge').className = 'modal-badge ' + badgeClass;
+  document.getElementById('modalTitle').textContent = uc.name;
+  document.getElementById('modalGap').textContent = uc.gap;
+  document.getElementById('modalSolution').textContent = uc.solution;
+  document.getElementById('modalValue').textContent = uc.value;
+  document.getElementById('scoreX').textContent = uc.x + '/10';
+  document.getElementById('scoreY').textContent = uc.y + '/10';
+  document.getElementById('scoreSize').textContent = uc.size + '/5';
+  scorePips('barX', uc.x, 10);
+  scorePips('barY', uc.y, 10);
+  scorePips('barSize', uc.size, 5);
+
+  // Meta tags
+  const meta = document.getElementById('modalMeta');
+  meta.innerHTML = '';
+  [uc.section, uc.ai, uc.deployed === 'Yes' ? '✓ Deployed Today' : uc.deployed === 'Partial' ? '◑ Partially Deployed' : '○ Not Yet Deployed'].forEach(t => {
+    const tag = document.createElement('span');
+    tag.className = 'meta-tag';
+    tag.textContent = t;
+    meta.appendChild(tag);
+  });
+
+  // Show View More button if a process flow exists for this use case
+  const vmDiv = document.getElementById('modalViewMore');
+  const vmLink = document.getElementById('viewMoreLink');
+  if (PROCESS_FLOWS[uc.id]) {
+    vmLink.href = PROCESS_FLOWS[uc.id];
+    vmDiv.style.display = 'block';
+  } else {
+    vmDiv.style.display = 'none';
+  }
+
+  overlay.classList.add('open');
+}
+
+function closeModal() { overlay.classList.remove('open'); }
+modalClose.addEventListener('click', closeModal);
+overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ── FILTERS ───────────────────────────────────────────────────────────────────
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    requestAnimationFrame(() => requestAnimationFrame(() => renderDots(activeFilter)));
+  });
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+// Use double rAF to ensure layout is complete before measuring container sizes
+requestAnimationFrame(() => requestAnimationFrame(() => renderDots('all')));
+</script>
+</body>
+</html>

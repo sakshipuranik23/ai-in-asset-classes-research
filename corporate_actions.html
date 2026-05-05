@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Corporate Actions Processing — Process Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+  --navy:#1c3557;--navy-pale:#edf3fb;--navy-border:#a8c4e0;
+  --exec:#1a6b35;--exec-pale:#edf7f1;--exec-border:#a8d9bc;
+  --amber:#b86a00;--amber-pale:#fff8ed;--amber-border:#f5c882;
+  --purple:#5b3faa;--purple-pale:#f3f0fb;--purple-border:#c4b0f0;
+  --teal:#0d7377;--teal-pale:#e6f7f7;--teal-border:#8ecece;
+  --red:#c04040;--red-pale:#fdf0f0;--red-border:#f0b8b8;
+  --opp:#1a6b35;--opp-pale:#edf7f1;--opp-border:#6dba80;
+  --opp-overlay:rgba(109,186,128,0.09);--opp-overlay-border:rgba(26,107,53,0.32);
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,0.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.nav-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--text-secondary);padding:5px 14px 5px 0;border-right:1px solid var(--border);margin-right:16px;background:none;border-top:none;border-bottom:none;border-left:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .15s}
+.nav-back:hover{color:var(--navy)}
+.nav-crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+.nav-crumb .active{color:var(--navy);font-weight:600}
+.nav-crumb .sep{color:var(--border)}
+.nav-badge{margin-left:auto;background:#fff3e0;color:#b86a00;border:1px solid #f5c882;border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;text-transform:uppercase;letter-spacing:.06em}
+
+/* PAGE */
+.page{max-width:1100px;margin:0 auto;padding:28px 24px 48px}
+.uc-num{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--navy);letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+.header-sub{font-size:14px;color:var(--text-secondary);max-width:700px;line-height:1.6;margin-bottom:12px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+.chip{font-size:11.5px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary)}
+.chip.green{background:var(--exec-pale);border-color:var(--exec-border);color:var(--exec)}
+.chip.navy{background:var(--navy-pale);border-color:var(--navy-border);color:var(--navy)}
+.chip.amber{background:var(--amber-pale);border-color:var(--amber-border);color:var(--amber)}
+.chip.purple{background:var(--purple-pale);border-color:var(--purple-border);color:var(--purple)}
+.chip.red{background:var(--red-pale);border-color:var(--red-border);color:var(--red)}
+
+/* SUMMARY */
+.summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:3px solid transparent;box-shadow:var(--shadow-sm)}
+.sc-gap{border-left-color:#d06060}.sc-sol{border-left-color:#5aaa72}.sc-val{border-left-color:#4a7fd4}
+.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.sc-gap .sc-lbl{color:#c04040}.sc-sol .sc-lbl{color:#2e7a46}.sc-val .sc-lbl{color:#2a4faa}
+.sc-txt{font-size:13px;line-height:1.5}.sc-val .sc-txt{font-weight:600;color:var(--navy)}
+
+/* STRATEGY BANNER */
+.strategy-banner{background:var(--navy);border-radius:10px;padding:16px 22px;margin-bottom:24px;box-shadow:var(--shadow-md);border-left:5px solid #f5c882}
+.sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#f5c882;margin-bottom:6px}
+.sb-text{font-size:13.5px;color:rgba(255,255,255,.88);line-height:1.65}
+.sb-text strong{color:#fff}
+
+/* SECTION TITLES */
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.section-title h2{font-family:'DM Serif Display',serif;font-size:18px;color:var(--navy);letter-spacing:-.01em;white-space:nowrap}
+.section-title .s-line{flex:1;height:1px;background:var(--border)}
+
+/* MATURITY LADDER */
+.ladder-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px 18px;box-shadow:var(--shadow-sm);margin-bottom:28px}
+.ladder-intro{font-size:12.5px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5}
+.ladder-intro strong{color:var(--text-primary)}
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;position:relative}
+.ladder::before{content:'';position:absolute;top:22px;left:10%;right:10%;height:3px;background:linear-gradient(to right,#d0ccc6,#c8c4bc,var(--amber-border),var(--opp-border),var(--opp-border));border-radius:2px;z-index:0}
+.ladder-step{position:relative;z-index:1;border-radius:10px;padding:12px 10px 10px;cursor:pointer;transition:box-shadow .18s,transform .18s;border:1.5px solid transparent;text-align:center}
+.ladder-step:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.ladder-step.active{box-shadow:0 0 0 3px rgba(28,53,87,.15),var(--shadow-md)}
+.ls-1,.ls-2{background:#f5f4f1;border-color:#d0ccc6}
+.ls-3{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-4,.ls-5{background:var(--opp-pale);border-color:var(--opp-border)}
+.ls-num{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.ls-1 .ls-num,.ls-2 .ls-num{color:var(--text-muted)}
+.ls-3 .ls-num{color:var(--amber)}
+.ls-4 .ls-num,.ls-5 .ls-num{color:var(--opp)}
+.ls-icon{font-size:22px;margin-bottom:5px;line-height:1}
+.ls-name{font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:3px}
+.ls-focus{font-size:11px;color:var(--text-secondary);line-height:1.3;margin-bottom:7px}
+.ls-btn{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.ls-1 .ls-btn,.ls-2 .ls-btn{background:#ece9e3;color:var(--text-secondary)}
+.ls-3 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.ls-4 .ls-btn,.ls-5 .ls-btn{background:var(--opp-pale);color:var(--opp);border:1px solid var(--opp-border)}
+.ladder-legend{display:flex;align-items:center;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border-light)}
+.ll-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-secondary)}
+.ll-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ═══ MAIN DIAGRAM ═══ */
+.diagram-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:visible;box-shadow:var(--shadow-md);margin-bottom:28px}
+.diag-titlebar{background:var(--navy);padding:11px 20px;display:flex;align-items:center;gap:10px;border-radius:13px 13px 0 0}
+.diag-titlebar span{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em}
+.diag-titlebar small{font-size:11.5px;color:rgba(255,255,255,.45)}
+.diagram-inner{padding:22px 20px 20px;display:flex;flex-direction:column;gap:0}
+
+/* TIER CONTAINERS */
+.tier{border-radius:12px;padding:18px 18px 16px;margin-bottom:0;position:relative}
+.tier-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.tier-label .tl-icon{font-size:16px}
+.tier-label .tl-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:8px;text-transform:uppercase;letter-spacing:.06em}
+
+.tier-top{background:#f8fdf9;border:2px solid var(--border);border-top:3px solid var(--navy)}
+.tier-top .tier-label{color:var(--navy)}
+.tier-top .tl-badge{background:var(--navy-pale);color:var(--navy);border:1px solid var(--navy-border)}
+
+.tier-mid{background:var(--opp-overlay);border:2px dashed var(--opp-overlay-border);border-top:3px solid var(--opp)}
+.tier-mid .tier-label{color:var(--opp)}
+.tier-mid .tl-badge{background:var(--opp-pale);color:var(--opp);border:1px solid var(--opp-border)}
+
+.tier-bot{background:var(--navy-pale);border:2px solid var(--navy-border);border-top:3px solid var(--navy)}
+.tier-bot .tier-label{color:var(--navy)}
+.tier-bot .tl-badge{background:var(--navy-pale);color:var(--navy);border:1px solid var(--navy-border)}
+
+/* DOWN CONNECTOR BETWEEN TIERS */
+.tier-connector{display:flex;align-items:center;justify-content:center;padding:10px 0;gap:10px}
+.tc-line{width:2px;height:24px;background:linear-gradient(to bottom,var(--border),var(--opp-border));border-radius:2px}
+.tc-label{font-size:9.5px;font-weight:600;color:var(--text-muted);background:var(--bg);padding:1px 8px;border-radius:10px;border:1px solid var(--border-light);white-space:nowrap}
+
+/* OPS DASHBOARD MOCK */
+.ops-mock{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0}
+.ops-stat-row{display:flex;gap:10px;margin-bottom:12px}
+.ops-stat{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;box-shadow:var(--shadow-sm)}
+.ops-stat .os-num{font-family:'DM Serif Display',serif;font-size:26px;line-height:1}
+.ops-stat .os-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);font-weight:600;margin-top:2px}
+.ops-stat.green .os-num{color:var(--exec)}
+.ops-stat.amber .os-num{color:var(--amber)}
+.ops-stat.red .os-num{color:var(--red)}
+.ops-stat.navy .os-num{color:var(--navy)}
+
+/* Exception queue mock */
+.exc-queue{background:var(--surface);border:1px solid var(--border);border-radius:9px;overflow:hidden;box-shadow:var(--shadow-sm)}
+.exc-header{background:var(--red-pale);border-bottom:1px solid var(--red-border);padding:8px 12px;font-size:11px;font-weight:700;color:var(--red);display:flex;align-items:center;gap:6px}
+.exc-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border-light);font-size:11px;cursor:pointer;transition:background .12s}
+.exc-item:last-child{border-bottom:none}
+.exc-item:hover{background:#fafaf8}
+.exc-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.exc-name{flex:1;font-weight:500;color:var(--text-primary)}
+.exc-issue{font-size:10px;color:var(--text-muted)}
+.exc-badge{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px}
+
+/* STP Tracker mock */
+.stp-track{background:var(--surface);border:1px solid var(--border);border-radius:9px;overflow:hidden;box-shadow:var(--shadow-sm)}
+.stp-header{background:var(--exec-pale);border-bottom:1px solid var(--exec-border);padding:8px 12px;font-size:11px;font-weight:700;color:var(--exec);display:flex;align-items:center;gap:6px}
+.stp-bar-row{padding:10px 12px 8px}
+.stp-bar-label{display:flex;justify-content:space-between;font-size:10.5px;margin-bottom:4px}
+.stp-bar-track{height:10px;background:var(--border);border-radius:5px;overflow:hidden;margin-bottom:8px}
+.stp-bar-fill{height:100%;border-radius:5px}
+.stp-footnote{font-size:10px;color:var(--text-muted);padding:0 12px 10px;font-style:italic}
+
+/* RECON BRAIN LAYOUT */
+.recon-body{display:grid;grid-template-columns:200px 1fr;gap:16px;align-items:start}
+
+/* Feed inputs */
+.feeds-col{display:flex;flex-direction:column;gap:8px}
+.feed-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 11px;display:flex;align-items:center;gap:9px;box-shadow:var(--shadow-sm)}
+.feed-icon{font-size:15px;flex-shrink:0}
+.feed-name{font-size:11px;font-weight:600;color:var(--text-primary)}
+.feed-type{font-size:10px;color:var(--text-muted)}
+
+/* Recon right panel */
+.recon-right{display:flex;flex-direction:column;gap:12px}
+
+/* Recon pipeline nodes — horizontal inside the brain */
+.recon-pipeline{display:flex;align-items:center;gap:0}
+.rnode{background:var(--surface);border:1.5px solid var(--border);border-radius:9px;padding:9px 11px;flex:1;cursor:pointer;transition:box-shadow .18s,transform .18s;box-shadow:var(--shadow-sm);position:relative;min-width:0}
+.rnode:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.rnode.active{border-color:var(--navy)!important;box-shadow:0 0 0 2px rgba(28,53,87,.12)}
+.rnode.n-grey{border-top:3px solid #b0aba4}
+.rnode.n-navy{border-top:3px solid var(--navy)}
+.rnode.n-teal{border-top:3px solid var(--teal)}
+.rnode.n-purple{border-top:3px solid var(--purple)}
+.rnode.n-opp{border-top:3px solid var(--opp)}
+.rn-stage{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:2px}
+.rn-icon{font-size:16px;margin-bottom:2px;line-height:1}
+.rn-title{font-size:11px;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:2px}
+.rn-desc{font-size:10px;color:var(--text-secondary);line-height:1.35;margin-bottom:5px}
+.rn-btn{display:inline-flex;align-items:center;gap:2px;font-size:9.5px;font-weight:600;padding:2px 7px;border-radius:4px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.n-grey .rn-btn{background:#f0ece6;color:var(--text-secondary)}
+.n-navy .rn-btn{background:var(--navy-pale);color:var(--navy)}
+.n-teal .rn-btn{background:var(--teal-pale);color:var(--teal)}
+.n-purple .rn-btn{background:var(--purple-pale);color:var(--purple)}
+.n-opp .rn-btn{background:var(--opp-pale);color:var(--opp)}
+
+/* Small pipeline arrow */
+.sarr{display:flex;align-items:center;flex-shrink:0;width:16px;padding-top:34px}
+.sarr-line{height:2px;background:#c8c4bc;flex:1}
+.sarr-head{width:0;height:0;border-top:4px solid transparent;border-bottom:4px solid transparent;border-left:6px solid #c8c4bc;flex-shrink:0}
+
+/* Feed → recon connector arrow */
+.feed-connector{display:flex;align-items:center;gap:0;margin-bottom:12px}
+.fc-line{flex:1;height:2px;background:linear-gradient(to right,var(--border),var(--opp-border));border-radius:1px}
+.fc-head{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:7px solid var(--opp-border)}
+.fc-label{font-size:9.5px;font-weight:600;color:var(--text-muted);background:var(--bg);padding:1px 7px;border-radius:8px;border:1px solid var(--border-light);white-space:nowrap;margin:0 6px}
+
+/* ADVERSARIAL RECON SVG EMBED */
+.adv-embed{background:var(--surface);border:1.5px solid var(--opp-border);border-radius:9px;padding:10px 12px;box-shadow:var(--shadow-sm)}
+.adv-embed-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--opp);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.adv-embed-label svg{flex-shrink:0}
+
+/* AUDIT LEDGER */
+.ledger-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.ledger-item{background:var(--surface);border:1.5px solid var(--navy-border);border-radius:9px;padding:12px 13px;cursor:pointer;transition:box-shadow .18s,transform .18s;box-shadow:var(--shadow-sm)}
+.ledger-item:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.ledger-item.active{border-color:var(--navy)!important;box-shadow:0 0 0 2px rgba(28,53,87,.12)}
+.li-icon{font-size:20px;margin-bottom:5px;line-height:1}
+.li-title{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:3px}
+.li-desc{font-size:11px;color:var(--text-secondary);line-height:1.4;margin-bottom:7px}
+.li-btn{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;border:1px solid var(--navy-border);background:var(--navy-pale);color:var(--navy);cursor:pointer;font-family:'DM Sans',sans-serif}
+
+/* RESEARCH */
+.research{padding-top:24px;border-top:1px solid var(--border)}
+.research h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy);margin-bottom:16px;letter-spacing:-.01em}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.r-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.r-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:7px}
+.r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.r-rows{display:flex;flex-direction:column;gap:7px}
+.r-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.r-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:155px}
+.r-key::after{content:':'}
+.r-val{color:var(--text-secondary)}
+.threat-callout{background:var(--red-pale);border:1.5px solid var(--red-border);border-left:5px solid var(--red);border-radius:10px;padding:18px 20px;box-shadow:var(--shadow-sm)}
+.tc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--red);margin-bottom:6px}
+.tc-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--navy);margin-bottom:7px;letter-spacing:-.01em}
+.tc-body{font-size:13px;color:var(--text-secondary);line-height:1.65}
+.tc-body strong{color:var(--text-primary)}
+.ref-list{display:flex;flex-direction:column;gap:6px}
+.ref-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.ref-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--navy-pale);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.ref-txt{color:var(--text-secondary)}.ref-txt strong{color:var(--text-primary)}
+.page-footer{text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:28px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(20,18,14,.45);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(3px)}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:14px;width:540px;max-width:calc(100vw - 32px);max-height:calc(100vh - 60px);overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(12px) scale(.98);transition:transform .22s cubic-bezier(.34,1.56,.64,1)}
+.overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-hdr{padding:20px 22px 15px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2;border-radius:14px 14px 0 0}
+.m-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block}
+.m-title{font-family:'DM Serif Display',serif;font-size:19px;color:var(--navy);line-height:1.25;margin-bottom:4px;padding-right:30px}
+.m-sub{font-size:12.5px;color:var(--text-secondary);font-style:italic}
+.m-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:15px;font-family:'DM Sans',sans-serif;transition:background .12s}
+.m-close:hover{background:var(--border)}
+.m-body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:14px}
+.info-sec{display:flex;flex-direction:column;gap:7px}
+.info-sec-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);padding-bottom:5px;border-bottom:1px solid var(--border-light)}
+.info-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.info-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:165px}
+.info-key::after{content:':'}
+.info-val{color:var(--text-secondary)}
+.num-list{display:flex;flex-direction:column;gap:6px}
+.num-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.num-badge{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--navy-pale);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.num-badge.opp{background:var(--opp-pale);color:var(--opp)}
+.num-text{color:var(--text-secondary)}.num-text strong{color:var(--text-primary)}
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="nav-back" onclick="window.history.back()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11L5 7l4-4"/></svg>
+    Back to Matrix
+  </button>
+  <div class="nav-crumb">
+    <span>Equity Markets</span><span class="sep">/</span>
+    <span>Immediate Priorities</span><span class="sep">/</span>
+    <span class="active">AI Corporate Actions Processing</span>
+  </div>
+  <div class="nav-badge">🎯 Immediate Priority</div>
+</nav>
+
+<div class="page">
+
+  <div class="uc-num">Use Case #18 &nbsp;·&nbsp; Post-Trade &nbsp;·&nbsp; Strategic Impact 7/10</div>
+  <h1>AI Corporate Actions Processing</h1>
+  <p class="header-sub">Corporate Actions is the "final frontier" of post-trade automation. While trades execute in microseconds, a complex corporate action — a spin-off across multiple jurisdictions, a nested rights issue — can still take days of manual reconciliation. An error here is not a nuisance. It is a financial liability.</p>
+  <div class="chips">
+    <span class="chip navy">LLM / NLP</span>
+    <span class="chip green">Agentic AI</span>
+    <span class="chip navy">Adversarial Reconciliation</span>
+    <span class="chip purple">RPA + AI</span>
+    <span class="chip red">Financial Liability Risk</span>
+    <span class="chip amber">Partially Deployed</span>
+  </div>
+
+  <div class="summary-row">
+    <div class="sc sc-gap"><div class="sc-lbl">The Gap</div><div class="sc-txt">Two data vendors routinely report different Ex-Dates or ratios for the same event. A human must manually call the exchange to verify — a process that takes hours and fails at scale.</div></div>
+    <div class="sc sc-sol"><div class="sc-lbl">AI Solution</div><div class="sc-txt">A three-tier agentic system: an Ops Dashboard surfacing only exceptions, a Reconciliation Brain that adversarially cross-references all vendor data, and an immutable Audit Ledger anchoring every decision.</div></div>
+    <div class="sc sc-val"><div class="sc-lbl">Value Created</div><div class="sc-txt">Near-elimination of "missing dividend" and "incorrect split" errors — events that currently cost the industry billions annually in claims, rework, and regulatory penalties.</div></div>
+  </div>
+
+  <!-- STRATEGY BANNER -->
+  <div class="strategy-banner">
+    <div class="sb-label">Strategic Framing — Liability Reduction</div>
+    <div class="sb-text">"In Corporate Actions, an error is not a nuisance — it's a <strong>financial liability</strong>. By using AI to create a <strong>Golden Record</strong> through three-way reconciliation between vendors, exchanges, and the DTCC, firms can virtually eliminate the 'missing dividend' and 'incorrect split' errors that currently cost the industry billions in claims annually."</div>
+  </div>
+
+  <!-- MATURITY LADDER -->
+  <div class="section-title">
+    <h2>AI Maturity Ladder — Corporate Actions</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="ladder-wrap">
+    <p class="ladder-intro">Most operations teams sit at <strong>Level 1–2</strong> today. The proposed architecture targets <strong>Levels 3–4</strong>. Level 5 (Zero-Touch STP) is achievable near-term — Broadridge already claims 70% manual reduction. Click any level for detail.</p>
+    <div class="ladder">
+      <div class="ladder-step ls-1" onclick="openModal('l1')">
+        <div class="ls-num">Level 1</div><div class="ls-icon">📋</div>
+        <div class="ls-name">Digitised Tracking</div><div class="ls-focus">Basic alerts, manual entry</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-2" onclick="openModal('l2')">
+        <div class="ls-num">Level 2</div><div class="ls-icon">🤖</div>
+        <div class="ls-name">Automated Extraction</div><div class="ls-focus">OCR / NLP fields</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-3" onclick="openModal('l3')">
+        <div class="ls-num">Level 3</div><div class="ls-icon">⚖️</div>
+        <div class="ls-name">Automated Reconciliation</div><div class="ls-focus">AI flags vendor breaks</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-4" onclick="openModal('l4')">
+        <div class="ls-num">Level 4</div><div class="ls-icon">🧠</div>
+        <div class="ls-name">Agentic Processing</div><div class="ls-focus">Auto-tax + election drafts</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-5" onclick="openModal('l5')">
+        <div class="ls-num">Level 5</div><div class="ls-icon">⚡</div>
+        <div class="ls-name">Fully Autonomous</div><div class="ls-focus">Zero-Touch STP 95%+</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+    </div>
+    <div class="ladder-legend">
+      <div class="ll-item"><div class="ll-dot" style="background:#c8c4bc;"></div>Current state — most operations teams today</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--amber);"></div>Emerging — proposed architecture entry point</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--opp);"></div>Opportunity — proposed architecture and beyond</div>
+    </div>
+  </div>
+
+  <!-- MAIN DIAGRAM -->
+  <div class="section-title">
+    <h2>The Announcement-to-Ledger Architecture</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="diag-titlebar">
+      <span>Three-Tier Vertical Architecture — Data flows downward · Click any element for detail</span>
+      <small>&nbsp;·&nbsp; Top: what ops teams see &nbsp;·&nbsp; Middle: where AI works &nbsp;·&nbsp; Bottom: where everything is stored</small>
+    </div>
+
+    <div class="diagram-inner">
+
+      <!-- ── TIER 1: OPS DASHBOARD ─────────────────────────────────────── -->
+      <div class="tier tier-top" onclick="openModal('opsdash')" style="cursor:pointer;">
+        <div class="tier-label">
+          <span class="tl-icon">🖥️</span>
+          <span>Tier 1 — Ops Dashboard</span>
+          <span class="tl-badge">Human-Facing</span>
+          <span style="margin-left:auto;font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid var(--navy-border);background:var(--navy-pale);color:var(--navy);cursor:pointer;">Details →</span>
+        </div>
+
+        <!-- Stats row -->
+        <div class="ops-stat-row">
+          <div class="ops-stat green"><div class="os-num">1,847</div><div class="os-lbl">STP Processed Today</div></div>
+          <div class="ops-stat navy"><div class="os-num">94.3%</div><div class="os-lbl">Straight-Through Rate</div></div>
+          <div class="ops-stat amber"><div class="os-num">108</div><div class="os-lbl">Pending Review</div></div>
+          <div class="ops-stat red"><div class="os-num">14</div><div class="os-lbl">Exceptions — Urgent</div></div>
+        </div>
+
+        <!-- Two panel mock -->
+        <div class="ops-mock">
+          <!-- Exception Queue -->
+          <div class="exc-queue">
+            <div class="exc-header">
+              <span>🔴</span> Exceptions Queue — 14 requiring human review
+            </div>
+            <div class="exc-item">
+              <div class="exc-dot" style="background:#c04040;"></div>
+              <div class="exc-name">HDFC Bank — Rights Issue</div>
+              <div class="exc-issue">Vendor conflict: Ex-Date mismatch</div>
+              <div class="exc-badge" style="background:#fde8e8;color:#9a1f1f;">URGENT</div>
+            </div>
+            <div class="exc-item">
+              <div class="exc-dot" style="background:#c04040;"></div>
+              <div class="exc-name">Infosys — Bonus Issue</div>
+              <div class="exc-issue">Ratio discrepancy: 1:1 vs 2:1</div>
+              <div class="exc-badge" style="background:#fde8e8;color:#9a1f1f;">URGENT</div>
+            </div>
+            <div class="exc-item">
+              <div class="exc-dot" style="background:#b86a00;"></div>
+              <div class="exc-name">Reliance — Dividend</div>
+              <div class="exc-issue">Elective: cash vs reinvestment pending</div>
+              <div class="exc-badge" style="background:#fff3cd;color:#856404;">REVIEW</div>
+            </div>
+            <div class="exc-item">
+              <div class="exc-dot" style="background:#9e9b96;"></div>
+              <div class="exc-name">TCS — Stock Split</div>
+              <div class="exc-issue">Language: Tamil Nadu exchange notice</div>
+              <div class="exc-badge" style="background:#f5f4f1;color:#9e9b96;">PENDING</div>
+            </div>
+          </div>
+
+          <!-- STP Tracker -->
+          <div class="stp-track">
+            <div class="stp-header">
+              <span>✅</span> STP Tracker — Autonomous Processing Volume
+            </div>
+            <div class="stp-bar-row">
+              <div class="stp-bar-label"><span style="color:var(--exec);font-weight:600;">Dividends</span><span style="color:var(--exec);font-weight:700;">98.2%</span></div>
+              <div class="stp-bar-track"><div class="stp-bar-fill" style="width:98%;background:var(--exec);"></div></div>
+              <div class="stp-bar-label"><span style="color:var(--navy);font-weight:600;">Stock Splits</span><span style="color:var(--navy);font-weight:700;">96.5%</span></div>
+              <div class="stp-bar-track"><div class="stp-bar-fill" style="width:96%;background:var(--navy);"></div></div>
+              <div class="stp-bar-label"><span style="color:var(--amber);font-weight:600;">Rights Issues</span><span style="color:var(--amber);font-weight:700;">81.3%</span></div>
+              <div class="stp-bar-track"><div class="stp-bar-fill" style="width:81%;background:var(--amber);"></div></div>
+              <div class="stp-bar-label"><span style="color:var(--red);font-weight:600;">Mergers / Spin-offs</span><span style="color:var(--red);font-weight:700;">61.0%</span></div>
+              <div class="stp-bar-track"><div class="stp-bar-fill" style="width:61%;background:var(--red);"></div></div>
+            </div>
+            <div class="stp-footnote">Complex multi-jurisdiction events remain the hardest category to automate — they make up the majority of the Exceptions Queue.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONNECTOR 1→2 -->
+      <div class="tier-connector">
+        <svg width="2" height="24" viewBox="0 0 2 24"><line x1="1" y1="0" x2="1" y2="24" stroke="#6dba80" stroke-width="2"/></svg>
+        <div class="tc-label">Reconciled data flows down · Exceptions stay at Tier 1</div>
+        <svg width="2" height="24" viewBox="0 0 2 24"><line x1="1" y1="0" x2="1" y2="24" stroke="#6dba80" stroke-width="2"/></svg>
+      </div>
+
+      <!-- ── TIER 2: RECONCILIATION BRAIN ─────────────────────────────── -->
+      <div class="tier tier-mid">
+        <div class="tier-label">
+          <span class="tl-icon">⚙️</span>
+          <span>Tier 2 — Reconciliation Brain</span>
+          <span class="tl-badge">Proposed Architecture · Levels 3–4</span>
+        </div>
+
+        <div class="recon-body">
+          <!-- LEFT: Data feeds -->
+          <div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:8px;">Input Sources</div>
+            <div class="feeds-col">
+              <div class="feed-item"><div class="feed-icon">📡</div><div><div class="feed-name">SWIFT Messages</div><div class="feed-type">MT564/MT568</div></div></div>
+              <div class="feed-item"><div class="feed-icon">📊</div><div><div class="feed-name">Bloomberg</div><div class="feed-type">CA data feed</div></div></div>
+              <div class="feed-item"><div class="feed-icon">📰</div><div><div class="feed-name">Reuters / Refinitiv</div><div class="feed-type">Event announcements</div></div></div>
+              <div class="feed-item"><div class="feed-icon">🏛️</div><div><div class="feed-name">DTCC / Exchange</div><div class="feed-type">Authoritative source</div></div></div>
+              <div class="feed-item"><div class="feed-icon">📄</div><div><div class="feed-name">PDF Announcements</div><div class="feed-type">Issuer / Exchange</div></div></div>
+            </div>
+          </div>
+
+          <!-- RIGHT: pipeline + adversarial recon -->
+          <div class="recon-right">
+            <!-- Feed connector arrow -->
+            <div class="feed-connector">
+              <div class="fc-line"></div>
+              <div class="fc-label">100+ sources ingested</div>
+              <div class="fc-line"></div>
+              <div class="fc-head"></div>
+            </div>
+
+            <!-- Pipeline nodes -->
+            <div class="recon-pipeline">
+              <div class="rnode n-grey" onclick="openModal('ingestion')">
+                <div class="rn-stage">Stage 1</div><div class="rn-icon">📥</div>
+                <div class="rn-title">Ingestion</div>
+                <div class="rn-desc">Aggregates 100+ disparate sources simultaneously</div>
+                <button class="rn-btn">Details →</button>
+              </div>
+              <div class="sarr"><div class="sarr-line"></div><div class="sarr-head"></div></div>
+
+              <div class="rnode n-navy" onclick="openModal('parsing')">
+                <div class="rn-stage">Stage 2</div><div class="rn-icon">🔍</div>
+                <div class="rn-title">Parsing</div>
+                <div class="rn-desc">LLM identifies action type, dates, ratios, tax implications</div>
+                <button class="rn-btn">Details →</button>
+              </div>
+              <div class="sarr"><div class="sarr-line"></div><div class="sarr-head"></div></div>
+
+              <div class="rnode n-teal" onclick="openModal('goldenrecord')">
+                <div class="rn-stage">Stage 3</div><div class="rn-icon">🏆</div>
+                <div class="rn-title">Golden Record</div>
+                <div class="rn-desc">Three-way vendor comparison — conflicts flagged</div>
+                <button class="rn-btn">Details →</button>
+              </div>
+              <div class="sarr"><div class="sarr-line"></div><div class="sarr-head"></div></div>
+
+              <div class="rnode n-purple" onclick="openModal('impact')">
+                <div class="rn-stage">Stage 4</div><div class="rn-icon">📐</div>
+                <div class="rn-title">Impact Analysis</div>
+                <div class="rn-desc">Calculates effect on all client portfolios simultaneously</div>
+                <button class="rn-btn">Details →</button>
+              </div>
+              <div class="sarr"><div class="sarr-line"></div><div class="sarr-head"></div></div>
+
+              <div class="rnode n-opp" onclick="openModal('posting')">
+                <div class="rn-stage">Stage 5</div><div class="rn-icon">⚡</div>
+                <div class="rn-title">Instruction & Post</div>
+                <div class="rn-desc">RPA + AI updates ledger and sends election to exchange</div>
+                <button class="rn-btn">Details →</button>
+              </div>
+            </div>
+
+            <!-- ADVERSARIAL RECON SVG — embedded directly in diagram -->
+            <div class="adv-embed">
+              <div class="adv-embed-label">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#1a6b35" stroke-width="1.5"/><path d="M6 3v4" stroke="#1a6b35" stroke-width="1.5" stroke-linecap="round"/><circle cx="6" cy="9" r=".8" fill="#1a6b35"/></svg>
+                Adversarial Reconciliation — Live Vendor Conflict Detection
+              </div>
+              <svg viewBox="0 0 860 90" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
+                <defs>
+                  <marker id="ok" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#1a6b35"/></marker>
+                  <marker id="warn" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#c04040"/></marker>
+                </defs>
+                <!-- Column headers -->
+                <rect x="0" y="0" width="860" height="20" rx="4" fill="#1c3557"/>
+                <text x="10"  y="14" font-family="DM Mono" font-size="9.5" fill="white" font-weight="500">FIELD</text>
+                <text x="170" y="14" font-family="DM Mono" font-size="9.5" fill="white" font-weight="500">BLOOMBERG</text>
+                <text x="330" y="14" font-family="DM Mono" font-size="9.5" fill="white" font-weight="500">REUTERS</text>
+                <text x="490" y="14" font-family="DM Mono" font-size="9.5" fill="white" font-weight="500">DTCC (AUTHORITY)</text>
+                <text x="670" y="14" font-family="DM Mono" font-size="9.5" fill="white" font-weight="500">AI VERDICT</text>
+
+                <!-- Row 1: Ex-Date — CONFLICT -->
+                <rect x="0" y="22" width="860" height="22" fill="#fdf0f0"/>
+                <text x="10"  y="37" font-family="DM Sans" font-size="10" font-weight="600" fill="#6b6760">Ex-Date</text>
+                <text x="170" y="37" font-family="DM Mono" font-size="10" fill="#c04040">2024-03-14</text>
+                <text x="330" y="37" font-family="DM Mono" font-size="10" fill="#c04040">2024-03-15</text>
+                <text x="490" y="37" font-family="DM Mono" font-size="10" fill="#1a6b35" font-weight="700">2024-03-14</text>
+                <text x="670" y="37" font-family="DM Sans" font-size="10" font-weight="700" fill="#c04040">⚠ CONFLICT → Accept DTCC</text>
+
+                <!-- Row 2: Ratio — MATCH -->
+                <rect x="0" y="44" width="860" height="22" fill="#f4fbf6"/>
+                <text x="10"  y="59" font-family="DM Sans" font-size="10" font-weight="600" fill="#6b6760">Split Ratio</text>
+                <text x="170" y="59" font-family="DM Mono" font-size="10" fill="#1a6b35">2-for-1</text>
+                <text x="330" y="59" font-family="DM Mono" font-size="10" fill="#1a6b35">2-for-1</text>
+                <text x="490" y="59" font-family="DM Mono" font-size="10" fill="#1a6b35" font-weight="700">2-for-1</text>
+                <text x="670" y="59" font-family="DM Sans" font-size="10" font-weight="700" fill="#1a6b35">✓ CONFIRMED — All sources agree</text>
+
+                <!-- Row 3: Record Date — CONFLICT -->
+                <rect x="0" y="66" width="860" height="22" fill="#fdf0f0"/>
+                <text x="10"  y="81" font-family="DM Sans" font-size="10" font-weight="600" fill="#6b6760">Record Date</text>
+                <text x="170" y="81" font-family="DM Mono" font-size="10" fill="#c04040">2024-03-18</text>
+                <text x="330" y="81" font-family="DM Mono" font-size="10" fill="#c04040">2024-03-18</text>
+                <text x="490" y="81" font-family="DM Mono" font-size="10" fill="#1a6b35" font-weight="700">2024-03-19</text>
+                <text x="670" y="81" font-family="DM Sans" font-size="10" font-weight="700" fill="#c04040">⚠ CONFLICT → Accept DTCC</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONNECTOR 2→3 -->
+      <div class="tier-connector">
+        <svg width="2" height="24" viewBox="0 0 2 24"><line x1="1" y1="0" x2="1" y2="24" stroke="#a8c4e0" stroke-width="2"/></svg>
+        <div class="tc-label">Verified Golden Record + Ledger update flows to Audit</div>
+        <svg width="2" height="24" viewBox="0 0 2 24"><line x1="1" y1="0" x2="1" y2="24" stroke="#a8c4e0" stroke-width="2"/></svg>
+      </div>
+
+      <!-- ── TIER 3: AUDIT & LEDGER ─────────────────────────────────────── -->
+      <div class="tier tier-bot">
+        <div class="tier-label">
+          <span class="tl-icon">🔒</span>
+          <span>Tier 3 — Audit & Ledger</span>
+          <span class="tl-badge">Immutable Record</span>
+        </div>
+        <div class="ledger-row">
+          <div class="ledger-item" onclick="openModal('originalrecord')">
+            <div class="li-icon">📄</div>
+            <div class="li-title">Original Source Store</div>
+            <div class="li-desc">The original PDF, SWIFT message, or exchange feed stored verbatim alongside the AI's interpretation — the source of truth that never changes</div>
+            <button class="li-btn">Details →</button>
+          </div>
+          <div class="ledger-item" onclick="openModal('goldenledger')">
+            <div class="li-icon">🏆</div>
+            <div class="li-title">Golden Record Ledger</div>
+            <div class="li-desc">The verified, reconciled version of every corporate action — authoritative data that feeds client position updates and regulatory reporting</div>
+            <button class="li-btn">Details →</button>
+          </div>
+          <div class="ledger-item" onclick="openModal('audittrail')">
+            <div class="li-icon">🔗</div>
+            <div class="li-title">AI Decision Audit Trail</div>
+            <div class="li-desc">Every AI decision — which vendor was accepted, why a conflict was flagged, what election was drafted — logged with timestamp and rationale for regulatory review</div>
+            <button class="li-btn">Details →</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RESEARCH -->
+  <div class="research">
+    <h2>Research Notes</h2>
+    <div class="r-grid">
+
+      <!-- Conditional Trap Callout -->
+      <div class="threat-callout">
+        <div class="tc-label">⚠ AI Challenge — The Conditional Trap</div>
+        <div class="tc-title">When "Cash or Shares" Requires Client-Specific Reasoning</div>
+        <div class="tc-body">Many corporate actions are <strong>elective</strong> — the client can choose between receiving cash or additional shares, for example. Processing these automatically requires the AI to do something fundamentally more complex than data extraction: it must apply the client's <strong>standing instructions</strong>, <strong>tax profile</strong>, and <strong>portfolio context</strong> to make the optimal election. A client in a high tax bracket may prefer shares over a cash dividend that would trigger immediate tax liability. A client with a concentrated position may prefer cash to reduce exposure. This is not a lookup — it is <strong>client-specific reasoning</strong>, the kind of contextual decision-making that defines agentic AI. The system must integrate with the client's profile database and apply configurable decision rules, escalating to a human only when the standing instructions are ambiguous.</div>
+      </div>
+
+      <!-- Vendor Conflict Callout -->
+      <div class="threat-callout">
+        <div class="tc-label">⚠ Data Challenge — The Vendor Conflict Problem</div>
+        <div class="tc-title">Two Trusted Sources, Two Different Answers</div>
+        <div class="tc-body">It is <strong>commonplace</strong> for Bloomberg and Reuters to report different Ex-Dates or ratios for the same corporate action event. Historically, a human operations analyst had to contact the exchange directly to adjudicate. At scale — thousands of events daily — this is impossible. The Adversarial Reconciliation approach resolves this by assigning <strong>credibility weights</strong> to each source: exchange feeds and DTCC are treated as authoritative; Bloomberg and Reuters as high-quality secondary. When conflicts arise, the system automatically adopts the authoritative source, flags the discrepancy in the audit trail, and routes a notification to the vendor for correction. <strong>Only unresolvable conflicts</strong> — where even the authoritative source is ambiguous — reach the human exceptions queue.</div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--navy);"></div>Technical Architecture</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">LLM / NLP Parsing</span><span class="r-val">Extracts action type, effective dates, ratios, tax implications, and elective options from unstructured announcement text — including non-English sources via multilingual models</span></div>
+          <div class="r-row"><span class="r-key">Credibility Weighting</span><span class="r-val">Conflict Resolution Agent assigns trust scores to each data source — exchange feed and DTCC score highest; Bloomberg and Reuters score high but below authoritative sources</span></div>
+          <div class="r-row"><span class="r-key">Mathematical Engine</span><span class="r-val">Translates corporate action terms into precise portfolio impacts — "1-for-10 split" becomes exact new share counts across every affected client position, including fractional share handling</span></div>
+          <div class="r-row"><span class="r-key">RPA + AI Posting</span><span class="r-val">Robotic Process Automation executes the actual ledger update and exchange instruction — AI provides the verified data, RPA executes the mechanical update without human touch</span></div>
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--opp);"></div>Who Is Building This in 2026</div>
+        <div class="ref-list">
+          <div class="ref-item"><div class="ref-num">1</div><div class="ref-txt"><strong>DTCC</strong> — scaling pilots using tokenised securities to make corporate actions "self-executing" via smart contracts; the logical Level 5 endpoint where the action processes itself</div></div>
+          <div class="ref-item"><div class="ref-num">2</div><div class="ref-txt"><strong>Broadridge (Sentry AI)</strong> — market leader; claims 70% reduction in manual processing using GenAI to interpret complex event notifications across custody chains</div></div>
+          <div class="ref-item"><div class="ref-num">3</div><div class="ref-txt"><strong>FIS Global</strong> — recently launched agentic AI frameworks in partnership with <strong>Anthropic</strong> specifically to compress back-office CA investigations from days to minutes</div></div>
+          <div class="ref-item"><div class="ref-num">4</div><div class="ref-txt"><strong>Bloomberg / Refinitiv</strong> — both investing in reducing their own data quality gaps that currently cause vendor conflicts; improving the input quality that the Reconciliation Brain depends on</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-footer">
+    Hexaware Financial Services &nbsp;·&nbsp; AI in Equity Markets &nbsp;·&nbsp; Use Case #18 &nbsp;·&nbsp; Preliminary Research 2026
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="m-tag" id="mTag"></div>
+      <div class="m-title" id="mTitle"></div>
+      <div class="m-sub" id="mSub"></div>
+      <button class="m-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="m-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+const NODES = {
+  l1:{tag:'Level 1 · Current State',ts:'background:#ece9e3;color:#6b6760;',title:'Digitised Tracking',sub:'Basic alerts and digital notifications — humans still do all the analytical work',sections:[
+    {t:'What It Is',rows:[{k:'Capability',v:'The system monitors exchange websites and DTCC feeds and sends email or dashboard alerts when a new corporate action is announced. A human operations analyst then reads the PDF and manually types the relevant fields into the internal system.'},{k:'The bottleneck',v:'A large custodian may process 500–2,000 corporate action events daily across all markets. Manual data entry at this volume is impossibly slow and error-prone.'},{k:'Error rate',v:'Manual re-keying of complex financial data produces error rates of 1–3% — in corporate actions, where a 1% error on a 10,000-client dividend event means 100 incorrect payments, this is a serious liability exposure.'}]}
+  ]},
+  l2:{tag:'Level 2 · Current State',ts:'background:#ece9e3;color:#6b6760;',title:'Automated Extraction',sub:'OCR and NLP pull standard fields automatically — but still one source at a time, no reconciliation',sections:[
+    {t:'What It Does',rows:[{k:'Technology',v:'OCR converts scanned announcements to text; NLP models extract standard fields — Ex-Date, Record Date, Ratio, Payment Amount — into a structured database'},{k:'Improvement',v:'Eliminates most manual re-keying for straightforward events (dividends, simple splits). Processing time for routine events drops from hours to minutes.'},{k:'Remaining gap',v:'Still works from a single data source — no cross-vendor reconciliation, no conflict detection. An error in the source document propagates directly to the ledger with no safety check.'}]}
+  ]},
+  l3:{tag:'Level 3 · Proposed Architecture Entry',ts:'background:#fff8ed;color:#b86a00;',title:'Automated Reconciliation',sub:'The first level where the AI actively protects against vendor errors — comparing multiple sources and flagging breaks',sections:[
+    {t:'What It Does',rows:[{k:'Core capability',v:'The system simultaneously ingests the same event from multiple vendors (Bloomberg, Reuters, DTCC, Exchange feed) and compares the extracted fields across all sources'},{k:'Conflict detection',v:'Any discrepancy between sources — a different Ex-Date, a different ratio, a different payment amount — is automatically flagged as a "break" requiring human review'},{k:'Source weighting',v:'Exchange feeds and DTCC data are treated as authoritative; Bloomberg and Reuters are high-quality secondary sources. Conflicts are resolved in favour of the authoritative source where possible.'},{k:'Human escalation',v:'Only true conflicts — where even the authoritative source is ambiguous — reach the human exceptions queue. Everything else is auto-resolved with a full audit trail.'}]}
+  ]},
+  l4:{tag:'Level 4 · Proposed Architecture',ts:'background:#edf7f1;color:#1a6b35;',title:'Agentic Processing',sub:'The AI moves beyond reading to reasoning — calculating taxes, drafting election instructions, and applying client-specific rules',sections:[
+    {t:'What It Does',rows:[{k:'Tax calculation',v:'For each event type, the system calculates the tax implications under each relevant jurisdiction — a dividend from a US company to an Indian institutional client has different withholding tax treatment than the same dividend to a UK pension fund'},{k:'Election drafting',v:'For elective corporate actions, the system drafts the election instruction based on the client\'s standing instructions and tax profile — "this client prefers shares over cash based on their tax-efficient growth mandate"'},{k:'Portfolio impact',v:'The mathematical engine calculates the exact portfolio effect for every affected client simultaneously — new share counts, new cost basis, accrued dividends — populating the ledger update automatically'},{k:'Exceptions routing',v:'Any case where the client\'s standing instructions are ambiguous, the tax treatment is unclear, or the event is structurally unusual is escalated to the human queue with a pre-populated case summary'}]}
+  ]},
+  l5:{tag:'Level 5 · Opportunity',ts:'background:#edf7f1;color:#1a6b35;',title:'Fully Autonomous — Zero-Touch STP',sub:'95%+ of corporate actions processed without human touch — the industry\'s "final frontier" made achievable',sections:[
+    {t:'What It Means',rows:[{k:'Straight-Through Processing',v:'The event is announced by the exchange, ingested, parsed, reconciled, tax-calculated, elections drafted, client portfolios updated, and the ledger posted — all without a human touching it'},{k:'The 95% threshold',v:'Broadridge claims 70% manual reduction already achieved. The path to 95% requires: better data quality from vendors, standardised announcement formats (SWIFT ISO 20022 compliance), and agentic AI capable of handling edge cases'},{k:'The remaining 5%',v:'Complex multi-jurisdiction events (cross-border mergers, multi-class restructurings, contested takeovers) will remain in the human exceptions queue — they require legal judgment, not just data processing'}]},
+    {t:'Level 5 Technology — DTCC Smart Contracts',rows:[{k:'The vision',v:'DTCC\'s 2026 pilots use tokenised securities on a permissioned blockchain where corporate action terms are encoded directly into the token — the action executes automatically when the event conditions are met'},{k:'Why this matters',v:'Instead of 20 systems being told about a dividend and then processing it, the dividend pays itself. The information gap between announcement and processing collapses to near-zero.'},{k:'Timeline',v:'Still in pilot phase as of 2026. Full deployment requires broad adoption of tokenised securities infrastructure across the custody chain — a 5–10 year transition.'}]}
+  ]},
+  opsdash:{tag:'Tier 1 · Ops Dashboard',ts:'background:#edf3fb;color:#1c3557;',title:'Ops Dashboard',sub:'The human interface — designed so that a human never needs to see a routine event, only genuine exceptions',sections:[
+    {t:'Design Philosophy',rows:[{k:'Exception-first design',v:'The dashboard surfaces only events the AI could not fully resolve. A routine dividend on a major blue-chip stock should never appear here — it processes silently and appears only in the STP Tracker count'},{k:'The 5% rule',v:'If the exceptions queue is showing more than 5–8% of daily volume, something is wrong — either the AI models need retraining, a new event type has emerged, or a data vendor has a quality issue'},{k:'Triage interface',v:'Each exception shows: the event, the specific conflict or ambiguity, the AI\'s recommended resolution, and one-click accept/override/escalate. The human reviews AI suggestions rather than starting from scratch'}]},
+    {t:'STP Tracker Metrics',rows:[{k:'By event type',v:'Dividends and simple splits achieve 95%+ STP rates; complex restructurings and multi-jurisdiction events are the long tail that keeps the exceptions queue populated'},{k:'Trend tracking',v:'The STP rate by event type is tracked over time — if dividends drop from 98% to 91% STP, that signals a change in announcement format from a major exchange that requires model retraining'},{k:'Regulatory reporting',v:'The STP rate and exceptions volume are reportable metrics for certain regulators — firms must demonstrate that exceptions are reviewed and resolved within prescribed timeframes'}]}
+  ]},
+  ingestion:{tag:'Stage 1 · Ingestion',ts:'background:#ece9e3;color:#6b6760;',title:'Ingestion',sub:'Aggregating 100+ disparate data sources simultaneously — the first challenge before any AI analysis begins',sections:[
+    {t:'What Gets Ingested',rows:[{k:'SWIFT messages',v:'MT564 (corporate action notification) and MT568 (narrative text) messages are the standard inter-bank format — arriving in a semi-structured binary format that requires a parser'},{k:'Exchange feeds',v:'Direct data feeds from BSE, NSE, NYSE, LSE, and 40+ other exchanges — each with proprietary formats, update frequencies, and data structures'},{k:'Bloomberg / Reuters',v:'High-quality commercial data feeds covering global markets — valuable secondary sources but not authoritative for regulatory purposes'},{k:'PDF announcements',v:'Issuer and exchange PDF announcements — unstructured, but often the earliest and most complete disclosure of complex events'}]},
+    {t:'Multi-Source Normalisation',rows:[{k:'Format harmonisation',v:'Every source arrives in a different format — SWIFT binary, Bloomberg API JSON, Reuters XML, Exchange PDF. The ingestion layer normalises all of them into a common internal schema before any analysis'},{k:'Deduplication',v:'The same event may arrive from 5–10 sources within seconds of each other. The system must recognise these as the same event and merge them rather than creating 10 separate records'},{k:'Latency management',v:'Different sources have different latency — an exchange announcement may arrive 2–15 minutes before it appears on Bloomberg. The system tracks which version of each event it has received and updates as later, higher-quality data arrives'}]}
+  ]},
+  parsing:{tag:'Stage 2 · Parsing',ts:'background:#edf3fb;color:#1c3557;',title:'Parsing',sub:'LLM and NLP convert unstructured announcement text into precise, structured data fields',sections:[
+    {t:'Action Type Classification',rows:[{k:'Technology',v:'A classification model identifies the event type from the announcement text — Dividend, Stock Split, Rights Issue, Bonus Issue, Merger, Spin-off, Tender Offer, etc. Each type triggers a different downstream processing workflow'},{k:'Why this is hard',v:'A "Scheme of Arrangement" announcement might be a merger, a restructuring, a demerger, or a capital reduction depending on its specific terms. Getting the classification wrong routes the event to the wrong processing workflow.'},{k:'Confidence scoring',v:'Every classification comes with a confidence score. Low-confidence classifications (below 85%) are immediately flagged for human verification before any downstream processing occurs'}]},
+    {t:'Field Extraction',rows:[{k:'Key fields',v:'Ex-Date, Record Date, Payment Date, Ratio (for splits and bonus issues), Amount (for dividends), Currency, Elective options (cash vs stock), Tax withholding rates, Offer price (for tender offers)'},{k:'Language nuance',v:'Non-English announcements — from emerging market exchanges in Arabic, Chinese, Tamil, Portuguese — are handled by multilingual LLMs that understand not just the language but the local legal conventions for how each field is disclosed'},{k:'Ambiguity handling',v:'When the announcement is genuinely ambiguous — "approximately 1-for-10" instead of a precise ratio — the system flags this rather than making an assumption. Approximate data never reaches the ledger without human confirmation'}]}
+  ]},
+  goldenrecord:{tag:'Stage 3 · Golden Record Creation',ts:'background:#e6f7f7;color:#0d7377;',title:'Golden Record Creation',sub:'The core innovation — adversarially comparing every vendor\'s version of the event to find the truth',sections:[
+    {t:'How Adversarial Reconciliation Works',rows:[{k:'The setup',v:'For every field (Ex-Date, Ratio, Record Date, etc.), the system compares the extracted value from every source: Bloomberg, Reuters, DTCC, the exchange feed, and the original PDF'},{k:'Conflict detection',v:'Any discrepancy between sources — even a one-day difference in Ex-Date — is a "break." The system detects and logs every break automatically.'},{k:'Resolution logic',v:'Source credibility hierarchy: Exchange feed = Tier 1 authoritative. DTCC = Tier 1 authoritative. Bloomberg = Tier 2 high-quality. Reuters = Tier 2 high-quality. PDF announcement = Tier 2 primary but may predate corrections.'},{k:'Auto-resolution',v:'When a Tier 2 source conflicts with a Tier 1 source, the Tier 1 value is adopted automatically. When two Tier 1 sources conflict with each other, the event is escalated to the human queue — this is the hardest case.'}]},
+    {t:'The Golden Record',rows:[{k:'What it is',v:'A single, authoritative, verified version of the corporate action event — every field confirmed against at least two independent sources, all conflicts logged with resolution rationale'},{k:'Who reads it',v:'The Golden Record feeds: the Impact Analysis engine (Stage 4), the Client Reporting system, the Regulatory Reporting system, and the Audit Ledger'},{k:'Immutability',v:'Once a Golden Record is finalised and the ledger is posted, the record is locked — it cannot be changed without creating a new correction record that explicitly references the original. This is the foundation of the regulatory audit trail.'}]}
+  ]},
+  impact:{tag:'Stage 4 · Impact Analysis',ts:'background:#f3f0fb;color:#5b3faa;',title:'Impact Analysis',sub:'Translating the Golden Record into precise portfolio updates for every affected client',sections:[
+    {t:'What the Mathematical Engine Does',rows:[{k:'Position calculation',v:'For a 2-for-1 stock split: every client\'s current position is multiplied by 2, the cost basis per share is halved, any limit orders are adjusted, and margin requirements are recalculated'},{k:'Scale',v:'A major blue-chip split may affect 50,000+ client accounts simultaneously. The engine calculates every account\'s new position in parallel — not sequentially — to ensure all updates are consistent'},{k:'Edge cases',v:'Fractional shares (e.g. a 3-for-2 split on an odd-lot holding), currency conversion for cross-border dividends, withholding tax deduction by jurisdiction, rights issue entitlement rounding — each requires specific calculation logic'}]},
+    {t:'The Elective Decision Engine',rows:[{k:'For elective events',v:'When the client can choose (cash vs additional shares, for example), the engine retrieves the client\'s standing instructions and applies them automatically'},{k:'The Conditional Trap',v:'A client in a high-tax bracket may prefer shares over a taxable cash dividend; a client with a concentrated position may prefer cash to reduce exposure. These preferences must be encoded in standing instructions that the engine can reliably interpret'},{k:'Human escalation',v:'If standing instructions are ambiguous, absent, or if the event structure doesn\'t map cleanly to existing instructions, the system generates a draft recommendation and escalates to the relationship manager for approval'}]}
+  ]},
+  posting:{tag:'Stage 5 · Instruction & Posting',ts:'background:#edf7f1;color:#1a6b35;',title:'Instruction & Posting',sub:'RPA executes the verified update — no human touches the keyboard',sections:[
+    {t:'The RPA Layer',rows:[{k:'What it does',v:'Robotic Process Automation executes the mechanical steps that previously required a human operator: logging into the internal ledger system, navigating to the affected positions, entering the verified new values, submitting the election instruction to the exchange'},{k:'AI + RPA separation',v:'AI provides the verified data and decisions. RPA executes the mechanical update. This separation means the AI reasoning can be independently audited — the "what" and "why" are separate from the "how"'},{k:'Error handling',v:'If the RPA execution fails (system unavailable, field validation error, unexpected screen state), an alert immediately goes to the human queue with the pre-populated data ready for manual entry — no data is lost'}]},
+    {t:'The Exchange Instruction',rows:[{k:'For elective events',v:'The system submits the client\'s election to the exchange or transfer agent before the election deadline — typically 48–72 hours after the event announcement'},{k:'Deadline management',v:'The system tracks election deadlines for every open event and sends escalation alerts at T-24h and T-4h if any instruction remains unsubmitted. Missing a deadline is a regulatory and financial event.'},{k:'Confirmation',v:'Exchange confirmation of the instruction is received, parsed, and logged against the original event record — closing the loop between instruction and confirmation in the audit trail'}]}
+  ]},
+  originalrecord:{tag:'Tier 3 · Original Source Store',ts:'background:#edf3fb;color:#1c3557;',title:'Original Source Store',sub:'The verbatim original — what the exchange or issuer actually said, preserved forever',sections:[
+    {t:'What Is Stored',rows:[{k:'Every original source',v:'The original SWIFT message binary, the Bloomberg data packet, the Reuters XML feed, the Exchange PDF — every version of the event as it was received, with the exact timestamp of receipt'},{k:'Why verbatim',v:'If a regulator later disputes the interpretation of a corporate action, the firm must be able to show: "this is the original announcement, this is what our system extracted from it, this is how we resolved the vendor conflict, this is what we posted to the ledger." The original source is the foundation of that chain.'},{k:'Immutability',v:'Nothing in the Original Source Store can be deleted or modified — it is append-only. Corrections create new records that reference the original, not replacements.'}]}
+  ]},
+  goldenledger:{tag:'Tier 3 · Golden Record Ledger',ts:'background:#edf3fb;color:#1c3557;',title:'Golden Record Ledger',sub:'The authoritative, verified record of every corporate action — the data that feeds everything downstream',sections:[
+    {t:'What It Contains',rows:[{k:'The verified event',v:'Every field of the corporate action — all verified through the adversarial reconciliation process — with the source credibility scores and any conflicts that were detected and how they were resolved'},{k:'Portfolio updates',v:'The exact position changes for every affected client — new share counts, new cost basis, dividends credited, elections submitted — forming a complete position history'},{k:'Downstream feeds',v:'The Golden Record Ledger feeds: client statements, regulatory reports (SEBI filings, DTCC reporting), tax reporting, risk management systems, and the client-facing portfolio view'}]},
+    {t:'Data Quality Governance',rows:[{k:'Completeness check',v:'Before a record is finalled, the system verifies that all mandatory fields are populated and internally consistent — an Ex-Date after the Record Date, for example, would be flagged as logically impossible'},{k:'Cross-system reconciliation',v:'The Golden Record is reconciled against the custodian\'s book of record daily — any discrepancy between the AI-maintained Golden Record and the custodian\'s position is surfaced immediately'}]}
+  ]},
+  audittrail:{tag:'Tier 3 · AI Decision Audit Trail',ts:'background:#edf3fb;color:#1c3557;',title:'AI Decision Audit Trail',sub:'Every AI decision logged with its rationale — the regulatory proof that the system is trustworthy',sections:[
+    {t:'What Is Logged',rows:[{k:'Every conflict resolution',v:'"Bloomberg reported Ex-Date 2024-03-14. Reuters reported 2024-03-14. DTCC reported 2024-03-15. DTCC adopted as authoritative. Bloomberg and Reuters notified of discrepancy."'},{k:'Every election decision',v:'"Client #A-44821 standing instructions: prefer shares over cash for dividend events. Election submitted: reinvestment. Rationale: client\'s growth mandate, current cash allocation below threshold."'},{k:'Every human override',v:'When a human overrides an AI recommendation, the override is logged with the operator\'s ID, timestamp, and the reason code — creating accountability for both AI and human decisions'}]},
+    {t:'Regulatory Use',rows:[{k:'Examination readiness',v:'SEBI, RBI, and international regulators can request a complete audit of any corporate action event — the trail shows every step from announcement to ledger posting, with timestamps and decision rationales'},{k:'Error investigation',v:'When a client reports a missing dividend or incorrect split, the operations team can trace the exact processing path within seconds — identifying at which stage the error occurred and which data source introduced it'},{k:'Model governance',v:'The audit trail is used to retrain the AI models — systematic patterns of human overrides indicate where the model is making consistent errors and needs additional training data'}]}
+  ]}
+};
+
+function openModal(key){
+  const d=NODES[key];if(!d)return;
+  document.querySelectorAll('.ladder-step,.rnode,.ledger-item').forEach(n=>n.classList.remove('active'));
+  if(event && event.currentTarget) event.currentTarget.classList.add('active');
+  document.getElementById('mTag').textContent=d.tag;
+  document.getElementById('mTag').style.cssText=d.ts+'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block;';
+  document.getElementById('mTitle').textContent=d.title;
+  document.getElementById('mSub').textContent=d.sub;
+  const body=document.getElementById('mBody');body.innerHTML='';
+  d.sections.forEach(sec=>{
+    const sd=document.createElement('div');sd.className='info-sec';
+    const st=document.createElement('div');st.className='info-sec-title';st.textContent=sec.t;sd.appendChild(st);
+    if(sec.rows)sec.rows.forEach(r=>{const row=document.createElement('div');row.className='info-row';row.innerHTML=`<span class="info-key">${r.k}</span><span class="info-val">${r.v}</span>`;sd.appendChild(row);});
+    if(sec.numbered){const nl=document.createElement('div');nl.className='num-list';sec.numbered.forEach((item,i)=>{const el=document.createElement('div');el.className='num-item';el.innerHTML=`<div class="num-badge opp">${i+1}</div><div class="num-text"><strong>${item.label}:</strong> ${item.text}</div>`;nl.appendChild(el);});sd.appendChild(nl);}
+    body.appendChild(sd);
+  });
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  document.querySelectorAll('.ladder-step,.rnode,.ledger-item').forEach(n=>n.classList.remove('active'));
+}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target===document.getElementById('overlay'))closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+</script>
+</body>
+</html>

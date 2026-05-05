@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auction IEP Prediction — Process Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+  --navy:#1c3557;--navy-pale:#edf3fb;--navy-border:#a8c4e0;
+  --exec:#1a6b35;--exec-pale:#edf7f1;--exec-border:#a8d9bc;
+  --amber:#b86a00;--amber-pale:#fff8ed;--amber-border:#f5c882;
+  --purple:#5b3faa;--purple-pale:#f3f0fb;--purple-border:#c4b0f0;
+  --teal:#0d7377;--teal-pale:#e6f7f7;--teal-border:#8ecece;
+  --red:#c04040;--red-pale:#fdf0f0;--red-border:#f0b8b8;
+  --opp:#1a6b35;--opp-pale:#edf7f1;--opp-border:#6dba80;
+  --opp-overlay:rgba(109,186,128,0.09);--opp-overlay-border:rgba(26,107,53,0.32);
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,0.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.nav-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--text-secondary);padding:5px 14px 5px 0;border-right:1px solid var(--border);margin-right:16px;background:none;border-top:none;border-bottom:none;border-left:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .15s}
+.nav-back:hover{color:var(--navy)}
+.nav-crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+.nav-crumb .active{color:var(--navy);font-weight:600}
+.nav-crumb .sep{color:var(--border)}
+.nav-badge{margin-left:auto;background:#fff3e0;color:#b86a00;border:1px solid #f5c882;border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;text-transform:uppercase;letter-spacing:.06em}
+
+/* PAGE */
+.page{max-width:1100px;margin:0 auto;padding:28px 24px 48px}
+.uc-num{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--navy);letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+.header-sub{font-size:14px;color:var(--text-secondary);max-width:700px;line-height:1.6;margin-bottom:12px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+.chip{font-size:11.5px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary)}
+.chip.green{background:var(--exec-pale);border-color:var(--exec-border);color:var(--exec)}
+.chip.navy{background:var(--navy-pale);border-color:var(--navy-border);color:var(--navy)}
+.chip.amber{background:var(--amber-pale);border-color:var(--amber-border);color:var(--amber)}
+.chip.purple{background:var(--purple-pale);border-color:var(--purple-border);color:var(--purple)}
+.chip.teal{background:var(--teal-pale);border-color:var(--teal-border);color:var(--teal)}
+
+/* SUMMARY */
+.summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:3px solid transparent;box-shadow:var(--shadow-sm)}
+.sc-gap{border-left-color:#d06060}.sc-sol{border-left-color:#5aaa72}.sc-val{border-left-color:#4a7fd4}
+.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.sc-gap .sc-lbl{color:#c04040}.sc-sol .sc-lbl{color:#2e7a46}.sc-val .sc-lbl{color:#2a4faa}
+.sc-txt{font-size:13px;line-height:1.5}.sc-val .sc-txt{font-weight:600;color:var(--navy)}
+
+/* STRATEGY BANNER */
+.strategy-banner{
+  background:var(--navy);border-radius:10px;padding:16px 22px;
+  margin-bottom:24px;box-shadow:var(--shadow-md);
+  border-left:5px solid #f5c882;
+}
+.strategy-banner .sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#f5c882;margin-bottom:6px}
+.strategy-banner .sb-text{font-size:13.5px;color:rgba(255,255,255,.88);line-height:1.65}
+.strategy-banner .sb-text strong{color:#fff}
+
+/* SECTION TITLES */
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.section-title h2{font-family:'DM Serif Display',serif;font-size:18px;color:var(--navy);letter-spacing:-.01em;white-space:nowrap}
+.section-title .s-line{flex:1;height:1px;background:var(--border)}
+
+/* ═══ MATURITY LADDER ═══ */
+.ladder-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px 18px;box-shadow:var(--shadow-sm);margin-bottom:28px}
+.ladder-intro{font-size:12.5px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5}
+.ladder-intro strong{color:var(--text-primary)}
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;position:relative}
+.ladder::before{content:'';position:absolute;top:22px;left:10%;right:10%;height:3px;background:linear-gradient(to right,#d0ccc6,#c8c4bc,var(--amber-border),var(--opp-border),var(--opp-border));border-radius:2px;z-index:0}
+.ladder-step{position:relative;z-index:1;border-radius:10px;padding:12px 10px 10px;cursor:pointer;transition:box-shadow .18s,transform .18s;border:1.5px solid transparent;text-align:center}
+.ladder-step:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.ladder-step.active{box-shadow:0 0 0 3px rgba(28,53,87,.15),var(--shadow-md)}
+.ls-1,.ls-2{background:#f5f4f1;border-color:#d0ccc6}
+.ls-3{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-4,.ls-5{background:var(--opp-pale);border-color:var(--opp-border)}
+.ls-num{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.ls-1 .ls-num,.ls-2 .ls-num{color:var(--text-muted)}
+.ls-3 .ls-num{color:var(--amber)}
+.ls-4 .ls-num,.ls-5 .ls-num{color:var(--opp)}
+.ls-icon{font-size:22px;margin-bottom:5px;line-height:1}
+.ls-name{font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:3px}
+.ls-focus{font-size:11px;color:var(--text-secondary);line-height:1.3;margin-bottom:7px}
+.ls-btn{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.ls-1 .ls-btn,.ls-2 .ls-btn{background:#ece9e3;color:var(--text-secondary)}
+.ls-3 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.ls-4 .ls-btn,.ls-5 .ls-btn{background:var(--opp-pale);color:var(--opp);border:1px solid var(--opp-border)}
+.ladder-legend{display:flex;align-items:center;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border-light)}
+.ll-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-secondary)}
+.ll-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ═══ AUCTION PIPELINE ═══ */
+.pipeline-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:visible;box-shadow:var(--shadow-md);margin-bottom:28px}
+.diag-titlebar{background:var(--navy);padding:11px 20px;display:flex;align-items:center;gap:10px;border-radius:13px 13px 0 0}
+.diag-titlebar span{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em}
+.diag-titlebar small{font-size:11.5px;color:rgba(255,255,255,.45)}
+
+/* TIME AXIS */
+.time-axis{
+  padding:10px 20px 0;
+  background:#fafaf8;
+  border-bottom:1px solid var(--border-light);
+}
+.time-track{
+  display:flex;
+  align-items:center;
+  position:relative;
+  height:28px;
+  margin-left:0;
+}
+.time-line{
+  position:absolute;
+  left:0;right:0;
+  top:50%;
+  height:2px;
+  background:linear-gradient(to right, var(--navy) 0%, var(--amber) 60%, var(--red) 100%);
+  border-radius:2px;
+  transform:translateY(-50%);
+}
+.time-tick{
+  position:absolute;
+  top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;align-items:center;
+}
+.time-tick .tt-dot{width:8px;height:8px;border-radius:50%;border:2px solid var(--surface);position:relative;z-index:2}
+.time-tick .tt-label{font-size:9.5px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text-muted);margin-top:8px;white-space:nowrap}
+.time-cross{
+  position:absolute;right:0;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;align-items:center;
+}
+.cross-dot{width:14px;height:14px;border-radius:50%;background:var(--red);border:2px solid var(--surface);box-shadow:0 0 0 3px rgba(192,64,64,.25);z-index:3;position:relative}
+.cross-label{font-size:9.5px;font-weight:700;color:var(--red);margin-top:8px;font-family:'DM Mono',monospace;white-space:nowrap}
+.time-axis-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:6px}
+
+/* Node anchors below time axis */
+.node-row{
+  display:flex;
+  align-items:flex-start;
+  padding:16px 16px 20px;
+  gap:0;
+  overflow:visible;
+  position:relative;
+}
+
+/* Pipeline nodes */
+.node{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 11px;width:175px;cursor:pointer;transition:box-shadow .18s,transform .18s;box-shadow:var(--shadow-sm);flex-shrink:0;position:relative;z-index:2}
+.node:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.node.active{border-color:var(--navy)!important;box-shadow:0 0 0 3px rgba(28,53,87,.12),var(--shadow-md)}
+.node.n-grey{border-top:3px solid #b0aba4}
+.node.n-navy{border-top:3px solid var(--navy)}
+.node.n-teal{border-top:3px solid var(--teal)}
+.node.n-amber{border-top:3px solid var(--amber)}
+.node.n-purple{border-top:3px solid var(--purple)}
+.node.n-opp{border-top:3px solid var(--opp)}
+.n-stage{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;color:var(--text-muted)}
+.n-icon{font-size:17px;margin-bottom:3px;line-height:1}
+.n-title{font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:3px}
+.n-desc{font-size:10.5px;color:var(--text-secondary);line-height:1.4;margin-bottom:4px}
+.n-ai{font-size:10px;font-weight:600;font-style:italic;margin-bottom:7px}
+.n-btn{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.n-grey .n-btn{background:#f0ece6;color:var(--text-secondary)}
+.n-navy .n-btn{background:var(--navy-pale);color:var(--navy)}
+.n-teal .n-btn{background:var(--teal-pale);color:var(--teal)}
+.n-amber .n-btn{background:var(--amber-pale);color:var(--amber)}
+.n-purple .n-btn{background:var(--purple-pale);color:var(--purple)}
+.n-opp .n-btn{background:var(--opp-pale);color:var(--opp)}
+
+/* Arrows */
+.arr{display:flex;align-items:center;flex-shrink:0;width:18px;margin-top:44px}
+.arr-line{height:2px;background:#c8c4bc;flex:1}
+.arr-head{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:7px solid #c8c4bc;flex-shrink:0}
+
+/* Proposed arch overlay */
+.prop-wrap{display:flex;align-items:flex-start;gap:0;position:relative}
+.prop-box{position:absolute;inset:-10px -8px -10px -8px;border:2px dashed var(--opp-overlay-border);background:var(--opp-overlay);border-radius:12px;pointer-events:none;z-index:1}
+.prop-label{position:absolute;top:-30px;right:0;display:flex;align-items:center;gap:5px;pointer-events:none;z-index:10}
+.prop-label span{font-size:10px;font-weight:700;color:var(--opp);background:var(--surface);padding:2px 9px;border-radius:20px;border:1.5px solid var(--opp-border);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
+
+/* Cross event bar */
+.cross-bar{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 20px;
+  background:linear-gradient(to right, var(--red-pale), #fff5f5);
+  border-top:1px solid var(--red-border);
+}
+.cross-icon{font-size:18px}
+.cross-text{font-size:12.5px;color:var(--red);font-weight:600}
+.cross-sub{font-size:11.5px;color:var(--text-secondary);font-style:italic}
+
+/* ═══ TRADER COCKPIT SVG ═══ */
+.cockpit-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 24px;box-shadow:var(--shadow-md);margin-bottom:28px}
+.cockpit-intro{font-size:12.5px;color:var(--text-secondary);line-height:1.5;margin-bottom:16px}
+.cockpit-intro strong{color:var(--text-primary)}
+
+/* ═══ RESEARCH ═══ */
+.research{padding-top:24px;border-top:1px solid var(--border)}
+.research h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy);margin-bottom:16px;letter-spacing:-.01em}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.r-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.r-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:7px}
+.r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.r-rows{display:flex;flex-direction:column;gap:7px}
+.r-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.r-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:155px}
+.r-key::after{content:':'}
+.r-val{color:var(--text-secondary)}
+/* Crowded trade callout — full width */
+.crowded-callout{
+  grid-column:1/-1;
+  background:var(--red-pale);
+  border:1.5px solid var(--red-border);
+  border-left:5px solid var(--red);
+  border-radius:10px;
+  padding:18px 20px;
+  box-shadow:var(--shadow-sm);
+}
+.cc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--red);margin-bottom:8px}
+.cc-title{font-family:'DM Serif Display',serif;font-size:17px;color:var(--navy);margin-bottom:8px;letter-spacing:-.01em}
+.cc-body{font-size:13px;color:var(--text-secondary);line-height:1.65}
+.cc-body strong{color:var(--text-primary)}
+
+.ref-list{display:flex;flex-direction:column;gap:6px}
+.ref-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.ref-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--navy-pale);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.ref-txt{color:var(--text-secondary)}.ref-txt strong{color:var(--text-primary)}
+
+.page-footer{text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:28px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(20,18,14,.45);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(3px)}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:14px;width:540px;max-width:calc(100vw - 32px);max-height:calc(100vh - 60px);overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(12px) scale(.98);transition:transform .22s cubic-bezier(.34,1.56,.64,1)}
+.overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-hdr{padding:20px 22px 15px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2;border-radius:14px 14px 0 0}
+.m-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block}
+.m-title{font-family:'DM Serif Display',serif;font-size:19px;color:var(--navy);line-height:1.25;margin-bottom:4px;padding-right:30px}
+.m-sub{font-size:12.5px;color:var(--text-secondary);font-style:italic}
+.m-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:15px;font-family:'DM Sans',sans-serif;transition:background .12s}
+.m-close:hover{background:var(--border)}
+.m-body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:14px}
+.info-sec{display:flex;flex-direction:column;gap:7px}
+.info-sec-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);padding-bottom:5px;border-bottom:1px solid var(--border-light)}
+.info-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.info-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:165px}
+.info-key::after{content:':'}
+.info-val{color:var(--text-secondary)}
+.mono-field{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-primary);background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:8px 10px;line-height:1.6;white-space:pre-wrap}
+.num-list{display:flex;flex-direction:column;gap:6px}
+.num-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.num-badge{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--navy-pale);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.num-badge.opp{background:var(--opp-pale);color:var(--opp)}
+.num-text{color:var(--text-secondary)}.num-text strong{color:var(--text-primary)}
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="nav-back" onclick="window.history.back()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11L5 7l4-4"/></svg>
+    Back to Matrix
+  </button>
+  <div class="nav-crumb">
+    <span>Equity Markets</span><span class="sep">/</span>
+    <span>Immediate Priorities</span><span class="sep">/</span>
+    <span class="active">Auction IEP Prediction</span>
+  </div>
+  <div class="nav-badge">🎯 Immediate Priority</div>
+</nav>
+
+<div class="page">
+
+  <div class="uc-num">Use Case #3 &nbsp;·&nbsp; Pre-Trade &nbsp;·&nbsp; Strategic Impact 9/10</div>
+  <h1>Auction Equilibrium Price (IEP) Prediction</h1>
+  <p class="header-sub">Every trading day begins and ends with an auction — a 10–15 minute window where buyers and sellers submit orders before a single clearing price is set. The exchange publishes an "Indicative" price, but it is always lagging. AI reads ahead of it.</p>
+  <div class="chips">
+    <span class="chip navy">Gradient Boosting (XGBoost)</span>
+    <span class="chip purple">Deep Learning + NLP</span>
+    <span class="chip green">Reinforcement Learning</span>
+    <span class="chip teal">Monte Carlo Simulation</span>
+    <span class="chip amber">Partially Deployed</span>
+    <span class="chip green">Implementation Readiness: 9/10</span>
+  </div>
+
+  <div class="summary-row">
+    <div class="sc sc-gap"><div class="sc-lbl">The Gap</div><div class="sc-txt">The exchange's public indicative price is a lagging signal — institutional desks using it are always reacting to where the market was, not where it will settle.</div></div>
+    <div class="sc sc-sol"><div class="sc-lbl">AI Solution</div><div class="sc-txt">A five-stage ML pipeline ingests live order book data, news sentiment, and Monte Carlo simulations to predict the final clearing price 30 seconds before the Cross — turning the auction from a gamble into a deterministic event.</div></div>
+    <div class="sc sc-val"><div class="sc-lbl">Value Created</div><div class="sc-txt">Operating in "Lead Time" — predicting the Cross before it happens — allows institutional desks to hide orders at the optimal price and get better fills on every auction participation.</div></div>
+  </div>
+
+  <!-- STRATEGY BANNER -->
+  <div class="strategy-banner">
+    <div class="sb-label">Strategic Framing — Information Asymmetry</div>
+    <div class="sb-text">
+      "While the exchange provides a 'public' indicative price, it is a lagging indicator. An AI-driven IEP prediction allows an institutional desk to operate in <strong>Lead Time</strong> — predicting the final Cross price 30 seconds before the market settles. This effectively turns the auction from a gamble into a deterministic event, converting public information into a private edge."
+    </div>
+  </div>
+
+  <!-- ═══ MATURITY LADDER ═══ -->
+  <div class="section-title">
+    <h2>AI Maturity Ladder — Auction Prediction</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="ladder-wrap">
+    <p class="ladder-intro">Most institutional desks operate at <strong>Level 2–3</strong> today. The strategic edge — and our proposed architecture — sits at <strong>Levels 4–5</strong>. Click any level for detail.</p>
+    <div class="ladder">
+      <div class="ladder-step ls-1" onclick="openModal('l1')">
+        <div class="ls-num">Level 1</div>
+        <div class="ls-icon">📋</div>
+        <div class="ls-name">Static Heuristics</div>
+        <div class="ls-focus">Manual averages</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-2" onclick="openModal('l2')">
+        <div class="ls-num">Level 2</div>
+        <div class="ls-icon">📈</div>
+        <div class="ls-name">Statistical Regression</div>
+        <div class="ls-focus">Linear models</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-3" onclick="openModal('l3')">
+        <div class="ls-num">Level 3</div>
+        <div class="ls-icon">🌲</div>
+        <div class="ls-name">Non-Linear ML</div>
+        <div class="ls-focus">Gradient Boosting</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-4" onclick="openModal('l4')">
+        <div class="ls-num">Level 4</div>
+        <div class="ls-icon">🧠</div>
+        <div class="ls-name">Multimodal Context</div>
+        <div class="ls-focus">Deep Learning + NLP</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-5" onclick="openModal('l5')">
+        <div class="ls-num">Level 5</div>
+        <div class="ls-icon">🤖</div>
+        <div class="ls-name">Adversarial Agents</div>
+        <div class="ls-focus">Reinforcement Learning</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+    </div>
+    <div class="ladder-legend">
+      <div class="ll-item"><div class="ll-dot" style="background:#c8c4bc;"></div>Current state — most desks today</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--amber);"></div>Emerging — selective adoption</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--opp);"></div>Opportunity — proposed architecture</div>
+    </div>
+  </div>
+
+  <!-- ═══ AUCTION PULSE PIPELINE ═══ -->
+  <div class="section-title">
+    <h2>The Auction Pulse Pipeline</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="pipeline-wrap">
+    <div class="diag-titlebar">
+      <span>The 10–15 Minute Pre-Auction Window</span>
+      <small>&nbsp;·&nbsp; Time flows left to right → Cross at T-0 &nbsp;·&nbsp; Click any node for detail</small>
+    </div>
+
+    <!-- TIME AXIS -->
+    <div class="time-axis">
+      <div class="time-axis-label">Auction Window Timeline</div>
+      <div class="time-track">
+        <div class="time-line"></div>
+        <!-- Ticks -->
+        <div class="time-tick" style="left:0%;">
+          <div class="tt-dot" style="background:var(--navy);"></div>
+          <div class="tt-label">T−15 min</div>
+        </div>
+        <div class="time-tick" style="left:19%;">
+          <div class="tt-dot" style="background:var(--navy);"></div>
+          <div class="tt-label">T−12 min</div>
+        </div>
+        <div class="time-tick" style="left:38%;">
+          <div class="tt-dot" style="background:#8a7a30;"></div>
+          <div class="tt-label">T−8 min</div>
+        </div>
+        <div class="time-tick" style="left:58%;">
+          <div class="tt-dot" style="background:var(--amber);"></div>
+          <div class="tt-label">T−5 min</div>
+        </div>
+        <div class="time-tick" style="left:78%;">
+          <div class="tt-dot" style="background:#a03020;"></div>
+          <div class="tt-label">T−2 min</div>
+        </div>
+        <!-- Cross -->
+        <div class="time-cross">
+          <div class="cross-dot"></div>
+          <div class="cross-label">T−0 THE CROSS</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NODE ROW -->
+    <div class="node-row" style="padding-top:20px;padding-bottom:20px;overflow:visible;">
+
+      <!-- Stage 1: Observation -->
+      <div class="node n-grey" onclick="openModal('observation')" style="margin-top:0;">
+        <div class="n-stage">Stage 1 · T−15 min</div>
+        <div class="n-icon">👁️</div>
+        <div class="n-title">Observation</div>
+        <div class="n-desc">Exchange broadcasts indicative prices and order imbalances</div>
+        <div class="n-ai" style="color:var(--text-muted);">AI: Data Normalisation</div>
+        <button class="n-btn">Details →</button>
+      </div>
+      <div class="arr"><div class="arr-line"></div><div class="arr-head"></div></div>
+
+      <!-- Stage 2: Feature Extraction -->
+      <div class="node n-navy" onclick="openModal('features')">
+        <div class="n-stage">Stage 2 · T−12 min</div>
+        <div class="n-icon">⚙️</div>
+        <div class="n-title">Feature Extraction</div>
+        <div class="n-desc">Monitors order vs. cancellation rate in the flickering LOB</div>
+        <div class="n-ai" style="color:var(--navy);">AI: Gradient Boosting</div>
+        <button class="n-btn">Details →</button>
+      </div>
+      <div class="arr"><div class="arr-line"></div><div class="arr-head"></div></div>
+
+      <!-- Proposed arch: Sentiment + Simulation + Execution -->
+      <div class="prop-wrap" style="align-items:flex-start;gap:0;">
+        <div class="prop-box"></div>
+        <div class="prop-label" style="top:-30px;right:0;">
+          <svg width="28" height="22" viewBox="0 0 28 22" fill="none" style="position:relative;top:2px;">
+            <path d="M24 2 C24 12, 8 8, 4 18" stroke="#1a6b35" stroke-width="1.8" stroke-dasharray="3,2" fill="none" stroke-linecap="round"/>
+            <polygon points="4,18 2,12 8,14" fill="#1a6b35"/>
+          </svg>
+          <span>Proposed Architecture</span>
+        </div>
+
+        <!-- Stage 3: Sentiment Injection -->
+        <div class="node n-teal" onclick="openModal('sentiment')" style="position:relative;z-index:3;">
+          <div class="n-stage">Stage 3 · T−8 min</div>
+          <div class="n-icon">📰</div>
+          <div class="n-title">Sentiment Injection</div>
+          <div class="n-desc">Breaking news scored for sector impact in real-time</div>
+          <div class="n-ai" style="color:var(--teal);">AI: LLM / NLP</div>
+          <button class="n-btn">Details →</button>
+        </div>
+        <div class="arr" style="position:relative;z-index:3;margin-top:44px;"><div class="arr-line"></div><div class="arr-head"></div></div>
+
+        <!-- Stage 4: Simulation -->
+        <div class="node n-purple" onclick="openModal('simulation')" style="position:relative;z-index:3;">
+          <div class="n-stage">Stage 4 · T−5 min</div>
+          <div class="n-icon">🎲</div>
+          <div class="n-title">Simulation</div>
+          <div class="n-desc">"What if we add 500k shares?" — Monte Carlo models the impact</div>
+          <div class="n-ai" style="color:var(--purple);">AI: Monte Carlo / Deep Learning</div>
+          <button class="n-btn">Details →</button>
+        </div>
+        <div class="arr" style="position:relative;z-index:3;margin-top:44px;"><div class="arr-line"></div><div class="arr-head"></div></div>
+
+        <!-- Stage 5: Execution Recommendation -->
+        <div class="node n-opp" onclick="openModal('execution')" style="position:relative;z-index:3;">
+          <div class="n-stage">Stage 5 · T−2 min</div>
+          <div class="n-icon">🎯</div>
+          <div class="n-title">Execution Rec.</div>
+          <div class="n-desc">System suggests optimal limit price for auction participation</div>
+          <div class="n-ai" style="color:var(--opp);">AI: Reinforcement Learning</div>
+          <button class="n-btn">Details →</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Cross event bar -->
+    <div class="cross-bar">
+      <div class="cross-icon">⚡</div>
+      <div>
+        <div class="cross-text">T−0 : THE CROSS — Auction Executes</div>
+        <div class="cross-sub">All matched orders execute simultaneously at the single clearing price. The AI prediction window closes. The edge was captured (or missed) in the minutes above.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TRADER'S COCKPIT SVG ═══ -->
+  <div class="section-title">
+    <h2>The Trader's Cockpit — Live IEP Forecast View</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="cockpit-wrap">
+    <p class="cockpit-intro">This is what the institutional desk sees during the auction window — the <strong>Exchange Indicative price</strong> (what the market publishes) versus the <strong>AI Predicted price</strong> (what the model forecasts the Cross will actually settle at). The gap between these two numbers is the tradeable edge.</p>
+    <svg viewBox="0 0 960 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
+      <defs>
+        <linearGradient id="confGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1a6b35" stop-opacity="0.18"/>
+          <stop offset="100%" stop-color="#1a6b35" stop-opacity="0.03"/>
+        </linearGradient>
+        <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#f7f6f3"/>
+          <stop offset="100%" stop-color="#f0f4ff"/>
+        </linearGradient>
+        <marker id="arrow-g" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L7,3 z" fill="#1a6b35"/>
+        </marker>
+        <marker id="arrow-b" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L7,3 z" fill="#2a5faa"/>
+        </marker>
+      </defs>
+
+      <!-- Background panels -->
+      <rect x="10" y="10" width="440" height="240" rx="10" fill="url(#bgGrad)" stroke="#e4e1da" stroke-width="1.5"/>
+      <rect x="470" y="10" width="480" height="240" rx="10" fill="#f7f6f3" stroke="#e4e1da" stroke-width="1.5"/>
+
+      <!-- LEFT PANEL: Gauge comparison -->
+      <!-- Panel label -->
+      <text x="30" y="35" font-family="DM Mono" font-size="10" font-weight="500" fill="#9e9b96" letter-spacing="1">IEP FORECAST METER</text>
+
+      <!-- Exchange Indicative gauge -->
+      <rect x="30" y="48" width="180" height="80" rx="8" fill="#edf3fb" stroke="#a8c4e0" stroke-width="1.5"/>
+      <text x="120" y="68" text-anchor="middle" font-family="DM Sans" font-size="10" font-weight="700" fill="#1c3557" letter-spacing=".5">EXCHANGE INDICATIVE</text>
+      <text x="120" y="98" text-anchor="middle" font-family="DM Serif Display" font-size="30" fill="#1c3557">$184.20</text>
+      <text x="120" y="118" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#6b6760">Public lagging signal</text>
+
+      <!-- AI Predicted gauge -->
+      <rect x="240" y="48" width="180" height="80" rx="8" fill="#edf7f1" stroke="#6dba80" stroke-width="2"/>
+      <text x="330" y="68" text-anchor="middle" font-family="DM Sans" font-size="10" font-weight="700" fill="#1a6b35" letter-spacing=".5">AI PREDICTED CROSS</text>
+      <text x="330" y="98" text-anchor="middle" font-family="DM Serif Display" font-size="30" fill="#1a6b35">$184.67</text>
+      <text x="330" y="118" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#1a6b35">30 sec lead time ▲</text>
+
+      <!-- Edge callout -->
+      <rect x="30" y="142" width="390" height="36" rx="7" fill="#1c3557"/>
+      <text x="225" y="158" text-anchor="middle" font-family="DM Sans" font-size="11" font-weight="600" fill="#fff">Edge: +$0.47 per share &nbsp;·&nbsp; 100k shares &nbsp;·&nbsp; </text>
+      <text x="225" y="170" text-anchor="middle" font-family="DM Sans" font-size="11" font-weight="700" fill="#f5c882">$47,000 captured per auction</text>
+
+      <!-- Confidence bar -->
+      <text x="30" y="202" font-family="DM Sans" font-size="10" font-weight="600" fill="#6b6760">MODEL CONFIDENCE</text>
+      <rect x="30" y="210" width="390" height="10" rx="5" fill="#e4e1da"/>
+      <rect x="30" y="210" width="312" height="10" rx="5" fill="url(#confGrad)" stroke="#6dba80" stroke-width="1"/>
+      <rect x="30" y="210" width="312" height="10" rx="5" fill="#1a6b35" opacity="0.7"/>
+      <text x="348" y="220" font-family="DM Mono" font-size="11" font-weight="700" fill="#1a6b35">80%</text>
+      <text x="30" y="238" font-family="DM Sans" font-size="10" fill="#9e9b96" font-style="italic">Confidence drops if volatility spikes above 2σ in the 30s before Cross</text>
+
+      <!-- RIGHT PANEL: Signal stack -->
+      <text x="490" y="35" font-family="DM Mono" font-size="10" font-weight="500" fill="#9e9b96" letter-spacing="1">ACTIVE SIGNAL STACK</text>
+
+      <!-- LOB Signal -->
+      <rect x="490" y="48" width="440" height="42" rx="7" fill="#edf3fb" stroke="#a8c4e0" stroke-width="1.5"/>
+      <text x="510" y="66" font-family="DM Sans" font-size="11" font-weight="700" fill="#1c3557">📊 LOB Parser</text>
+      <text x="510" y="80" font-family="DM Sans" font-size="10.5" fill="#6b6760">Buy imbalance: +23% &nbsp;|&nbsp; Cancel rate: 4.2/sec &nbsp;|&nbsp; Wall at $184.50 detected</text>
+
+      <!-- News Signal -->
+      <rect x="490" y="100" width="440" height="42" rx="7" fill="#e6f7f7" stroke="#8ecece" stroke-width="1.5"/>
+      <text x="510" y="118" font-family="DM Sans" font-size="11" font-weight="700" fill="#0d7377">📰 News-Alpha Layer</text>
+      <text x="510" y="132" font-family="DM Sans" font-size="10.5" fill="#6b6760">Fed hold confirmed (+0.12 pts) &nbsp;|&nbsp; Tech sector: bullish &nbsp;|&nbsp; Sentiment: +0.34σ</text>
+
+      <!-- Simulation Signal -->
+      <rect x="490" y="152" width="440" height="42" rx="7" fill="#f3f0fb" stroke="#c4b0f0" stroke-width="1.5"/>
+      <text x="510" y="170" font-family="DM Sans" font-size="11" font-weight="700" fill="#5b3faa">🎲 Monte Carlo</text>
+      <text x="510" y="184" font-family="DM Sans" font-size="10.5" fill="#6b6760">500k share add: +$0.08 impact &nbsp;|&nbsp; 10k simulations &nbsp;|&nbsp; P90 cross: $184.71</text>
+
+      <!-- RL Recommendation -->
+      <rect x="490" y="204" width="440" height="36" rx="7" fill="#edf7f1" stroke="#6dba80" stroke-width="2"/>
+      <text x="510" y="220" font-family="DM Sans" font-size="11" font-weight="700" fill="#1a6b35">🎯 RL Recommendation</text>
+      <text x="510" y="234" font-family="DM Sans" font-size="10.5" fill="#1a6b35" font-weight="600">Submit 500k shares at limit $184.65 — HIGH fill probability</text>
+    </svg>
+  </div>
+
+  <!-- RESEARCH -->
+  <div class="research">
+    <h2>Research Notes</h2>
+    <div class="r-grid">
+
+      <!-- Crowded Trade Callout — full width, prominent -->
+      <div class="crowded-callout">
+        <div class="cc-label">⚠ Critical Risk — The Crowded Trade Trap</div>
+        <div class="cc-title">When Every AI Predicts the Same Price, the Edge Disappears</div>
+        <div class="cc-body">
+          The most dangerous second-order risk in AI-driven auction prediction is a <strong>self-fulfilling prophecy</strong>. If every major institutional desk deploys a similar model trained on similar data, they will all predict the same Cross price — and they will all act on it simultaneously. This collective action pushes the market toward the predicted price <strong>before</strong> the Cross fires, creating a new equilibrium that the model did not account for. The prediction was correct, but the act of everyone believing it made it cost the very edge it was supposed to capture. The mitigation is model differentiation — using proprietary data sources, unique features, or deliberately introducing controlled randomness into order timing so that no two institutions are submitting at the same microsecond.
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--red);"></div>The Two Core Bottlenecks</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">The Flash Problem</span><span class="r-val">Order book data during auctions is extremely noisy — participants place "dummy" orders to probe the price and cancel them milliseconds later. Distinguishing real liquidity from noise is the primary data challenge</span></div>
+          <div class="r-row"><span class="r-key">Random Jitter Defence</span><span class="r-val">Exchanges like LSE and NYSE deliberately randomise the exact moment the auction fires — an AI that is 1 millisecond late in its final prediction becomes worthless. The system must be designed to be robust to this uncertainty, not dependent on pinpoint timing</span></div>
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--navy);"></div>Knowledge Vault — Historical Auction Replay</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">What it stores</span><span class="r-val">Every auction over the last 5+ years — order book snapshots at each timestamp, the final Cross price, volume, and which macro events were live at the time</span></div>
+          <div class="r-row"><span class="r-key">How it is used</span><span class="r-val">When current market conditions resemble a historical pattern (e.g. post-Fed-announcement volatility), the model retrieves analogous auctions and adjusts its confidence weighting accordingly</span></div>
+          <div class="r-row"><span class="r-key">Why it matters</span><span class="r-val">The auction window is only 10–15 minutes — there is no time to learn during the event. All learning happens offline against historical replays; the live system only infers</span></div>
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--opp);"></div>Who Is Building This</div>
+        <div class="ref-list">
+          <div class="ref-item"><div class="ref-num">1</div><div class="ref-txt"><strong>Pragma Trading (Pragma360)</strong> — advanced AI agents for auction participation optimisation; widely used by institutional buy-side desks</div></div>
+          <div class="ref-item"><div class="ref-num">2</div><div class="ref-txt"><strong>Virtu Financial (Frontier)</strong> — industry-standard predictive pre-trade analytics; their algorithms set the benchmark for IEP estimation accuracy</div></div>
+          <div class="ref-item"><div class="ref-num">3</div><div class="ref-txt"><strong>Oxford Man Institute</strong> — leading academic research on neural networks for limit order books; the theoretical foundation for Level 4–5 models</div></div>
+          <div class="ref-item"><div class="ref-num">4</div><div class="ref-txt"><strong>Stanford Financial AI Lab</strong> — reinforcement learning agents for market microstructure problems, including auction gaming strategies</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-footer">
+    Hexaware Financial Services &nbsp;·&nbsp; AI in Equity Markets &nbsp;·&nbsp; Use Case #3 &nbsp;·&nbsp; Preliminary Research 2026
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="m-tag" id="mTag"></div>
+      <div class="m-title" id="mTitle"></div>
+      <div class="m-sub" id="mSub"></div>
+      <button class="m-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="m-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+const NODES = {
+  l1:{tag:'Level 1 · Static Heuristics',ts:'background:#ece9e3;color:#6b6760;',title:'Static Heuristics',sub:'Manually tracking historical open and close averages — the starting point, not a competitive edge',sections:[
+    {t:'What It Is',rows:[{k:'Approach',v:'Traders look at historical data — "this stock typically closes 0.2% above the indicative price on high-volume days" — and use those averages as a rule of thumb'},{k:'Implementation',v:'Spreadsheets, simple dashboards, institutional memory. No real-time computation.'},{k:'Limitation',v:'Averages work until they don\'t. A market event that breaks the historical pattern — a surprise earnings, a macro shock — renders the heuristic useless in real time'}]},
+    {t:'Who Still Uses This',rows:[{k:'Current prevalence',v:'Smaller regional brokers, individual prop traders, and desks without quant infrastructure still rely primarily on this approach'},{k:'The gap',v:'Against a Level 4–5 competitor in the same auction, a Level 1 desk is effectively bidding blind'}]}
+  ]},
+  l2:{tag:'Level 2 · Statistical Regression',ts:'background:#ece9e3;color:#6b6760;',title:'Statistical Regression',sub:'Basic linear models using the exchange\'s indicative feed — better than averages, still reactive',sections:[
+    {t:'What It Is',rows:[{k:'Approach',v:'Linear regression models that use the exchange\'s own indicative price feed as the primary input, with additional variables like volume imbalance and time-to-Cross'},{k:'Technology',v:'OLS regression, ARIMA time series models, simple logistic classifiers for direction prediction'},{k:'Output',v:'A price estimate with a confidence interval — e.g. "we expect the Cross at $184.20 ± $0.15"'}]},
+    {t:'Limitation',rows:[{k:'Linear assumption',v:'Financial auction dynamics are non-linear — large order cancellations cause disproportionate price moves that linear models systematically underestimate'},{k:'Still lagging',v:'The model is still anchored to the exchange\'s indicative feed, which is itself lagging. It refines a lagging signal rather than leading it'}]}
+  ]},
+  l3:{tag:'Level 3 · Non-Linear ML',ts:'background:#fff8ed;color:#b86a00;',title:'Non-Linear ML — Gradient Boosting',sub:'XGBoost and LightGBM extract non-linear patterns from the order book that linear models miss',sections:[
+    {t:'What It Does',rows:[{k:'Technology',v:'Gradient Boosted Trees (XGBoost, LightGBM) — ensemble models that build hundreds of decision trees sequentially, each correcting the errors of the last'},{k:'Key features used',v:'Level 2 order book depth, volume imbalance at each price level, order arrival and cancellation rates, bid-ask spread evolution, time-to-Cross'},{k:'Why non-linear matters',v:'The relationship between a large cancellation at the top of the book and the final Cross price is not proportional — it depends on market context. Gradient Boosting captures this conditional logic'}]},
+    {t:'The Flash Problem at This Level',rows:[{k:'The noise challenge',v:'At this maturity, the model is consuming raw Level 2 data which includes "dummy" orders placed and cancelled within milliseconds — pure noise'},{k:'Mitigation',v:'Feature engineering — instead of using raw order counts, the model uses rolling statistics (cancellation rate per 100ms, order persistence score) that smooth out the noise without losing the signal'}]}
+  ]},
+  l4:{tag:'Level 4 · Opportunity',ts:'background:#edf7f1;color:#1a6b35;',title:'Multimodal Context — Deep Learning + NLP',sub:'Adding real-world context to the order book signal — news, sentiment, and macro events change the model\'s prior',sections:[
+    {t:'What It Adds',rows:[{k:'Technology',v:'Deep Learning (LSTM or Transformer) for temporal order book patterns + NLP/LLM for real-time news scoring'},{k:'News-Alpha Layer',v:'When a breaking headline hits — "Fed holds rates steady" — an NLP model scores the impact on the specific sector being auctioned and adjusts the predicted Cross price accordingly within milliseconds'},{k:'Why this matters',v:'A news event during the auction window can shift the Cross by 0.5–2% in seconds. A model that cannot read news is blind to the most impactful signal in the window'}]},
+    {t:'Technical Implementation',rows:[{k:'NLP model',v:'A fine-tuned financial LLM (e.g. BloombergGPT or FinBERT) classifies headlines by direction (bullish/bearish), magnitude, and sector relevance'},{k:'Integration',v:'The NLP output is concatenated with the order book feature vector as an additional input to the Deep Learning model — both signals inform the same price prediction'},{k:'Latency',v:'The entire pipeline — headline ingestion, NLP scoring, model inference — must complete in under 500 milliseconds to be useful in the auction window'}]}
+  ]},
+  l5:{tag:'Level 5 · Opportunity',ts:'background:#edf7f1;color:#1a6b35;',title:'Adversarial Agents — Reinforcement Learning',sub:'RL agents that don\'t just predict the auction — they actively optimise participation in it, learning from every auction they touch',sections:[
+    {t:'What "Gaming the Auction" Means',rows:[{k:'The concept',v:'An RL agent doesn\'t ask "what will the Cross price be?" It asks "given my order size, what limit price maximises my probability of getting filled at the best possible price?"'},{k:'The difference',v:'A prediction model is passive — it observes and forecasts. An RL agent is active — it models how its own actions will change the outcome and chooses accordingly'},{k:'How it learns',v:'The agent receives a reward signal after every auction — the difference between its execution price and the final Cross. Over thousands of auctions, it learns which strategies in which market conditions produce the best fills'}]},
+    {t:'The Adversarial Element',rows:[{k:'What it means',v:'The agent learns to model the behaviour of other auction participants — including other AI systems. It places orders not just based on where the price will go, but based on how its order will influence other systems\' behaviour'},{k:'Example',v:'If the agent detects that submitting a large visible order causes other algorithms to adjust their bids upward, it learns to submit in smaller, staggered pieces — hiding its true intention'},{k:'The crowded trade risk',v:'When multiple RL agents are trained on similar data in the same market, they can discover similar strategies — amplifying rather than diversifying risk. See the Crowded Trade Trap in Research Notes'}]}
+  ]},
+  observation:{tag:'Stage 1 · T−15 min',ts:'background:#ece9e3;color:#6b6760;',title:'Observation',sub:'The pipeline opens — the exchange starts broadcasting and the AI begins watching',sections:[
+    {t:'What the Exchange Broadcasts',rows:[{k:'Indicative Equilibrium Price',v:'The exchange\'s own estimate of where the auction will Cross, updated every few seconds based on current orders in the book'},{k:'Order imbalance',v:'The net difference between buy and sell volume at each price level — a directional signal for where pressure is building'},{k:'Matched volume',v:'How many shares would execute at the current indicative price — a liquidity signal'}]},
+    {t:'AI Role — Data Normalisation',rows:[{k:'The problem',v:'The exchange feed arrives in a proprietary binary format, with microsecond timestamps, and updates dozens of times per second. Raw, it is unusable.'},{k:'What normalisation does',v:'Converts the raw feed into structured, consistent feature vectors — same format, same timestamp precision, same scaling — ready for the ML models in Stage 2'},{k:'Why this step matters',v:'Garbage in, garbage out. A model trained on clean data deployed against noisy, un-normalised real-time data will fail in production regardless of its theoretical accuracy'}]}
+  ]},
+  features:{tag:'Stage 2 · T−12 min',ts:'background:#edf3fb;color:#1c3557;',title:'Feature Extraction',sub:'Extracting the signals that actually predict the Cross — separating real liquidity from noise',sections:[
+    {t:'Key Features Extracted',rows:[{k:'Order arrival rate',v:'How many new orders are entering the book per second — high arrival rate signals genuine institutional interest'},{k:'Cancellation rate',v:'How many orders are being cancelled per second — a high cancellation-to-arrival ratio is the signature of "probe" orders designed to test the market'},{k:'Volume imbalance',v:'The ratio of buy-side to sell-side volume at each price level — a sustained buy imbalance predicts an upward Cross'},{k:'Order persistence score',v:'How long orders survive in the book before being cancelled — persistent orders represent genuine liquidity, ephemeral ones are noise'}]},
+    {t:'Gradient Boosting — Why This Algorithm',rows:[{k:'Non-linearity',v:'The relationship between these features and the final Cross price is context-dependent and non-linear — gradient boosting handles this without assuming any particular functional form'},{k:'Speed',v:'XGBoost and LightGBM are among the fastest ML algorithms in production — inference on a new data point takes microseconds, critical in the auction window'},{k:'Interpretability',v:'Unlike deep neural networks, gradient boosting produces feature importance scores — the desk can always ask "why did the model predict $184.67?" and get a ranked list of contributing factors'}]}
+  ]},
+  sentiment:{tag:'Stage 3 · T−8 min · Proposed Architecture',ts:'background:#e6f7f7;color:#0d7377;',title:'Sentiment Injection',sub:'Real-world events during the auction window are the most impactful signal — and the hardest to capture without NLP',sections:[
+    {t:'How It Works',rows:[{k:'Input',v:'Real-time news feeds (Bloomberg Terminal API, Reuters, financial Twitter/X firehose) ingested as raw text'},{k:'NLP model',v:'A fine-tuned financial LLM (FinBERT or BloombergGPT) classifies each headline by direction (bullish/bearish), magnitude (minor/moderate/major), and sector relevance to the stock being auctioned'},{k:'Output',v:'A scalar sentiment adjustment — e.g. "+0.34 standard deviations bullish for Tech sector" — concatenated with the order book features before model inference'}]},
+    {t:'Real-Time Example',rows:[{k:'Event',v:'Fed announces no rate change — released at 2:02 PM during the closing auction window'},{k:'NLP classification',v:'Bullish · Moderate magnitude · Broad market relevance · Tech sector: +0.4σ'},{k:'Effect on prediction',v:'The model adjusts its Cross prediction upward by $0.08 — the news has been priced in before most human traders have finished reading the headline'},{k:'Latency requirement',v:'The entire NLP pipeline — headline ingestion, classification, feature injection — must complete within 500ms to be useful in the auction window'}]}
+  ]},
+  simulation:{tag:'Stage 4 · T−5 min · Proposed Architecture',ts:'background:#f3f0fb;color:#5b3faa;',title:'Simulation — Monte Carlo & Deep Learning',sub:'Before submitting, the model simulates the impact of its own order on the final Cross price',sections:[
+    {t:'The Core Question',rows:[{k:'What it asks',v:'"If we submit 500,000 shares at limit $184.65 right now, what does the Cross price become?" — the model simulates its own market impact before acting'},{k:'Why this matters',v:'A 500,000 share order in a thin auction book can move the Cross price by 0.2–0.5%. Without simulating this, the desk might push the Cross past their limit price and fail to get filled — or worse, get filled at a worse price than expected'}]},
+    {t:'Monte Carlo Simulation',rows:[{k:'How it works',v:'The model runs 10,000 simulated auctions — each with slightly randomised assumptions about how other participants will respond to seeing the order enter the book'},{k:'Output',v:'A distribution of possible Cross prices — e.g. P50: $184.67, P90: $184.71, P10: $184.58. The desk submits based on the P90 scenario to be conservative'},{k:'Speed',v:'10,000 Monte Carlo paths must complete in under 2 minutes (T−5 to T−3) to leave time for the Execution Recommendation step'}]},
+    {t:'Deep Learning Component',rows:[{k:'Role',v:'A neural network trained on historical auction replays learns the aggregate response of the order book to different order sizes and submission timings'},{k:'What it predicts',v:'The expected cross-impact function — given current book conditions and order size, how much will the Cross move?'},{k:'Integration',v:'The neural network provides the prior distribution for the Monte Carlo simulation — making the simulations realistic rather than purely random'}]}
+  ]},
+  execution:{tag:'Stage 5 · T−2 min · Proposed Architecture',ts:'background:#edf7f1;color:#1a6b35;',title:'Execution Recommendation',sub:'The final output — a specific limit price and order size that maximises fill probability at the best achievable Cross',sections:[
+    {t:'What the RL Agent Outputs',rows:[{k:'Limit price',v:'The specific price at which to submit the order — e.g. "$184.65" — chosen to be above the predicted Cross so the order gets filled, but below the P90 Cross so the desk doesn\'t overpay'},{k:'Order size',v:'The recommended share quantity that maximises fill without pushing the Cross above the limit'},{k:'Timing',v:'Whether to submit immediately or wait for a specific order book condition — e.g. "submit when buy imbalance exceeds 25%"'}]},
+    {t:'Reinforcement Learning — How It Learns',rows:[{k:'Reward signal',v:'After every auction, the agent receives a score: the difference between its achieved fill price and the final Cross. Closer to the Cross = higher reward'},{k:'Learning process',v:'Over thousands of auctions, the agent learns which limit prices in which market conditions produce the best fills — without being explicitly programmed with rules'},{k:'Adaptation',v:'As market conditions change — new participants, new macro regime — the agent continuously updates its policy. It never stops learning'}]},
+    {t:'The Random Jitter Defence',rows:[{k:'The risk',v:'Exchanges like LSE and NYSE randomise the exact moment the Cross fires — within a window of seconds. An agent that submits at the last millisecond risks being late'},{k:'The solution',v:'The RL agent is trained to be robust to this randomness — it submits its order with a time buffer, accepting slightly less precision in exchange for certainty of participation'},{k:'Design principle',v:'In an adversarial environment designed to prevent gaming, the best AI is not the most aggressive — it is the most robust'}]}
+  ]}
+};
+
+function openModal(key){
+  const d=NODES[key];if(!d)return;
+  document.querySelectorAll('.node,.ladder-step').forEach(n=>n.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('mTag').textContent=d.tag;
+  document.getElementById('mTag').style.cssText=d.ts+'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block;';
+  document.getElementById('mTitle').textContent=d.title;
+  document.getElementById('mSub').textContent=d.sub;
+  const body=document.getElementById('mBody');body.innerHTML='';
+  d.sections.forEach(sec=>{
+    const sd=document.createElement('div');sd.className='info-sec';
+    const st=document.createElement('div');st.className='info-sec-title';st.textContent=sec.t;sd.appendChild(st);
+    if(sec.rows)sec.rows.forEach(r=>{const row=document.createElement('div');row.className='info-row';row.innerHTML=`<span class="info-key">${r.k}</span><span class="info-val">${r.v}</span>`;sd.appendChild(row);});
+    if(sec.numbered){const nl=document.createElement('div');nl.className='num-list';sec.numbered.forEach((item,i)=>{const el=document.createElement('div');el.className='num-item';el.innerHTML=`<div class="num-badge opp">${i+1}</div><div class="num-text"><strong>${item.label}:</strong> ${item.text}</div>`;nl.appendChild(el);});sd.appendChild(nl);}
+    body.appendChild(sd);
+  });
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  document.querySelectorAll('.node,.ladder-step').forEach(n=>n.classList.remove('active'));
+}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target===document.getElementById('overlay'))closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+</script>
+</body>
+</html>

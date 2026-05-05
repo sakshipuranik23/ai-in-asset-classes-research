@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI IPO Intelligence Platform — Process Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+  --navy:#1c3557;--navy-pale:#edf3fb;--navy-border:#a8c4e0;
+  --exec:#1a6b35;--exec-pale:#edf7f1;--exec-border:#a8d9bc;
+  --amber:#b86a00;--amber-pale:#fff8ed;--amber-border:#f5c882;
+  --purple:#5b3faa;--purple-pale:#f3f0fb;--purple-border:#c4b0f0;
+  --teal:#0d7377;--teal-pale:#e6f7f7;--teal-border:#8ecece;
+  --red:#c04040;--red-pale:#fdf0f0;--red-border:#f0b8b8;
+  --opp:#1a6b35;--opp-pale:#edf7f1;--opp-border:#6dba80;
+  --opp-overlay:rgba(109,186,128,0.09);--opp-overlay-border:rgba(26,107,53,0.32);
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,0.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.nav-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--text-secondary);padding:5px 14px 5px 0;border-right:1px solid var(--border);margin-right:16px;background:none;border-top:none;border-bottom:none;border-left:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .15s}
+.nav-back:hover{color:var(--navy)}
+.nav-crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+.nav-crumb .active{color:var(--navy);font-weight:600}
+.nav-crumb .sep{color:var(--border)}
+.nav-badge{margin-left:auto;background:#fff3e0;color:#b86a00;border:1px solid #f5c882;border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;text-transform:uppercase;letter-spacing:.06em}
+
+/* PAGE */
+.page{max-width:1100px;margin:0 auto;padding:28px 24px 48px}
+.uc-num{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--navy);letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+.header-sub{font-size:14px;color:var(--text-secondary);max-width:700px;line-height:1.6;margin-bottom:12px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+.chip{font-size:11.5px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary)}
+.chip.green{background:var(--exec-pale);border-color:var(--exec-border);color:var(--exec)}
+.chip.navy{background:var(--navy-pale);border-color:var(--navy-border);color:var(--navy)}
+.chip.amber{background:var(--amber-pale);border-color:var(--amber-border);color:var(--amber)}
+.chip.purple{background:var(--purple-pale);border-color:var(--purple-border);color:var(--purple)}
+.chip.teal{background:var(--teal-pale);border-color:var(--teal-border);color:var(--teal)}
+.chip.red{background:var(--red-pale);border-color:var(--red-border);color:var(--red)}
+
+/* SEBI MANDATE BANNER */
+.sebi-banner{
+  display:flex;align-items:center;gap:16px;
+  background:linear-gradient(135deg,#1c3557 0%,#2a5f8a 100%);
+  border-radius:10px;padding:14px 20px;margin-bottom:16px;
+  box-shadow:var(--shadow-md);border-left:5px solid #f5c882;
+  position:relative;overflow:hidden;
+}
+.sebi-banner::after{content:'SEBI 2025';position:absolute;right:-10px;top:-10px;font-family:'DM Serif Display',serif;font-size:72px;color:rgba(255,255,255,.04);pointer-events:none;line-height:1}
+.sebi-icon{font-size:28px;flex-shrink:0}
+.sebi-text{flex:1}
+.sebi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#f5c882;margin-bottom:4px}
+.sebi-title{font-size:14px;font-weight:600;color:#fff;margin-bottom:3px;line-height:1.4}
+.sebi-sub{font-size:12.5px;color:rgba(255,255,255,.65);line-height:1.5}
+.sebi-badge{flex-shrink:0;background:rgba(245,200,130,.2);border:1px solid rgba(245,200,130,.5);border-radius:8px;padding:8px 14px;text-align:center}
+.sebi-badge .sb-year{font-family:'DM Serif Display',serif;font-size:22px;color:#f5c882;line-height:1}
+.sebi-badge .sb-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.5);margin-top:2px}
+
+/* SUMMARY */
+.summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:3px solid transparent;box-shadow:var(--shadow-sm)}
+.sc-gap{border-left-color:#d06060}.sc-sol{border-left-color:#5aaa72}.sc-val{border-left-color:#4a7fd4}
+.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.sc-gap .sc-lbl{color:#c04040}.sc-sol .sc-lbl{color:#2e7a46}.sc-val .sc-lbl{color:#2a4faa}
+.sc-txt{font-size:13px;line-height:1.5}.sc-val .sc-txt{font-weight:600;color:var(--navy)}
+
+/* STRATEGY BANNER */
+.strategy-banner{background:var(--navy);border-radius:10px;padding:16px 22px;margin-bottom:24px;box-shadow:var(--shadow-md);border-left:5px solid #f5c882}
+.sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#f5c882;margin-bottom:6px}
+.sb-text{font-size:13.5px;color:rgba(255,255,255,.88);line-height:1.65}
+.sb-text strong{color:#fff}
+
+/* SECTION TITLES */
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.section-title h2{font-family:'DM Serif Display',serif;font-size:18px;color:var(--navy);letter-spacing:-.01em;white-space:nowrap}
+.section-title .s-line{flex:1;height:1px;background:var(--border)}
+
+/* MATURITY LADDER */
+.ladder-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px 18px;box-shadow:var(--shadow-sm);margin-bottom:28px}
+.ladder-intro{font-size:12.5px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5}
+.ladder-intro strong{color:var(--text-primary)}
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;position:relative}
+.ladder::before{content:'';position:absolute;top:22px;left:10%;right:10%;height:3px;background:linear-gradient(to right,#d0ccc6,#c8c4bc,var(--amber-border),var(--opp-border),var(--amber-border));border-radius:2px;z-index:0}
+.ladder-step{position:relative;z-index:1;border-radius:10px;padding:12px 10px 10px;cursor:pointer;transition:box-shadow .18s,transform .18s;border:1.5px solid transparent;text-align:center}
+.ladder-step:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.ladder-step.active{box-shadow:0 0 0 3px rgba(28,53,87,.15),var(--shadow-md)}
+.ls-1,.ls-2{background:#f5f4f1;border-color:#d0ccc6}
+.ls-3{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-4{background:var(--opp-pale);border-color:var(--opp-border)}
+.ls-5{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-num{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.ls-1 .ls-num,.ls-2 .ls-num{color:var(--text-muted)}
+.ls-3 .ls-num{color:var(--amber)}
+.ls-4 .ls-num{color:var(--opp)}
+.ls-5 .ls-num{color:var(--amber)}
+.ls-icon{font-size:22px;margin-bottom:5px;line-height:1}
+.ls-name{font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:3px}
+.ls-focus{font-size:11px;color:var(--text-secondary);line-height:1.3;margin-bottom:7px}
+.ls-btn{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.ls-1 .ls-btn,.ls-2 .ls-btn{background:#ece9e3;color:var(--text-secondary)}
+.ls-3 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.ls-4 .ls-btn{background:var(--opp-pale);color:var(--opp);border:1px solid var(--opp-border)}
+.ls-5 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.emerging-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+.ladder-legend{display:flex;align-items:center;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border-light)}
+.ll-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-secondary)}
+.ll-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ═══ MAIN DIAGRAM ═══ */
+.diagram-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:visible;box-shadow:var(--shadow-md);margin-bottom:28px}
+.diag-titlebar{background:var(--navy);padding:11px 20px;display:flex;align-items:center;gap:10px;border-radius:13px 13px 0 0}
+.diag-titlebar span{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em}
+.diag-titlebar small{font-size:11.5px;color:rgba(255,255,255,.45)}
+
+.diagram-inner{padding:24px 20px 20px;display:flex;flex-direction:column;gap:0}
+
+/* ─── TOP FORK: Dual User Views ──────────────────────────────────────── */
+.fork-row{
+  display:grid;
+  grid-template-columns:1fr 32px 1fr;
+  gap:0;
+  align-items:stretch;
+  margin-bottom:0;
+}
+.fork-divider{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:0;padding:0 4px;
+}
+.fork-div-line{width:1px;flex:1;background:var(--border);min-height:20px}
+.fork-div-label{font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;writing-mode:vertical-rl;transform:rotate(180deg);padding:6px 0;background:var(--bg);border:1px solid var(--border);border-radius:4px}
+
+/* USER VIEW CARDS */
+.user-view{
+  border-radius:12px;padding:16px 16px 14px;
+  cursor:pointer;transition:box-shadow .18s,transform .18s;
+  border:2px solid transparent;
+  position:relative;
+}
+.user-view:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.user-view.active{box-shadow:0 0 0 3px rgba(28,53,87,.12),var(--shadow-md)}
+.uv-retail{background:var(--opp-overlay);border-color:var(--opp-border)}
+.uv-pro{background:var(--navy-pale);border-color:var(--navy-border)}
+.uv-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
+.uv-retail .uv-label{color:var(--opp)}
+.uv-pro .uv-label{color:var(--navy)}
+.uv-title{font-family:'DM Serif Display',serif;font-size:15px;margin-bottom:5px;letter-spacing:-.01em}
+.uv-retail .uv-title{color:var(--navy)}
+.uv-pro .uv-title{color:var(--navy)}
+.uv-desc{font-size:11.5px;color:var(--text-secondary);line-height:1.45;margin-bottom:10px}
+.uv-btn{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:6px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.uv-retail .uv-btn{background:var(--exec-pale);color:var(--exec);border:1px solid var(--exec-border)}
+.uv-pro .uv-btn{background:var(--navy-pale);color:var(--navy);border:1px solid var(--navy-border)}
+
+/* RISK-O-METER SVG embedded in retail card */
+.riskometer-wrap{margin:10px 0 6px;display:flex;justify-content:center}
+
+/* ─── UP ARROWS from pipeline to views ──────────────────────────────── */
+.up-arrows{display:grid;grid-template-columns:1fr 32px 1fr;gap:0;height:36px}
+.up-arr-cell{display:flex;justify-content:center;align-items:center}
+.up-arr-cell svg{display:block}
+
+/* ─── PIPELINE SECTION ───────────────────────────────────────────────── */
+.prop-wrap{position:relative;border:2px dashed var(--opp-overlay-border);background:var(--opp-overlay);border-radius:14px;padding:18px 16px 16px;margin-top:0}
+.prop-label{position:absolute;top:-14px;right:16px;display:flex;align-items:center;gap:5px}
+.prop-label span{font-size:10px;font-weight:700;color:var(--opp);background:var(--surface);padding:2px 9px;border-radius:20px;border:1.5px solid var(--opp-border);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
+
+/* Pipeline nodes row */
+.pipeline-row{display:flex;align-items:flex-start;gap:0}
+
+/* PIPE NODE */
+.pnode{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:12px 11px;flex:1;cursor:pointer;transition:box-shadow .18s,transform .18s;box-shadow:var(--shadow-sm);position:relative;min-width:0}
+.pnode:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.pnode.active{border-color:var(--navy)!important;box-shadow:0 0 0 3px rgba(28,53,87,.12),var(--shadow-md)}
+.pnode.n-grey{border-top:3px solid #b0aba4}
+.pnode.n-navy{border-top:3px solid var(--navy)}
+.pnode.n-teal{border-top:3px solid var(--teal)}
+.pnode.n-purple{border-top:3px solid var(--purple)}
+.pnode.n-opp{border-top:3px solid var(--opp)}
+.pn-stage{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:3px}
+.pn-icon{font-size:18px;margin-bottom:3px;line-height:1}
+.pn-title{font-size:11.5px;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:3px}
+.pn-desc{font-size:10px;color:var(--text-secondary);line-height:1.4;margin-bottom:5px}
+.pn-ai{font-size:9.5px;font-weight:600;font-style:italic;margin-bottom:7px}
+.pn-btn{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.n-grey .pn-btn,.n-grey .pn-ai{color:var(--text-muted)}
+.n-navy .pn-btn{background:var(--navy-pale);color:var(--navy)}.n-navy .pn-ai{color:var(--navy)}
+.n-teal .pn-btn{background:var(--teal-pale);color:var(--teal)}.n-teal .pn-ai{color:var(--teal)}
+.n-purple .pn-btn{background:var(--purple-pale);color:var(--purple)}.n-purple .pn-ai{color:var(--purple)}
+.n-opp .pn-btn{background:var(--opp-pale);color:var(--opp)}.n-opp .pn-ai{color:var(--opp)}
+.n-grey .pn-btn{background:#f0ece6;color:var(--text-secondary)}
+
+/* Pipeline arrow */
+.parr{display:flex;align-items:center;flex-shrink:0;width:20px;padding-top:40px}
+.parr-line{height:2px;background:#c8c4bc;flex:1}
+.parr-head{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:7px solid #c8c4bc;flex-shrink:0}
+
+/* ─── DOWN ARROWS from pipeline to vault ─────────────────────────────── */
+.down-arr-row{display:flex;justify-content:center;padding:12px 0 8px}
+
+/* ─── REFERENCE VAULT ────────────────────────────────────────────────── */
+.vault-node{
+  background:var(--navy-pale);border:1.5px solid var(--navy-border);border-top:3px solid var(--navy);
+  border-radius:12px;padding:14px 18px;cursor:pointer;
+  transition:box-shadow .18s,transform .18s;box-shadow:var(--shadow-sm);
+  display:flex;align-items:center;gap:16px;
+}
+.vault-node:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.vault-node.active{border-color:var(--navy)!important;box-shadow:0 0 0 3px rgba(28,53,87,.12)}
+.vault-icon{font-size:26px;flex-shrink:0}
+.vault-body h3{font-family:'DM Serif Display',serif;font-size:14px;color:var(--navy);margin-bottom:3px}
+.vault-body p{font-size:12px;color:var(--text-secondary);line-height:1.5}
+.vault-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.vpill{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--surface);border:1px solid var(--navy-border);color:var(--navy)}
+.vault-btn{margin-left:auto;font-size:11px;font-weight:600;padding:6px 14px;border-radius:7px;border:1.5px solid var(--navy);background:var(--navy-pale);color:var(--navy);cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0;transition:background .15s}
+.vault-btn:hover{background:var(--navy);color:#fff}
+
+/* RESEARCH */
+.research{padding-top:24px;border-top:1px solid var(--border)}
+.research h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy);margin-bottom:16px;letter-spacing:-.01em}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.r-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.r-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:7px}
+.r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.r-rows{display:flex;flex-direction:column;gap:7px}
+.r-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.r-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:155px}
+.r-key::after{content:':'}
+.r-val{color:var(--text-secondary)}
+.threat-callout{background:var(--red-pale);border:1.5px solid var(--red-border);border-left:5px solid var(--red);border-radius:10px;padding:18px 20px;box-shadow:var(--shadow-sm)}
+.tc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--red);margin-bottom:6px}
+.tc-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--navy);margin-bottom:7px;letter-spacing:-.01em}
+.tc-body{font-size:13px;color:var(--text-secondary);line-height:1.65}
+.tc-body strong{color:var(--text-primary)}
+.ref-list{display:flex;flex-direction:column;gap:6px}
+.ref-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.ref-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--navy-pale);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.ref-txt{color:var(--text-secondary)}.ref-txt strong{color:var(--text-primary)}
+.page-footer{text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:28px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(20,18,14,.45);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(3px)}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:14px;width:560px;max-width:calc(100vw - 32px);max-height:calc(100vh - 60px);overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(12px) scale(.98);transition:transform .22s cubic-bezier(.34,1.56,.64,1)}
+.overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-hdr{padding:20px 22px 15px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2;border-radius:14px 14px 0 0}
+.m-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block}
+.m-title{font-family:'DM Serif Display',serif;font-size:19px;color:var(--navy);line-height:1.25;margin-bottom:4px;padding-right:30px}
+.m-sub{font-size:12.5px;color:var(--text-secondary);font-style:italic}
+.m-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:15px;font-family:'DM Sans',sans-serif;transition:background .12s}
+.m-close:hover{background:var(--border)}
+.m-body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:14px}
+.info-sec{display:flex;flex-direction:column;gap:7px}
+.info-sec-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);padding-bottom:5px;border-bottom:1px solid var(--border-light)}
+.info-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.info-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:165px}
+.info-key::after{content:':'}
+.info-val{color:var(--text-secondary)}
+.num-list{display:flex;flex-direction:column;gap:6px}
+.num-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.num-badge{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--navy-pale);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.num-badge.opp{background:var(--opp-pale);color:var(--opp)}
+.num-text{color:var(--text-secondary)}.num-text strong{color:var(--text-primary)}
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="nav-back" onclick="window.history.back()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11L5 7l4-4"/></svg>
+    Back to Matrix
+  </button>
+  <div class="nav-crumb">
+    <span>Equity Markets</span><span class="sep">/</span>
+    <span>Immediate Priorities</span><span class="sep">/</span>
+    <span class="active">AI IPO Intelligence Platform</span>
+  </div>
+  <div class="nav-badge">🎯 Immediate Priority</div>
+</nav>
+
+<div class="page">
+
+  <div class="uc-num">Use Case #30 &nbsp;·&nbsp; Client-Facing &nbsp;·&nbsp; Strategic Impact 8/10</div>
+  <h1>AI IPO Intelligence Platform</h1>
+  <p class="header-sub">A DRHP exceeds 400 pages of legal jargon designed to protect the issuer, not inform the investor. AI transforms an unreadable document into an interrogatable intelligence asset — the same depth of scrutiny previously exclusive to institutional research desks, now accessible to everyone.</p>
+
+  <!-- SEBI MANDATE BANNER -->
+  <div class="sebi-banner">
+    <div class="sebi-icon">⚖️</div>
+    <div class="sebi-text">
+      <div class="sebi-label">Regulatory Tailwind — Live Mandate</div>
+      <div class="sebi-title">SEBI mandated Audio-Visual (AV) DRHP summaries in 2025 — the first regulatory requirement that a prospectus must be "interrogatable," not just "readable"</div>
+      <div class="sebi-sub">This mandate created the regulatory foundation for AI-driven IPO intelligence. BSE deployed an AI DRHP screener for SME IPOs in June 2025; SEBI piloted ChatGPT-style first-level DRHP parsing. The window is open — the infrastructure is being built now.</div>
+    </div>
+    <div class="sebi-badge">
+      <div class="sb-year">2025</div>
+      <div class="sb-lbl">Mandate Live</div>
+    </div>
+  </div>
+
+  <div class="chips">
+    <span class="chip navy">RAG Architecture</span>
+    <span class="chip navy">NLP / NER</span>
+    <span class="chip purple">Vector Database</span>
+    <span class="chip green">Sentiment Analysis</span>
+    <span class="chip teal">Document Parsing</span>
+    <span class="chip amber">Partially Deployed</span>
+  </div>
+
+  <div class="summary-row">
+    <div class="sc sc-gap"><div class="sc-lbl">The Gap</div><div class="sc-txt">A 400-page DRHP written in legal jargon creates a severe information asymmetry — institutions have analysts to parse it; retail investors rely on biased third-party commentary or skip it entirely.</div></div>
+    <div class="sc sc-sol"><div class="sc-lbl">AI Solution</div><div class="sc-txt">A RAG-based pipeline transforms the DRHP into a dual-experience platform — a Risk-o-Meter for retail investors and a citation-anchored professional chatbot for analysts — both grounded in verifiable document sources.</div></div>
+    <div class="sc sc-val"><div class="sc-lbl">Value Created</div><div class="sc-txt">Every AI answer is anchored to a specific page number in the DRHP — eliminating the hallucination risk that makes GenAI dangerous in financial contexts.</div></div>
+  </div>
+
+  <!-- STRATEGY BANNER -->
+  <div class="strategy-banner">
+    <div class="sb-label">Strategic Framing — The Verification Protocol</div>
+    <div class="sb-text">"For IPO intelligence, the AI's value is not in its <strong>answer</strong> but in its <strong>citation</strong>. By utilising a RAG architecture that anchors every response to a specific paragraph in the DRHP, the platform eliminates the 'black box' risk and provides retail investors with the same depth of scrutiny previously exclusive to institutional research desks."</div>
+  </div>
+
+  <!-- MATURITY LADDER -->
+  <div class="section-title">
+    <h2>AI Maturity Ladder — IPO Intelligence</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="ladder-wrap">
+    <p class="ladder-intro">Most platforms sit at <strong>Level 1–2</strong> today — keyword search and basic summaries. The proposed architecture is <strong>Level 3–4</strong>. Level 5 is an emerging capability.</p>
+    <div class="ladder">
+      <div class="ladder-step ls-1" onclick="openModal('l1')">
+        <div class="ls-num">Level 1</div><div class="ls-icon">🔍</div>
+        <div class="ls-name">Basic Search</div><div class="ls-focus">Ctrl+F in PDF</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-2" onclick="openModal('l2')">
+        <div class="ls-num">Level 2</div><div class="ls-icon">📝</div>
+        <div class="ls-name">Smart Summary</div><div class="ls-focus">AI 1-page summary</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-3" onclick="openModal('l3')">
+        <div class="ls-num">Level 3</div><div class="ls-icon">💬</div>
+        <div class="ls-name">RAG Chatbot</div><div class="ls-focus">Cited queries</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-4" onclick="openModal('l4')">
+        <div class="ls-num">Level 4</div><div class="ls-icon">🎬</div>
+        <div class="ls-name">Multimodal Sentiment</div><div class="ls-focus">AV + text analysis</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-5" onclick="openModal('l5')">
+        <div class="ls-num">Level 5</div><div class="ls-icon">🌐</div>
+        <div class="emerging-badge">⚡ Emerging</div>
+        <div class="ls-name">Cross-Prospectus Alpha</div><div class="ls-focus">Historical comparison</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+    </div>
+    <div class="ladder-legend">
+      <div class="ll-item"><div class="ll-dot" style="background:#c8c4bc;"></div>Current state — most platforms today</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--amber);"></div>Scaling / proposed architecture</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--opp);"></div>Opportunity — live in proposed platform</div>
+    </div>
+  </div>
+
+  <!-- MAIN DIAGRAM -->
+  <div class="section-title">
+    <h2>The Prospectus-to-Insight Architecture</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="diag-titlebar">
+      <span>Outputs on top · Pipeline below · Reference Vault anchors everything</span>
+      <small>&nbsp;·&nbsp; Click any element for detail</small>
+    </div>
+
+    <div class="diagram-inner">
+
+      <!-- DUAL USER VIEWS (top) -->
+      <div class="fork-row">
+        <!-- Retail View -->
+        <div class="user-view uv-retail" onclick="openModal('retail')">
+          <div class="uv-label">👤 Retail Investor View</div>
+          <div class="uv-title">Risk-o-Meter & TL;DR</div>
+          <div class="uv-desc">A plain-language verdict on the IPO — sentiment score, top 3 risks highlighted, and a one-paragraph summary anyone can understand in 60 seconds.</div>
+
+          <!-- RISK-O-METER SVG -->
+          <div class="riskometer-wrap">
+            <svg viewBox="0 0 220 120" xmlns="http://www.w3.org/2000/svg" style="width:200px;height:auto;display:block;">
+              <defs>
+                <linearGradient id="meterGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%"   stop-color="#1a6b35"/>
+                  <stop offset="40%"  stop-color="#b86a00"/>
+                  <stop offset="100%" stop-color="#c04040"/>
+                </linearGradient>
+                <clipPath id="arcClip">
+                  <path d="M10,110 A100,100 0 0,1 210,110 Z"/>
+                </clipPath>
+              </defs>
+              <!-- Background arc track -->
+              <path d="M18,108 A92,92 0 0,1 202,108" fill="none" stroke="#e4e1da" stroke-width="14" stroke-linecap="round"/>
+              <!-- Coloured gradient arc -->
+              <path d="M18,108 A92,92 0 0,1 202,108" fill="none" stroke="url(#meterGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="289" stroke-dashoffset="86"/>
+              <!-- Needle — pointing to ~65% (moderate risk) -->
+              <line x1="110" y1="108" x2="158" y2="46" stroke="#1c3557" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="110" cy="108" r="7" fill="#1c3557"/>
+              <circle cx="110" cy="108" r="3.5" fill="#fff"/>
+              <!-- Labels -->
+              <text x="12"  y="114" font-family="DM Sans" font-size="9" font-weight="700" fill="#1a6b35">LOW</text>
+              <text x="95"  y="20"  font-family="DM Sans" font-size="9" font-weight="700" fill="#b86a00">MED</text>
+              <text x="185" y="114" font-family="DM Sans" font-size="9" font-weight="700" fill="#c04040" text-anchor="end">HIGH</text>
+              <!-- Score -->
+              <text x="110" y="94" font-family="DM Serif Display" font-size="18" fill="#1c3557" text-anchor="middle">64</text>
+              <text x="110" y="104" font-family="DM Sans" font-size="8" fill="#9e9b96" text-anchor="middle">RISK SCORE</text>
+            </svg>
+          </div>
+
+          <button class="uv-btn" style="margin-top:4px;">Details →</button>
+        </div>
+
+        <!-- Fork divider -->
+        <div class="fork-divider">
+          <div class="fork-div-line"></div>
+          <div class="fork-div-label">OR</div>
+          <div class="fork-div-line"></div>
+        </div>
+
+        <!-- Professional View -->
+        <div class="user-view uv-pro" onclick="openModal('pro')">
+          <div class="uv-label">💼 Professional / Analyst View</div>
+          <div class="uv-title">Citation-Anchored Chatbot Terminal</div>
+          <div class="uv-desc">A terminal-style interface for deep-dive queries. Every answer cites the specific DRHP paragraph and page number — no hallucination, full auditability.</div>
+          <!-- Terminal mock -->
+          <div style="background:#0f1923;border-radius:8px;padding:12px 14px;margin:10px 0 6px;font-family:'DM Mono',monospace;font-size:10.5px;line-height:1.7;">
+            <div style="color:#9e9b96;margin-bottom:4px;">▶ How much of IPO proceeds goes to debt repayment?</div>
+            <div style="color:#6dba80;">→ ₹340 Cr (42% of proceeds) allocated to debt.</div>
+            <div style="color:#a8c4e0;font-size:9.5px;">  Source: Objects of the Issue, p. 87, para 3.2</div>
+            <div style="color:#9e9b96;margin-top:6px;">▶ Any related-party transactions in past 3 years?</div>
+            <div style="color:#f5c882;">→ 14 RPTs identified. 3 flagged as material.</div>
+            <div style="color:#a8c4e0;font-size:9.5px;">  Source: Related Party Disclosures, p. 214–218</div>
+          </div>
+          <button class="uv-btn">Details →</button>
+        </div>
+      </div>
+
+      <!-- UP ARROWS from pipeline -->
+      <div class="up-arrows">
+        <div class="up-arr-cell">
+          <svg width="24" height="36" viewBox="0 0 24 36">
+            <line x1="12" y1="36" x2="12" y2="8" stroke="#6dba80" stroke-width="2"/>
+            <polygon points="12,0 6,12 18,12" fill="#6dba80"/>
+          </svg>
+        </div>
+        <div class="up-arr-cell"></div>
+        <div class="up-arr-cell">
+          <svg width="24" height="36" viewBox="0 0 24 36">
+            <line x1="12" y1="36" x2="12" y2="8" stroke="#a8c4e0" stroke-width="2"/>
+            <polygon points="12,0 6,12 18,12" fill="#a8c4e0"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- PIPELINE — inside proposed arch overlay -->
+      <div class="prop-wrap">
+        <div class="prop-label">
+          <svg width="28" height="22" viewBox="0 0 28 22" fill="none" style="position:relative;top:2px;">
+            <path d="M24 2 C24 12, 8 8, 4 18" stroke="#1a6b35" stroke-width="1.8" stroke-dasharray="3,2" fill="none" stroke-linecap="round"/>
+            <polygon points="4,18 2,12 8,14" fill="#1a6b35"/>
+          </svg>
+          <span>Proposed Architecture — Levels 3 & 4</span>
+        </div>
+
+        <!-- Pipeline source label -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+          <div style="background:var(--navy);border-radius:8px;padding:6px 14px;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow-sm);cursor:pointer;" onclick="openModal('source')">
+            <span style="font-size:16px;">📄</span>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.07em;">Input Source</div>
+              <div style="font-size:12px;font-weight:600;color:#fff;">DRHP Document</div>
+              <div style="font-size:10px;color:rgba(255,255,255,.5);">SEC / SEBI RSS feed · 400+ pages</div>
+            </div>
+            <span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;background:rgba(255,255,255,.15);color:#fff;margin-left:auto;cursor:pointer;">Details →</span>
+          </div>
+          <div style="flex:1;height:2px;background:linear-gradient(to right,var(--border),transparent);border-radius:2px;"></div>
+        </div>
+
+        <div class="pipeline-row">
+          <!-- Stage 1: Ingestion -->
+          <div class="pnode n-grey" onclick="openModal('ingestion')">
+            <div class="pn-stage">Stage 1</div><div class="pn-icon">📥</div>
+            <div class="pn-title">Ingestion</div>
+            <div class="pn-desc">PDF broken into text, tables, and charts</div>
+            <div class="pn-ai">Document Parsing + OCR</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <!-- Stage 2: Indexing -->
+          <div class="pnode n-navy" onclick="openModal('indexing')">
+            <div class="pn-stage">Stage 2</div><div class="pn-icon">🗂️</div>
+            <div class="pn-title">Indexing</div>
+            <div class="pn-desc">Text vectorised and stored for RAG retrieval</div>
+            <div class="pn-ai">Embeddings + Vector DB</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <!-- Stage 3: Sentiment -->
+          <div class="pnode n-teal" onclick="openModal('sentiment')">
+            <div class="pn-stage">Stage 3</div><div class="pn-icon">🎭</div>
+            <div class="pn-title">Sentiment Analysis</div>
+            <div class="pn-desc">Risk Factors and MD&A scored for tone</div>
+            <div class="pn-ai">NLP Transformer · Red Flag Detection</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <!-- Stage 4: Extraction -->
+          <div class="pnode n-purple" onclick="openModal('extraction')">
+            <div class="pn-stage">Stage 4</div><div class="pn-icon">📊</div>
+            <div class="pn-title">Extraction</div>
+            <div class="pn-desc">Key metrics pulled into structured tables</div>
+            <div class="pn-ai">NER · Table Parsing</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <!-- Stage 5: Interaction -->
+          <div class="pnode n-opp" onclick="openModal('interaction')">
+            <div class="pn-stage">Stage 5</div><div class="pn-icon">💬</div>
+            <div class="pn-title">Interaction</div>
+            <div class="pn-desc">User queries answered with cited DRHP paragraphs</div>
+            <div class="pn-ai">RAG Chatbot · Citation Engine</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Down arrow to vault -->
+      <div class="down-arr-row">
+        <svg width="24" height="32" viewBox="0 0 24 32">
+          <line x1="12" y1="0" x2="12" y2="24" stroke="#a8c4e0" stroke-width="2"/>
+          <polygon points="12,32 6,20 18,20" fill="#a8c4e0"/>
+        </svg>
+      </div>
+
+      <!-- REFERENCE VAULT -->
+      <div class="vault-node" onclick="openModal('vault')">
+        <div class="vault-icon">🔗</div>
+        <div class="vault-body">
+          <h3>Reference Vault — The Curation Layer</h3>
+          <p>Every AI answer is linked to a direct PDF anchor — page number, paragraph, section header. This is what makes the platform trustworthy rather than just impressive.</p>
+          <div class="vault-pills">
+            <div class="vpill">📍 Page Citations</div>
+            <div class="vpill">📑 Paragraph Anchors</div>
+            <div class="vpill">✅ Fact-Verified Answers</div>
+            <div class="vpill">🔒 Audit Trail</div>
+          </div>
+        </div>
+        <button class="vault-btn">Details →</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RESEARCH -->
+  <div class="research">
+    <h2>Research Notes</h2>
+    <div class="r-grid">
+
+      <!-- Hallucination Risk -->
+      <div class="threat-callout">
+        <div class="tc-label">⚠ Critical Risk — The Hallucination Problem</div>
+        <div class="tc-title">In Finance, 99% Correct is 100% Wrong</div>
+        <div class="tc-body">An LLM without grounding will occasionally <strong>hallucinate</strong> — generating a plausible-sounding but factually incorrect answer. In most contexts this is a nuisance. In IPO intelligence, it is a liability. A hallucinated debt figure, a fabricated risk disclosure, or a misattributed financial metric could directly influence a retail investor's decision. The RAG architecture is the solution: the model can only answer using text retrieved from the actual DRHP, and every answer must cite its source paragraph. If the document doesn't contain the answer, the system says so rather than inventing one. The <strong>Curation Layer</strong> in the Reference Vault enforces this — any response without a valid citation is rejected before reaching the user.</div>
+      </div>
+
+      <!-- Boilerplate Problem -->
+      <div class="threat-callout">
+        <div class="tc-label">⚠ Data Challenge — Boilerplate vs Material Disclosure</div>
+        <div class="tc-title">Not Every Risk Is a Real Risk</div>
+        <div class="tc-body">A typical DRHP contains hundreds of pages of <strong>standard legal boilerplate</strong> — generic risk disclosures that every company must include but which reveal nothing specific about this issuer. Buried inside that boilerplate are the <strong>material disclosures</strong> that actually matter: a major supplier suing the company, a key customer representing 60% of revenue, a promoter pledging most of their shares. The AI must distinguish between a generic risk ("market volatility may affect our business") and a material one ("our single largest customer accounts for 58% of revenue and has not renewed their contract"). This requires a <strong>Sentiment Classifier trained specifically on financial legalese</strong> — general-purpose NLP models struggle to make this distinction reliably, which is why domain-specific fine-tuning is essential.</div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--navy);"></div>Technical Architecture</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">Vector Database</span><span class="r-val">Pinecone or Milvus — stores document chunks as embedding vectors, enabling semantic search rather than keyword search across the full DRHP</span></div>
+          <div class="r-row"><span class="r-key">Embedding Model</span><span class="r-val">A financial domain-specific embedding model converts each paragraph into a vector that captures meaning, not just words — "debt repayment" and "liability reduction" are retrieved together</span></div>
+          <div class="r-row"><span class="r-key">RAG Pipeline</span><span class="r-val">User query → embedding → similarity search → top-k relevant chunks retrieved → LLM generates answer grounded only in retrieved chunks → citation appended</span></div>
+          <div class="r-row"><span class="r-key">Sentiment Classifier</span><span class="r-val">Fine-tuned transformer (FinBERT or equivalent) scores each paragraph as Cautious / Neutral / Confident — the Risk-o-Meter aggregates these scores across all Risk Factor sections</span></div>
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--opp);"></div>Who Is Building This</div>
+        <div class="ref-list">
+          <div class="ref-item"><div class="ref-num">1</div><div class="ref-txt"><strong>BSE (June 2025)</strong> — deployed AI DRHP screener for SME IPO platform; generates pre-check report for merchant bankers before formal filing</div></div>
+          <div class="ref-item"><div class="ref-num">2</div><div class="ref-txt"><strong>SEBI (Feb 2024)</strong> — piloted ChatGPT-style tools for first-level DRHP parsing; pushing for standardised template-based DRHPs with auto-validatable fields</div></div>
+          <div class="ref-item"><div class="ref-num">3</div><div class="ref-txt"><strong>Morgan Stanley AI @ MS</strong> — deployed internal LLMs to help analysts synthesise company filings and prospectuses; blueprint for the professional terminal view</div></div>
+          <div class="ref-item"><div class="ref-num">4</div><div class="ref-txt"><strong>Harvey (Legal AI)</strong> — contract parsing capability being adapted for prospectus review; specialises in distinguishing material clauses from boilerplate</div></div>
+          <div class="ref-item"><div class="ref-num">5</div><div class="ref-txt"><strong>Glean</strong> — enterprise RAG search technology; blueprint for how vector databases should handle massive unstructured document repositories with reliable citation</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-footer">
+    Hexaware Financial Services &nbsp;·&nbsp; AI in Equity Markets &nbsp;·&nbsp; Use Case #30 &nbsp;·&nbsp; Preliminary Research 2026
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="m-tag" id="mTag"></div>
+      <div class="m-title" id="mTitle"></div>
+      <div class="m-sub" id="mSub"></div>
+      <button class="m-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="m-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+// Table parsing before/after SVG
+const TABLE_SVG = `
+<svg viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;margin:6px 0;">
+  <!-- BEFORE panel -->
+  <rect x="0" y="0" width="238" height="196" rx="7" fill="#fdf0f0" stroke="#f0b8b8" stroke-width="1.5"/>
+  <text x="10" y="18" font-family="DM Sans" font-size="10" font-weight="700" fill="#c04040">✗  BROKEN OCR EXTRACTION</text>
+  <line x1="0" y1="24" x2="238" y2="24" stroke="#f0b8b8" stroke-width="1"/>
+  <!-- Broken table -->
+  <rect x="10" y="32" width="218" height="152" rx="4" fill="white" stroke="#e4e1da" stroke-width="1"/>
+  <text x="18" y="50" font-family="DM Mono" font-size="9.5" fill="#c04040">Revenue FY24 ₹ 1,240 Cr</text>
+  <text x="18" y="64" font-family="DM Mono" font-size="9.5" fill="#c04040">PAT FY23 ₹ 89.4 Cr FY22</text>
+  <text x="18" y="78" font-family="DM Mono" font-size="9.5" fill="#c04040">₹ 210 Cr Debt FY24 ₹ 89</text>
+  <text x="18" y="92" font-family="DM Mono" font-size="9.5" fill="#c04040">PAT Margin % 7.2 8.1 —</text>
+  <text x="18" y="106" font-family="DM Mono" font-size="9.5" fill="#9e9b96">... headers merged with values</text>
+  <text x="18" y="120" font-family="DM Mono" font-size="9.5" fill="#9e9b96">... row/column relationship lost</text>
+  <text x="18" y="148" font-family="DM Sans" font-size="9" fill="#c04040" font-style="italic">AI calculates debt as ₹89 Cr</text>
+  <text x="18" y="162" font-family="DM Sans" font-size="9" fill="#c04040" font-style="italic">— misreading PAT as debt figure.</text>
+  <text x="18" y="176" font-family="DM Sans" font-size="9" fill="#c04040" font-style="italic">Wrong by 237%.</text>
+
+  <!-- Arrow between panels -->
+  <text x="246" y="102" font-family="DM Sans" font-size="16" fill="#9e9b96">→</text>
+
+  <!-- AFTER panel -->
+  <rect x="262" y="0" width="238" height="196" rx="7" fill="#edf7f1" stroke="#a8d9bc" stroke-width="1.5"/>
+  <text x="272" y="18" font-family="DM Sans" font-size="10" font-weight="700" fill="#1a6b35">✓  STRUCTURED EXTRACTION</text>
+  <line x1="262" y1="24" x2="500" y2="24" stroke="#a8d9bc" stroke-width="1"/>
+  <!-- Clean structured table -->
+  <rect x="272" y="32" width="218" height="152" rx="4" fill="white" stroke="#e4e1da" stroke-width="1"/>
+  <!-- Header row -->
+  <rect x="272" y="32" width="218" height="18" rx="4" fill="#1c3557"/>
+  <text x="282" y="44" font-family="DM Mono" font-size="9" fill="white" font-weight="500">Metric      FY22    FY23    FY24</text>
+  <!-- Data rows -->
+  <text x="282" y="62" font-family="DM Mono" font-size="9" fill="#1a1814">Revenue     210     890    1240</text>
+  <text x="282" y="76" font-family="DM Mono" font-size="9" fill="#1a1814">PAT          15      68      89</text>
+  <text x="282" y="90" font-family="DM Mono" font-size="9" fill="#c04040">Debt        320     380     420</text>
+  <text x="282" y="104" font-family="DM Mono" font-size="9" fill="#1a1814">PAT Margin  7.1%   7.6%   7.2%</text>
+  <line x1="272" y1="112" x2="490" y2="112" stroke="#e4e1da" stroke-width="1"/>
+  <text x="282" y="130" font-family="DM Sans" font-size="9" fill="#1a6b35" font-style="italic">Headers preserved. Row-column</text>
+  <text x="282" y="144" font-family="DM Sans" font-size="9" fill="#1a6b35" font-style="italic">relationships intact. Debt correctly</text>
+  <text x="282" y="158" font-family="DM Sans" font-size="9" fill="#1a6b35" font-style="italic">identified as ₹420 Cr.</text>
+  <text x="282" y="175" font-family="DM Sans" font-size="9" fill="#1a6b35" font-weight="700">📍 Source: Financials, p.142</text>
+</svg>`;
+
+const NODES = {
+  l1:{tag:'Level 1 · Basic Search',ts:'background:#ece9e3;color:#6b6760;',title:'Basic Search',sub:'Ctrl+F in a PDF — the baseline that 90% of retail investors are still using',sections:[
+    {t:'What It Is',rows:[{k:'Capability',v:'Keyword search within a PDF document — finds the word "debt" wherever it appears but cannot understand context, distinguish mentions, or summarise findings'},{k:'Limitation',v:'A 400-page DRHP contains the word "debt" over 200 times. Keyword search returns all of them with no ability to distinguish material disclosures from passing references'},{k:'User experience',v:'The investor is still doing all the analytical work. The PDF is just marginally more navigable.'}]}
+  ]},
+  l2:{tag:'Level 2 · Smart Summary',ts:'background:#ece9e3;color:#6b6760;',title:'Smart Summarisation',sub:'AI generates a structured 1-page overview — better than nothing, but still not interrogatable',sections:[
+    {t:'What It Does',rows:[{k:'Capability',v:'AI reads the full DRHP and generates a structured summary: Objects of the Issue, key financial metrics, promoter background, and a brief risk overview'},{k:'Improvement',v:'Saves several hours of reading. The investor gets the headline numbers without parsing 400 pages.'},{k:'Remaining limitation',v:'The summary is fixed — it cannot answer follow-up questions. If the investor wants to know about related-party transactions specifically, they still have to find and read that section manually. The document is summarised but not interrogatable.'}]}
+  ]},
+  l3:{tag:'Level 3 · Proposed Architecture',ts:'background:#fff8ed;color:#b86a00;',title:'RAG Chatbot — Cited Queries',sub:'The first level where the document becomes truly interrogatable — every answer backed by a source',sections:[
+    {t:'How It Works',rows:[{k:'Technology',v:'Retrieval-Augmented Generation (RAG) — the user\'s question is converted to an embedding vector, the most relevant DRHP sections are retrieved from the vector database, and the LLM generates an answer grounded only in those sections'},{k:'Citation requirement',v:'Every answer includes the source: page number, section name, paragraph. The investor can verify any claim in seconds'},{k:'Example query',v:'"How much of the IPO proceeds goes to debt repayment?" → "₹340 Cr (42% of proceeds) per Objects of the Issue, p. 87, para 3.2"'}]},
+    {t:'Why Citation Changes Everything',rows:[{k:'Trust',v:'Without citation, the investor must trust the AI blindly. With citation, the AI becomes a navigation tool — it finds the answer and tells you exactly where to verify it'},{k:'Hallucination control',v:'RAG fundamentally limits hallucination by constraining the model to use only retrieved document text. If the document does not contain the answer, the system says so rather than fabricating one'}]}
+  ]},
+  l4:{tag:'Level 4 · Proposed Architecture',ts:'background:#edf7f1;color:#1a6b35;',title:'Multimodal Sentiment — AV + Text Analysis',sub:'Ingesting SEBI\'s mandated audio-visual summaries alongside the text to check for consistency between what management says and what they disclose',sections:[
+    {t:'What It Adds',rows:[{k:'The SEBI AV mandate',v:'SEBI\'s 2025 mandate requires issuers to produce 5–8 minute audio-visual summaries of their DRHPs in English and Hindi. These are now a required disclosure — and a new data source.'},{k:'Tone consistency check',v:'The AI compares the tone of the AV summary (management\'s verbal presentation) with the tone of the written Risk Factors. If management sounds confident in the video but the written disclosures are cautious, that inconsistency is flagged as a potential red flag.'},{k:'Technology',v:'Speech-to-text transcription + NLP sentiment analysis applied to the AV transcript; cross-referenced with the written DRHP sentiment scores'}]},
+    {t:'Why This Matters',rows:[{k:'The insight',v:'Skilled investors have always known that management tone in presentations often diverges from legal disclosures. At Level 4, AI systematically checks for this divergence across every IPO — not just the ones analysts happen to scrutinise closely'},{k:'Example signal',v:'"CEO uses the phrase \'significant growth trajectory\' 11 times in the AV summary. Risk Factors section contains 3 material going-concern disclosures. Sentiment divergence: HIGH."'}]}
+  ]},
+  l5:{tag:'Level 5 · Emerging Capability',ts:'background:#fff8ed;color:#b86a00;',title:'Cross-Prospectus Alpha',sub:'AI compares the current DRHP against every historical successful and failed IPO in the same sector',sections:[
+    {t:'What It Does',rows:[{k:'Concept',v:'A database of all historical DRHPs — those that resulted in successful listings and those that underperformed — is used as a training and comparison corpus. The AI identifies which patterns in the current DRHP most resemble historical successes or failures.'},{k:'Example output',v:'"The debt-to-equity profile of this issuer most closely resembles 3 companies in the same sector that listed in 2021–2023. Two underperformed the index by 40%+ within 12 months. Key similarity: single-customer concentration exceeding 50%."'},{k:'Why it is emerging',v:'Requires a comprehensive, structured historical DRHP database that does not yet exist in a standardised form. Building and maintaining this corpus at scale is the primary infrastructure challenge.'}]},
+    {t:'Status',rows:[{k:'Current state',v:'Morgan Stanley and some quantitative hedge funds are doing versions of this manually or with proprietary databases. No retail-accessible platform offers cross-prospectus comparison at this depth.'},{k:'Timeline',v:'Dependent on regulatory push for standardised DRHP formats — SEBI\'s template-based format initiative (2024) is a step in this direction. With standardised fields, cross-prospectus comparison becomes dramatically more tractable.'}]}
+  ]},
+  source:{tag:'Input Source',ts:'background:#edf3fb;color:#1c3557;',title:'DRHP Document',sub:'The raw input — a 400+ page legal document that is simultaneously the most important and least readable IPO disclosure',sections:[
+    {t:'What a DRHP Contains',rows:[{k:'Objects of the Issue',v:'Where the money raised will go — the most important section for retail investors, but often buried after 50 pages of legal preamble'},{k:'Risk Factors',v:'Often 60–80 pages long. Contains both generic boilerplate (which the AI must ignore) and material specific disclosures (which the AI must surface)'},{k:'Financial Statements',v:'3 years of audited financials presented in complex multi-page tables — the primary challenge for document parsing'},{k:'Management Discussion',v:'Management\'s own narrative of the business — valuable for tone analysis but written to present the company favourably'},{k:'Related Party Transactions',v:'Often the most revealing section — shows how promoters and the company interact financially. Frequently understated or buried.'}]},
+    {t:'The Scale Challenge',rows:[{k:'Document size',v:'400–600 pages for a large IPO. The model cannot read this in a single context window — chunking and retrieval are essential'},{k:'Source feeds',v:'SEBI\'s EDGAR equivalent (SEBI website), BSE/NSE disclosure portals — both provide RSS feeds that can trigger automated ingestion when a new DRHP is filed'},{k:'Update cadence',v:'DRHPs are often amended multiple times before the IPO opens. The system must ingest amendments and update the vector database — ensuring the chatbot always answers from the latest version'}]}
+  ]},
+  ingestion:{tag:'Stage 1 · Ingestion',ts:'background:#ece9e3;color:#6b6760;',title:'Ingestion',sub:'Breaking the 400-page PDF into structured, processable components — the hardest technical step',sections:[
+    {t:'The Parsing Challenge',rows:[{k:'PDF structure',v:'A DRHP is not a clean text document. It contains scanned pages, embedded images, complex multi-column layouts, and financial tables that span multiple pages — each requiring a different parsing approach'},{k:'Text extraction',v:'Modern PDF parsers (PDFPlumber, Adobe\'s PDF Extract API) identify text blocks and preserve their logical reading order — essential for maintaining paragraph structure'},{k:'Table extraction',v:'The most complex component. Tables must be parsed to preserve the header-to-cell relationship. A single formatting error in a financial table can produce catastrophically wrong AI answers — see the Table Parsing problem.'},{k:'Image handling',v:'Charts and graphs are extracted as images and passed to a vision model for description — converting visual financial data into text that can be indexed'}]},
+    {t:'Chunking Strategy',rows:[{k:'What is chunking',v:'The extracted text is divided into manageable pieces ("chunks") — typically 200–500 tokens each — that can be independently retrieved'},{k:'Chunk boundaries',v:'Chunks must respect logical document boundaries — a chunk should not split a financial table header from its data rows, or cut a risk disclosure in mid-sentence'},{k:'Overlap',v:'Adjacent chunks typically share 50–100 tokens of overlap to ensure that context straddling a boundary is captured in both chunks'}]}
+  ]},
+  indexing:{tag:'Stage 2 · Indexing',ts:'background:#edf3fb;color:#1c3557;',title:'Indexing — Vector Database',sub:'Converting text chunks into mathematical vectors that capture meaning, enabling semantic search across the entire document',sections:[
+    {t:'How Vector Embeddings Work',rows:[{k:'The concept',v:'Each text chunk is passed through an embedding model (a specialised neural network) that converts it into a vector of 768–1,536 numbers. Chunks with similar meaning end up close together in this mathematical space'},{k:'Semantic search',v:'When the user asks "how much debt does the company have?", the query is also embedded. The system retrieves the chunks whose vectors are closest to the query vector — not those containing the word "debt" but those semantically related to the concept'},{k:'Why this beats keyword search',v:'"Liability," "borrowings," and "debt repayment" all retrieve together because their embeddings are similar — keyword search would miss any synonym the query didn\'t explicitly include'}]},
+    {t:'Vector Database',rows:[{k:'Technology',v:'Pinecone or Milvus — purpose-built databases for storing and querying high-dimensional vectors at speed'},{k:'Metadata storage',v:'Each vector is stored alongside metadata: page number, section name, paragraph index. This metadata becomes the citation when the RAG system generates an answer'},{k:'Update process',v:'When a DRHP is amended, only the changed sections need to be re-embedded and updated in the database — not the entire document'}]}
+  ]},
+  sentiment:{tag:'Stage 3 · Sentiment Analysis',ts:'background:#e6f7f7;color:#0d7377;',title:'Sentiment Analysis',sub:'Scoring the tone of legal disclosures — distinguishing genuine caution from routine boilerplate',sections:[
+    {t:'How It Works',rows:[{k:'Technology',v:'A Transformer-based NLP model fine-tuned on financial legalese — FinBERT or a custom model trained on labeled DRHP sections'},{k:'Input sections',v:'Risk Factors, Management Discussion & Analysis (MD&A), and Objects of the Issue — the three sections most predictive of issuer confidence and transparency'},{k:'Output',v:'Each paragraph receives a sentiment label (Cautious / Neutral / Confident) and a confidence score. These aggregate into the overall Risk Score visible in the Risk-o-Meter'}]},
+    {t:'The Boilerplate Distinction',rows:[{k:'Generic risk',v:'"Market volatility may adversely affect our business" — present in virtually every DRHP. The model learns to treat this as background noise, not a signal.'},{k:'Material risk',v:'"Our single largest customer accounted for 58% of revenue in FY24 and has not renewed their annual contract" — a specific, material disclosure that significantly elevates the risk score'},{k:'How the model learns',v:'Fine-tuning on labeled historical DRHPs teaches the model which phrasings are material vs boilerplate. A human expert labels hundreds of examples; the model generalises from those labels to new documents'}]}
+  ]},
+  extraction:{tag:'Stage 4 · Extraction',ts:'background:#f3f0fb;color:#5b3faa;',title:'Extraction — NER & Table Parsing',sub:'Pulling structured financial data out of unstructured legal text — including the notoriously difficult multi-page financial tables',sections:[
+    {t:'Named Entity Recognition (NER)',rows:[{k:'What it extracts',v:'Revenue figures, PAT, EBITDA, debt levels, EPS, promoter shareholding, use of proceeds breakdown — the key metrics a retail investor or analyst needs in structured form'},{k:'Technology',v:'NER models identify financial entities in text ("PAT of ₹89.4 Cr") and extract them into structured fields — auto-populating financial summary tables without manual data entry'},{k:'Verification',v:'Each extracted value is linked back to the source sentence for verification — the user can see "₹89.4 Cr — extracted from: Financial Highlights, p. 14, line 3"'}]},
+    {t:'The Table Parsing Problem — Before vs. After',svg:'table'},
+    {t:'Why This Matters',rows:[{k:'The risk',v:'A broken OCR extraction in a financial table can produce a number that is wrong by 200%+ — feeding incorrect figures into AI calculations and generating dangerously misleading outputs'},{k:'The solution',v:'Specialised table parsing models that understand the structural relationship between headers and cells — maintaining row-column integrity even across multi-page spanning tables'},{k:'Verification layer',v:'Every extracted financial figure is cross-referenced against at least two locations in the DRHP (e.g. the summary financials and the detailed financial statements) to catch inconsistencies'}]}
+  ]},
+  interaction:{tag:'Stage 5 · Interaction',ts:'background:#edf7f1;color:#1a6b35;',title:'Interaction — RAG Chatbot & Citation Engine',sub:'The user-facing layer — where the entire pipeline becomes a conversation',sections:[
+    {t:'How RAG Works in Practice',rows:[{k:'Query embedding',v:'The user\'s question is converted to a vector using the same embedding model used during indexing'},{k:'Retrieval',v:'The top-k most semantically similar chunks are retrieved from the vector database — typically 3–6 chunks of 300 tokens each'},{k:'Generation',v:'The LLM receives: the user\'s question + the retrieved chunks. It generates an answer using only the retrieved text — it cannot introduce information from outside the document'},{k:'Citation',v:'The answer is appended with the metadata of the retrieved chunks: page number, section name, paragraph. The user can immediately navigate to the source.'}]},
+    {t:'What Users Can Ask',rows:[{k:'Financial queries',v:'"What was EBITDA growth over the last 3 years?" "How much of the proceeds goes to promoter debt repayment?" "What is the debt-to-equity ratio?"'},{k:'Risk queries',v:'"What are the top 3 risks specific to this company?" "Are there any litigation disclosures?" "Does any related-party transaction involve the promoter family?"'},{k:'Comparative queries',v:'"Is this P/E ratio above or below sector average?" — for this, the system must access external data, which is a Level 5 capability'},{k:'The limit',v:'The chatbot can only answer questions whose answers exist in the document. "Should I invest?" is not a question it will answer — it surfaces information, not recommendations'}]}
+  ]},
+  retail:{tag:'User View · Retail Investor',ts:'background:#edf7f1;color:#1a6b35;',title:'Retail Investor View',sub:'A plain-language verdict designed to be understood in 60 seconds without financial expertise',sections:[
+    {t:'What the Retail Investor Sees',rows:[{k:'Risk-o-Meter',v:'A semi-circular gauge showing the overall risk score (0–100) derived from the sentiment analysis of all Risk Factor sections. Green = low risk, Red = high risk. One glance communicates what 80 pages of legal text hides.'},{k:'Risk Score components',v:'The score aggregates: number of material vs boilerplate risks detected, management tone in MD&A, concentration risks (customer, supplier, geographic), leverage ratios, promoter pledge levels'},{k:'TL;DR summary',v:'A 3-paragraph plain-English summary: what the company does, how it makes money, and the 3 most important risks — written at a reading level accessible to any educated adult'},{k:'Top risk flags',v:'The 3–5 most material disclosures highlighted with direct quotes from the DRHP and their page numbers — "We found: single customer >50% revenue (p.67), promoter pledged 34% holdings (p.88), ongoing litigation ₹120 Cr (p.204)"'}]},
+    {t:'Design Philosophy',rows:[{k:'Not a recommendation',v:'The platform explicitly does not say "buy" or "don\'t buy." It democratises information access — the investor makes their own decision with better information'},{k:'SEBI alignment',v:'The AV mandate and this platform share the same philosophy — make the DRHP accessible, not just available. An accessible DRHP is one that a retail investor can genuinely interrogate.'}]}
+  ]},
+  pro:{tag:'User View · Professional / Analyst',ts:'background:#edf3fb;color:#1c3557;',title:'Professional Terminal View',sub:'A citation-anchored chatbot for analysts who need depth, specificity, and verifiability',sections:[
+    {t:'What the Professional Sees',rows:[{k:'Terminal interface',v:'A command-line style query interface — type a question, receive an answer with a citation. Designed for analysts who know what they are looking for and need to find it fast'},{k:'Deep-dive queries',v:'"Analyse all related-party transactions in the past 3 years." "Identify any discrepancies between the projected revenue in the Objects section and the historical revenue trend." "Flag all litigation disclosures with claimed amounts."'},{k:'Citation format',v:'Every answer: the response text + "Source: [Section Name], p. [Page], para [Number]" — the analyst can immediately navigate to the exact location in the PDF'},{k:'Export capability',v:'Query results and cited sections can be exported to a structured research note template — reducing the time to first draft of an IPO research note from hours to minutes'}]},
+    {t:'The Morgan Stanley Blueprint',rows:[{k:'AI @ MS deployment',v:'Morgan Stanley deployed GPT-4 based tools specifically for analyst research synthesis — their approach validates the professional terminal model for institutional use'},{k:'The key differentiator',v:'For institutional use, citation is not optional — it is the product. An analyst presenting a recommendation to a portfolio manager must be able to say "this figure is on page 87, paragraph 3" — the AI that enables this is the AI that gets adopted'}]}
+  ]},
+  vault:{tag:'Reference Vault · Curation Layer',ts:'background:#edf3fb;color:#1c3557;',title:'Reference Vault — The Curation Layer',sub:'The architectural foundation that makes the platform trustworthy rather than impressive',sections:[
+    {t:'What It Does',rows:[{k:'Core function',v:'Every AI-generated answer must be associated with at least one valid DRHP citation before it is shown to the user. Answers without citations are rejected at this layer — they never reach the interface'},{k:'PDF anchor',v:'Citations link directly to the PDF: page number, section heading, paragraph number. In the professional view, clicking a citation opens the PDF at that exact location'},{k:'Version control',v:'When the DRHP is amended, the vault tracks which answers were generated from which version of the document — ensuring historical queries can be traced to the correct source'},{k:'Audit trail',v:'Every query and response is logged with timestamp, user ID (if authenticated), and citation chain. This creates a complete audit trail for regulatory or compliance review'}]},
+    {t:'Why This Is the Core Innovation',rows:[{k:'The trust problem',v:'The reason GenAI has not been widely adopted in regulated financial contexts is the hallucination risk. The curation layer is the architectural answer to that problem — it transforms a powerful but unreliable LLM into a trustworthy, auditable research tool'},{k:'The comparison',v:'Without the curation layer: impressive chatbot. With the curation layer: regulatory-grade research infrastructure. The difference is the ability to say "this answer is verifiable, always."'}]}
+  ]}
+};
+
+function openModal(key){
+  const d=NODES[key];if(!d)return;
+  document.querySelectorAll('.ladder-step,.user-view,.pnode,.vault-node').forEach(n=>n.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('mTag').textContent=d.tag;
+  document.getElementById('mTag').style.cssText=d.ts+'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block;';
+  document.getElementById('mTitle').textContent=d.title;
+  document.getElementById('mSub').textContent=d.sub;
+  const body=document.getElementById('mBody');body.innerHTML='';
+  d.sections.forEach(sec=>{
+    const sd=document.createElement('div');sd.className='info-sec';
+    const st=document.createElement('div');st.className='info-sec-title';st.textContent=sec.t;sd.appendChild(st);
+    if(sec.svg==='table'){
+      const w=document.createElement('div');
+      w.style.cssText='background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 8px;margin-top:4px;overflow-x:auto;';
+      w.innerHTML=TABLE_SVG;
+      sd.appendChild(w);
+    }
+    if(sec.rows)sec.rows.forEach(r=>{const row=document.createElement('div');row.className='info-row';row.innerHTML=`<span class="info-key">${r.k}</span><span class="info-val">${r.v}</span>`;sd.appendChild(row);});
+    if(sec.numbered){const nl=document.createElement('div');nl.className='num-list';sec.numbered.forEach((item,i)=>{const el=document.createElement('div');el.className='num-item';el.innerHTML=`<div class="num-badge opp">${i+1}</div><div class="num-text"><strong>${item.label}:</strong> ${item.text}</div>`;nl.appendChild(el);});sd.appendChild(nl);}
+    body.appendChild(sd);
+  });
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  document.querySelectorAll('.ladder-step,.user-view,.pnode,.vault-node').forEach(n=>n.classList.remove('active'));
+}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target===document.getElementById('overlay'))closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+</script>
+</body>
+</html>

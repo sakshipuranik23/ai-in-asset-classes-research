@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XAI for Regulatory Reporting — Process Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+  --navy:#1c3557;--navy-pale:#edf3fb;
+  --exec:#1a6b35;--exec-pale:#edf7f1;--exec-border:#a8d9bc;
+  --xai:#1c3557;--xai-pale:#edf3fb;--xai-border:#a8c4e0;
+  --amber:#b86a00;--amber-pale:#fff8ed;--amber-border:#f5c882;
+  --purple:#5b3faa;--purple-pale:#f3f0fb;--purple-border:#c4b0f0;
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,0.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.nav-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--text-secondary);padding:5px 14px 5px 0;border-right:1px solid var(--border);margin-right:16px;background:none;border-top:none;border-bottom:none;border-left:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .15s}
+.nav-back:hover{color:var(--navy)}
+.nav-crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+.nav-crumb .active{color:var(--navy);font-weight:600}
+.nav-crumb .sep{color:var(--border)}
+.nav-badge{margin-left:auto;background:#fff3e0;color:#b86a00;border:1px solid #f5c882;border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;text-transform:uppercase;letter-spacing:.06em}
+
+/* PAGE */
+.page{max-width:1100px;margin:0 auto;padding:28px 24px 48px}
+
+/* HEADER */
+.uc-num{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--navy);letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+.header-sub{font-size:14px;color:var(--text-secondary);max-width:700px;line-height:1.6;margin-bottom:12px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:24px}
+.chip{font-size:11.5px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary)}
+.chip.green{background:var(--exec-pale);border-color:var(--exec-border);color:var(--exec)}
+.chip.navy{background:var(--xai-pale);border-color:var(--xai-border);color:var(--xai)}
+.chip.amber{background:var(--amber-pale);border-color:var(--amber-border);color:var(--amber)}
+.chip.purple{background:var(--purple-pale);border-color:var(--purple-border);color:var(--purple)}
+
+/* SUMMARY */
+.summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:28px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:3px solid transparent;box-shadow:var(--shadow-sm)}
+.sc-gap{border-left-color:#d06060}.sc-sol{border-left-color:#5aaa72}.sc-val{border-left-color:#4a7fd4}
+.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.sc-gap .sc-lbl{color:#c04040}.sc-sol .sc-lbl{color:#2e7a46}.sc-val .sc-lbl{color:#2a4faa}
+.sc-txt{font-size:13px;line-height:1.5}.sc-val .sc-txt{font-weight:600;color:var(--navy)}
+
+/* DIAGRAM WRAPPER */
+.diagram-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-md);margin-bottom:28px}
+.diag-titlebar{background:var(--navy);padding:11px 20px;display:flex;align-items:center;gap:10px}
+.diag-titlebar span{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em}
+.diag-titlebar small{font-size:11.5px;color:rgba(255,255,255,.45);font-family:'DM Sans',sans-serif}
+
+/* SWIM LANE */
+.lane{display:flex;align-items:stretch;border-bottom:1px solid var(--border-light);min-height:118px;position:relative}
+.lane:last-child{border-bottom:none}
+.lane-lbl{width:104px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:12px 8px;border-right:2px solid var(--border)}
+.lane-lbl .li{font-size:20px;line-height:1}
+.lane-lbl .ln{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;text-align:center;line-height:1.3}
+.lane-lbl .lt{font-size:9.5px;font-weight:500;padding:2px 6px;border-radius:8px;text-transform:uppercase;letter-spacing:.06em}
+.lane.exec .lane-lbl{background:#f4fbf6}.lane.exec .ln{color:var(--exec)}.lane.exec .lt{background:var(--exec-pale);color:var(--exec);border:1px solid var(--exec-border)}
+.lane.async .lane-lbl{background:#f2f6fc}.lane.async .ln{color:var(--xai)}.lane.async .lt{background:var(--xai-pale);color:var(--xai);border:1px solid var(--xai-border)}
+.lane.aud .lane-lbl{background:#fdf8f2}.lane.aud .ln{color:var(--amber)}.lane.aud .lt{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+
+/* LANE CONTENT */
+.lane-content{flex:1;display:flex;align-items:center;padding:14px 16px;gap:0;position:relative;overflow:visible}
+
+/* NODE */
+.node{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;width:148px;cursor:pointer;transition:box-shadow .18s,border-color .18s,transform .18s;box-shadow:var(--shadow-sm);flex-shrink:0}
+.node:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.node.active{border-color:var(--navy)!important;box-shadow:0 0 0 3px rgba(28,53,87,.12),var(--shadow-md)}
+.node.n-exec{border-top:3px solid var(--exec)}
+.node.n-meta{border-top:3px solid var(--amber)}
+.node.n-xai{border-top:3px solid var(--xai)}
+.node.n-llm{border-top:3px solid var(--purple)}
+.node.n-vault{border-top:3px solid var(--exec)}
+.node.n-dash{border-top:3px solid #3a5fc8}
+.n-icon{font-size:18px;margin-bottom:4px;line-height:1}
+.n-title{font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:3px}
+.n-desc{font-size:11px;color:var(--text-secondary);line-height:1.4;margin-bottom:7px}
+.n-btn{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .15s}
+.n-btn:hover{opacity:.8}
+.n-exec .n-btn{background:var(--exec-pale);color:var(--exec)}
+.n-meta .n-btn{background:var(--amber-pale);color:var(--amber)}
+.n-xai .n-btn{background:var(--xai-pale);color:var(--xai)}
+.n-llm .n-btn{background:var(--purple-pale);color:var(--purple)}
+.n-vault .n-btn{background:var(--exec-pale);color:var(--exec)}
+.n-dash .n-btn{background:#e8edff;color:#3a5fc8}
+
+/* ARROWS */
+.arr{display:flex;align-items:center;flex-shrink:0;padding:0 3px;width:26px}
+.arr-line{height:2px;background:#c8c4bc;flex:1}
+.arr-head{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:7px solid #c8c4bc;flex-shrink:0}
+.arr.dashed .arr-line{background:none;border-top:2px dashed #c8c4bc;height:0}
+.arr-lbl{font-size:9.5px;font-weight:600;color:var(--text-muted);background:var(--surface);padding:1px 6px;border-radius:10px;border:1px solid var(--border-light);white-space:nowrap}
+
+/* LANE SEPARATOR */
+.sep-bar{display:flex;align-items:center;gap:10px;padding:7px 16px 7px 120px;background:linear-gradient(to right,#f2f6fc,#f7f6f3);border-bottom:1px solid var(--border);border-top:1px solid var(--border)}
+.sep-pill{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:2px 10px;border-radius:10px;background:var(--xai-pale);color:var(--xai);border:1px solid var(--xai-border)}
+.sep-desc{font-size:11px;color:var(--text-muted);font-style:italic}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(20,18,14,.45);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(3px)}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:14px;width:540px;max-width:calc(100vw - 32px);max-height:calc(100vh - 60px);overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(12px) scale(.98);transition:transform .22s cubic-bezier(.34,1.56,.64,1)}
+.overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-hdr{padding:20px 22px 15px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2}
+.m-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block}
+.m-title{font-family:'DM Serif Display',serif;font-size:19px;color:var(--navy);line-height:1.25;margin-bottom:4px;padding-right:30px}
+.m-sub{font-size:12.5px;color:var(--text-secondary);font-style:italic}
+.m-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:15px;font-family:'DM Sans',sans-serif;transition:background .12s}
+.m-close:hover{background:var(--border)}
+.m-body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:14px}
+
+/* MODAL CONTENT */
+.info-sec{display:flex;flex-direction:column;gap:7px}
+.info-sec-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);padding-bottom:5px;border-bottom:1px solid var(--border-light)}
+.info-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.info-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:168px}
+.info-key::after{content:':'}
+.info-val{color:var(--text-secondary)}
+.mono-field{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-primary);background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:8px 10px;line-height:1.6;white-space:pre-wrap}
+.num-list{display:flex;flex-direction:column;gap:6px}
+.num-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.num-badge{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--navy-pale);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.num-text{color:var(--text-secondary)}
+.num-text strong{color:var(--text-primary)}
+.mini-bars{display:flex;flex-direction:column;gap:5px}
+.mini-bar-row{display:flex;align-items:center;gap:8px}
+.mbl{font-size:12px;color:var(--text-secondary);width:148px;flex-shrink:0}
+.mbt{flex:1;height:8px;background:var(--border-light);border-radius:4px;overflow:hidden}
+.mbf{height:100%;border-radius:4px}
+.mbp{font-size:11.5px;font-weight:600;color:var(--text-secondary);width:32px;text-align:right}
+.alert-badge{display:inline-flex;align-items:center;gap:6px;background:#fdf0f0;color:#c04040;border:1px solid #f0b8b8;border-radius:6px;font-size:12px;font-weight:600;padding:5px 11px;margin-bottom:4px}
+.pulse{width:7px;height:7px;border-radius:50%;background:#d03030;animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.act-row{display:flex;gap:8px;margin-top:4px}
+.act-btn{padding:7px 16px;border-radius:6px;font-size:12px;font-weight:600;border:none;font-family:inherit;cursor:default}
+.approve{background:#d4edda;color:#1a6b35}.escalate{background:#fde8e8;color:#9a1f1f}
+
+/* RESEARCH */
+.research{padding-top:24px;border-top:1px solid var(--border)}
+.research h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy);margin-bottom:16px;letter-spacing:-.01em}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.r-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.r-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:7px}
+.r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.r-rows{display:flex;flex-direction:column;gap:7px}
+.r-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.r-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:148px}
+.r-key::after{content:':'}
+.r-val{color:var(--text-secondary)}
+.ref-list{display:flex;flex-direction:column;gap:6px}
+.ref-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.ref-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--navy-pale);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.ref-txt{color:var(--text-secondary)}
+.ref-txt strong{color:var(--text-primary)}
+.page-footer{text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:28px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* RESPONSIVE LANE SPACING — future-proof */
+.lane.exec .lane-content {
+  padding-top: clamp(24px, 3vw, 34px);
+  padding-bottom: clamp(16px, 2.2vw, 24px);
+}
+.lane.async .lane-content {
+  padding-top: clamp(16px, 2vw, 24px);
+  padding-bottom: clamp(14px, 2vw, 22px);
+}
+.lane.aud .lane-content {
+  padding-top: clamp(16px, 2vw, 24px);
+  padding-bottom: clamp(28px, 3vw, 40px);
+}
+
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="nav-back" onclick="window.history.back()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11L5 7l4-4"/></svg>
+    Back to Matrix
+  </button>
+  <div class="nav-crumb">
+    <span>Equity Markets</span><span class="sep">/</span>
+    <span>Immediate Priorities</span><span class="sep">/</span>
+    <span class="active">XAI for Regulatory Reporting</span>
+  </div>
+  <div class="nav-badge">🎯 Immediate Priority</div>
+</nav>
+
+<div class="page">
+
+  <div class="uc-num">Use Case #26 &nbsp;·&nbsp; Compliance &nbsp;·&nbsp; Strategic Impact 10/10</div>
+  <h1>Explainable AI (XAI) for Regulatory Reporting</h1>
+  <p class="header-sub">High-performing AI models are opaque — they produce accurate decisions but cannot explain their reasoning in terms a regulator can evaluate. XAI layers transparency on top of existing AI without sacrificing performance.</p>
+  <div class="chips">
+    <span class="chip navy">SHAP / LIME</span>
+    <span class="chip purple">LLM Narrative Generation</span>
+    <span class="chip navy">Apache Kafka</span>
+    <span class="chip amber">Partially Deployed</span>
+    <span class="chip green">Implementation Readiness: 7/10</span>
+  </div>
+
+  <div class="summary-row">
+    <div class="sc sc-gap"><div class="sc-lbl">The Gap</div><div class="sc-txt">AI models make accurate trading and compliance decisions but cannot explain them — regulators require auditable reasoning, not just correct outcomes.</div></div>
+    <div class="sc sc-sol"><div class="sc-lbl">AI Solution</div><div class="sc-txt">XAI frameworks generate mathematically verifiable, human-readable explanations layered on top of existing models without changing how they work.</div></div>
+    <div class="sc sc-val"><div class="sc-lbl">Value Created</div><div class="sc-txt">Powerful AI models can be used in regulated contexts that previously required simpler, less accurate rules — no performance trade-off.</div></div>
+  </div>
+
+  <!-- DIAGRAM -->
+  <div class="diagram-wrap">
+    <div class="diag-titlebar">
+      <span>System Process Flow</span>
+      <small>&nbsp;·&nbsp; Click any node for full detail &nbsp;·&nbsp; Two parallel tracks: Execution (real-time) and Explainability (async)</small>
+    </div>
+
+    <!-- LANE 1: EXECUTION -->
+    <div class="lane exec" style="min-height:126px;">
+      <div class="lane-lbl">
+        <div class="li">⚡</div>
+        <div class="ln">Execution Track</div>
+        <div class="lt">Real-time</div>
+      </div>
+      <div class="lane-content" style="overflow:visible;position:relative;">
+
+        <!-- Trader -->
+        <div class="node n-exec" onclick="openModal('trader')">
+          <div class="n-icon">👤</div>
+          <div class="n-title">Trader</div>
+          <div class="n-desc">Submits order to AI execution system</div>
+          <button class="n-btn">Details →</button>
+        </div>
+
+        <div class="arr"><div class="arr-line"></div><div class="arr-head"></div></div>
+
+        <!-- AI Model — feedback arc above -->
+        <div style="position:relative;">
+          <div style="position:absolute;top:-36px;left:-26px;right:-26px;height:30px;border-top:2px dashed #c8c4bc;border-left:2px dashed #c8c4bc;border-right:2px dashed #c8c4bc;border-radius:8px 8px 0 0;pointer-events:none;z-index:5;">
+            <span style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:9.5px;font-weight:600;color:var(--text-muted);background:var(--surface);padding:1px 7px;border-radius:10px;border:1px solid var(--border-light);white-space:nowrap;">Execution confirmation</span>
+          </div>
+          <div class="node n-exec" onclick="openModal('aimodel')">
+            <div class="n-icon">🤖</div>
+            <div class="n-title">AI Execution Model</div>
+            <div class="n-desc">Makes decision; emits metadata packet</div>
+            <button class="n-btn">Details →</button>
+          </div>
+          <!-- Vertical dashed drop to async lane -->
+          <div style="position:absolute;bottom:-30px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;pointer-events:none;z-index:20;">
+            <div style="width:2px;height:22px;border-left:2px dashed #b8b3bb;"></div>
+            <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #b8b3bb;"></div>
+          </div>
+          <div style="position:absolute;bottom:-28px;left:calc(50% + 10px);font-size:9.5px;font-weight:600;color:var(--text-muted);background:var(--surface);padding:1px 6px;border:1px solid var(--border-light);border-radius:10px;white-space:nowrap;pointer-events:none;z-index:21;">Metadata packet</div>
+        </div>
+
+        <div class="arr"><div class="arr-line"></div><div class="arr-head"></div></div>
+
+        <!-- Exchange -->
+        <div class="node n-exec" onclick="openModal('exchange')">
+          <div class="n-icon">🏛️</div>
+          <div class="n-title">Stock Exchange</div>
+          <div class="n-desc">Executes and confirms the trade</div>
+          <button class="n-btn">Details →</button>
+        </div>
+
+        <div style="flex:1;"></div>
+      </div>
+    </div>
+
+    <!-- SEPARATOR -->
+    <div class="sep-bar">
+      <div class="sep-pill">⏱ Explainability Track</div>
+      <div class="sep-desc">Asynchronous — runs in background, never delays the trader</div>
+    </div>
+
+    <!-- LANE 2: XAI ASYNC -->
+    <div class="lane async" style="min-height:126px;position:relative;">
+      <div class="lane-lbl">
+        <div class="li">🔍</div>
+        <div class="ln">XAI Track</div>
+        <div class="lt">Async</div>
+      </div>
+      <div class="lane-content" >
+
+        <!-- Kafka -->
+        <div class="node n-meta" onclick="openModal('kafka')">
+          <div class="n-icon">📨</div>
+          <div class="n-title">Metadata Hook + Kafka</div>
+          <div class="n-desc">Captures packet; queues asynchronously</div>
+          <button class="n-btn">Details →</button>
+        </div>
+
+        <div class="arr"><div class="arr-line"></div><div class="arr-head"></div></div>
+
+        <!-- XAI Engine -->
+        <div class="node n-xai" onclick="openModal('xai')">
+          <div class="n-icon">⚙️</div>
+          <div class="n-title">XAI Compute Engine</div>
+          <div class="n-desc">SHAP: maps 500 features → 15 categories</div>
+          <button class="n-btn">Details →</button>
+        </div>
+
+        <div class="arr"><div class="arr-line"></div><div class="arr-head"></div></div>
+
+        <!-- LLM -->
+        <div class="node n-llm" onclick="openModal('llm')">
+          <div class="n-icon">✍️</div>
+          <div class="n-title">Generative Narrative</div>
+          <div class="n-desc">LLM converts SHAP scores to plain English</div>
+          <button class="n-btn">Details →</button>
+        </div>
+
+        <div class="arr"><div class="arr-line"></div><div class="arr-head"></div></div>
+
+        <!-- Vault — upward connector to auditor -->
+        <div style="position:relative;">
+          <div class="node n-vault" onclick="openModal('vault')">
+            <div class="n-icon">🔒</div>
+            <div class="n-title">Compliance Vault</div>
+            <div class="n-desc">Stores immutable Evidence Package</div>
+            <button class="n-btn">Details →</button>
+          </div>
+          <!-- Up arrow to auditor lane -->
+          <div style="position:absolute;top:-1px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;pointer-events:none;z-index:20;">
+            <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:7px solid #b8b3bb;margin-top:-8px;"></div>
+            <div style="width:2px;height:6px;border-left:2px dashed #c8c4bc;"></div>
+          </div>
+          <!-- Down dashed from auditor back -->
+          <div style="position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;pointer-events:none;z-index:20;">
+            <div style="width:2px;height:6px;border-left:2px dashed #c8c4bc;"></div>
+            <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #b8b3bb;"></div>
+          </div>
+        </div>
+
+        <div style="flex:1;"></div>
+      </div>
+    </div>
+
+    <!-- LANE 3: AUDITOR -->
+    <div class="lane aud" style="min-height:118px;position:relative;">
+      <div class="lane-lbl">
+        <div class="li">👁</div>
+        <div class="ln">Auditor / Compliance</div>
+        <div class="lt">On demand</div>
+      </div>
+      <div class="lane-content" style="justify-content:flex-end;padding-right:24px;">
+        <!-- Dashboard aligned with vault above -->
+        <div class="node n-dash" onclick="openModal('dashboard')" style="position:relative;">
+          <div class="n-icon">🖥️</div>
+          <div class="n-title">Compliance Dashboard</div>
+          <div class="n-desc">Reviews explanation; Approve or Escalate logged to Vault</div>
+          <button class="n-btn">Details →</button>
+          <!-- feedback label -->
+          <div style="position:absolute;bottom:-28px;left:50%;transform:translateX(-50%);font-size:9.5px;font-weight:600;color:var(--text-muted);background:var(--surface);padding:1px 7px;border-radius:10px;border:1px solid var(--border-light);white-space:nowrap;pointer-events:none;">Approve / Escalate logged back</div>
+        </div>
+        <div style="flex:1;"></div>
+      </div>
+    </div>
+
+  </div><!-- end diagram-wrap -->
+
+  <!-- RESEARCH -->
+  <div class="research">
+    <h2>Research Notes</h2>
+    <div class="r-grid">
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--exec);"></div>Why This Matters Now</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">Regulatory driver</span><span class="r-val">SEBI, SEC, FCA, and ECB are all moving toward requiring firms to explain AI-driven decisions in trading and compliance contexts</span></div>
+          <div class="r-row"><span class="r-key">MiFID II precedent</span><span class="r-val">Already mandates explainability for certain algorithmic trading decisions across the EU</span></div>
+          <div class="r-row"><span class="r-key">Current workaround</span><span class="r-val">Firms use simpler, less accurate rules-based models just to satisfy audit requirements — XAI removes this trade-off entirely</span></div>
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--xai);"></div>Key Technical Components</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">SHAP</span><span class="r-val">SHapley Additive exPlanations — assigns each input feature a mathematically grounded contribution score to the model's output</span></div>
+          <div class="r-row"><span class="r-key">LIME</span><span class="r-val">Alternative to SHAP for cases requiring lighter computation; locally approximates the model around a specific prediction</span></div>
+          <div class="r-row"><span class="r-key">Apache Kafka</span><span class="r-val">Message queue that decouples the XAI pipeline from execution so trader latency is never impacted</span></div>
+          <div class="r-row"><span class="r-key">LLM prompting</span><span class="r-val">Anchored to SHAP inputs — output is grounded in structured scores, not free generation, which prevents hallucination</span></div>
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--amber);"></div>Key Challenges &amp; Mitigations</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">Faithfulness gap</span><span class="r-val">Mitigated by storing raw SHAP scores alongside the narrative — regulators can mathematically verify any explanation at any time</span></div>
+          <div class="r-row"><span class="r-key">Latency risk</span><span class="r-val">Solved by the async Kafka track — execution is never blocked regardless of XAI compute time</span></div>
+          <div class="r-row"><span class="r-key">LLM hallucination</span><span class="r-val">Constrained by strict prompt templates that anchor all output to structured SHAP inputs only</span></div>
+          <div class="r-row"><span class="r-key">Feature mapping</span><span class="r-val">Mapping 500 raw features to 15 business categories requires significant domain expertise at initial setup</span></div>
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--purple);"></div>Real-World Deployments</div>
+        <div class="ref-list">
+          <div class="ref-item"><div class="ref-num">1</div><div class="ref-txt"><strong>Fiddler AI</strong> — enterprise XAI platform used in financial services for model monitoring and explanation</div></div>
+          <div class="ref-item"><div class="ref-num">2</div><div class="ref-txt"><strong>IBM OpenScale</strong> — bias detection and explainability layer for regulated AI decision systems</div></div>
+          <div class="ref-item"><div class="ref-num">3</div><div class="ref-txt"><strong>Deloitte AI Explainability Toolkit</strong> — consulting-led implementation framework for regulated firms</div></div>
+          <div class="ref-item"><div class="ref-num">4</div><div class="ref-txt"><strong>SEBI</strong> — piloting AI explainability requirements for algorithmic trading firms (2024–26)</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-footer">
+    Hexaware Financial Services &nbsp;·&nbsp; AI in Equity Markets &nbsp;·&nbsp; Use Case #26 &nbsp;·&nbsp; Preliminary Research 2026
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="m-tag" id="mTag"></div>
+      <div class="m-title" id="mTitle"></div>
+      <div class="m-sub" id="mSub"></div>
+      <button class="m-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="m-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+const NODES = {
+  trader:{
+    tag:'⚡ Execution Track',ts:'background:#edf7f1;color:#1a6b35;',
+    title:'Trader',sub:'The human actor initiating the process',
+    sections:[
+      {t:'Role in the System',rows:[
+        {k:'Action',v:'Submits a buy or sell order through the firm\'s Order Management System (OMS)'},
+        {k:'Awareness',v:'The trader is unaware of the XAI pipeline — their execution speed is never affected'},
+        {k:'Output',v:'The order triggers the AI Execution Model to make a trading decision'},
+      ]},
+      {t:'Why This Matters for XAI',rows:[
+        {k:'Accountability',v:'Under MiFID II and SEBI regulations, any AI-assisted decision must be attributable to a responsible person — the trader is that person of record'},
+        {k:'No bottleneck',v:'The async design ensures the trader\'s workflow is identical whether XAI is running or not'},
+      ]}
+    ]
+  },
+  aimodel:{
+    tag:'⚡ Execution Track',ts:'background:#edf7f1;color:#1a6b35;',
+    title:'AI Execution Model',sub:'The core decision engine — and the source of the explainability challenge',
+    sections:[
+      {t:'What It Does',rows:[
+        {k:'Decision',v:'Processes hundreds of input features (price, volume, order book depth, macro signals) and produces a trade decision with a confidence score'},
+        {k:'Model type',v:'Typically a gradient-boosted tree or deep neural network — highly accurate but inherently opaque'},
+        {k:'Speed',v:'Decision made in microseconds; the metadata packet is emitted simultaneously without blocking execution'},
+      ]},
+      {t:'The Metadata Packet It Emits',mono:'Input Vector:     [500 raw features]\nModel Version ID: v4.2.1-prod\nPrediction Score: 0.91  ← FLAGGED (threshold: 0.85)\nTimestamp:        2024-03-15T14:02:33.441Z'},
+      {t:'The Core Problem',rows:[
+        {k:'Black box',v:'The model cannot by itself say "Market Volatility was 70% responsible" — it only knows the 500-feature input produced a 0.91 score'},
+        {k:'What XAI fixes',v:'SHAP decomposes the decision post-hoc into human-readable feature contributions without retraining the model'},
+      ]}
+    ]
+  },
+  exchange:{
+    tag:'⚡ Execution Track',ts:'background:#edf7f1;color:#1a6b35;',
+    title:'Stock Exchange',sub:'Executes and confirms the trade; sends execution report back',
+    sections:[
+      {t:'Role in the System',rows:[
+        {k:'Function',v:'Receives the order, matches it against the order book, executes it, and returns an execution report (filled price, quantity, timestamp)'},
+        {k:'Feedback arrow',v:'The dashed arc above the diagram shows the execution confirmation returning to the AI model — this closes the execution loop'},
+        {k:'XAI relevance',v:'The exchange\'s timestamp and execution price are stored in the metadata packet, making the audit trail complete and reproducible'},
+      ]}
+    ]
+  },
+  kafka:{
+    tag:'⏱ Explainability Track',ts:'background:#edf3fb;color:#1c3557;',
+    title:'Metadata Hook + Apache Kafka Queue',sub:'The integration point — captures every AI decision asynchronously without impacting execution speed',
+    sections:[
+      {t:'The Metadata Hook',rows:[
+        {k:'What it is',v:'An interceptor embedded in the AI model that fires on every prediction, emitting a structured packet to the queue'},
+        {k:'Asynchronous',v:'The hook pushes the packet to Kafka and immediately returns control to the execution engine — the trader never waits'},
+        {k:'What it captures',v:'Input vector (500 features), Model Version ID, Prediction Score, Timestamp'},
+      ]},
+      {t:'Apache Kafka\'s Role',rows:[
+        {k:'Message queue',v:'Buffers between the real-time execution system and the slower XAI compute engine — decouples their speeds completely'},
+        {k:'Durability',v:'Messages are persisted on disk, so if the XAI engine is temporarily unavailable, no metadata packets are lost'},
+        {k:'Scale',v:'Can handle millions of prediction events per day, matching high-frequency trading system throughput'},
+      ]}
+    ]
+  },
+  xai:{
+    tag:'⏱ Explainability Track',ts:'background:#edf3fb;color:#1c3557;',
+    title:'XAI Compute Engine',sub:'Runs SHAP to calculate feature importance, then maps raw scores to business-readable categories',
+    sections:[
+      {t:'The Core Computation',rows:[
+        {k:'Input',v:'500-feature prediction metadata packet from Kafka'},
+        {k:'Algorithm',v:'SHAP — calculates each feature\'s marginal contribution to the final prediction score'},
+        {k:'Output',v:'A ranked list of feature importance scores summing to 1.0'},
+      ]},
+      {t:'Feature Normalisation — Critical Step',rows:[
+        {k:'The problem',v:'500 raw features (e.g. "bid_ask_spread_5min_rolling_avg") are meaningless to a compliance officer'},
+        {k:'The solution',v:'A pre-built mapping file groups the 500 features into 10–15 named business categories'},
+        {k:'Example mapping',v:'"bid_ask_spread, order_book_depth_L1, L2_volume_ratio" → Liquidity Depth (18% of decision)'},
+      ]},
+      {t:'Normalised Output Example',bars:[
+        {label:'Market Volatility',pct:70,color:'#1c3557'},
+        {label:'Liquidity Depth',pct:18,color:'#2a5f8a'},
+        {label:'Counterparty Risk',pct:8,color:'#4a8ab0'},
+        {label:'Order Size Anomaly',pct:4,color:'#7ab0d0'},
+      ]}
+    ]
+  },
+  llm:{
+    tag:'⏱ Explainability Track',ts:'background:#edf3fb;color:#1c3557;',
+    title:'Generative Narrative Layer',sub:'Translates structured SHAP scores into plain-English audit-ready text using a constrained LLM',
+    sections:[
+      {t:'How It Works',rows:[
+        {k:'Input',v:'Normalised SHAP feature importance scores + original prediction metadata from the XAI Compute Engine'},
+        {k:'Method',v:'A fixed prompt template instructs the LLM to act as a compliance auditor and write a 3-sentence justification'},
+        {k:'Constraint',v:'The LLM is explicitly prohibited from adding information not present in the SHAP inputs — preventing hallucination'},
+      ]},
+      {t:'Prompt Template Structure',mono:'SYSTEM: "You are a professional Compliance Auditor. Using the SHAP feature importance scores and input data provided, write a 3-sentence justification referencing regulatory policy."\n\nINPUT:  Normalised SHAP scores from XAI Engine\n\nOUTPUT: 3-sentence plain-English explanation'},
+      {t:'Example Output',rows:[
+        {k:'Generated text',v:'"Trade triggered based on Rule 4.2.1. At 14:02, market depth in AAPL dropped 40%, aligning with the system\'s defensive hedging strategy. Model confidence score of 0.91 exceeds the flagging threshold of 0.85."'},
+        {k:'Faithfulness',v:'Raw SHAP scores are always stored alongside this text — if a regulator questions the narrative, the math is there to verify it'},
+      ]}
+    ]
+  },
+  vault:{
+    tag:'⏱ Explainability Track',ts:'background:#edf3fb;color:#1c3557;',
+    title:'Compliance Vault',sub:'Immutable, permanent storage for the complete Evidence Package',
+    sections:[
+      {t:'What It Stores — The Evidence Triplet',numbered:[
+        {label:'Original Decision',text:'The AI model\'s raw prediction score, input vector, model version ID, and timestamp'},
+        {label:'Mathematical Justification',text:'The full SHAP feature importance scores — all 500 raw values and 15 normalised business categories'},
+        {label:'Natural Language Explanation',text:'The LLM-generated narrative plus the auditor\'s Approve / Escalate decision and timestamp'},
+      ]},
+      {t:'Technical Properties',rows:[
+        {k:'Immutability',v:'Append-only database — records can never be modified or deleted, only added to'},
+        {k:'Access control',v:'Read access for Compliance Officers, MRM team, and Regulators; write access only for the automated pipeline'},
+        {k:'Retention',v:'Typically 5–7 years per MiFID II and equivalent regulatory requirements'},
+        {k:'Auditability',v:'Every record is timestamped, version-locked, and cryptographically signed to prevent tampering'},
+      ]}
+    ]
+  },
+  dashboard:{
+    tag:'👁 Auditor View',ts:'background:#fff8ed;color:#b86a00;',
+    title:'Compliance Dashboard',sub:"The auditor's interface — where the entire system becomes a human decision",
+    sections:[
+      {t:'What the Auditor Sees',rows:[
+        {k:'Flagged trade alert',v:'Real-time notification: Trade #TRD-2024-8821 flagged as Anomalous — AAPL — 14:02:33 EST'},
+        {k:'Visual view',v:'Bar chart showing which business categories drove the flag (Market Volatility: 70%, Liquidity Depth: 18%, etc.)'},
+        {k:'Narrative view',v:'Auto-generated plain-English explanation anchored directly to the SHAP scores'},
+        {k:'Action buttons',v:'Approve (trade is legitimate) or Escalate (requires further investigation)'},
+      ]},
+      {t:'The Feedback Loop',rows:[
+        {k:'On Approve',v:'Decision is logged back into the Compliance Vault alongside the original Evidence Package — full audit trail complete'},
+        {k:'On Escalate',v:'A new investigation record is created in the Vault; case is routed to MRM team or Regulator as required'},
+        {k:'Why it matters',v:'The system captures human oversight — regulators require a responsible human as the final accountability step, not just automated decisions'},
+      ]},
+      {t:'Live View (Illustrative)',alert:true,bars:[
+        {label:'Market Volatility',pct:70,color:'#3a5fc8'},
+        {label:'Liquidity Depth',pct:18,color:'#5b8fd4'},
+        {label:'Counterparty Risk',pct:8,color:'#8ab4e8'},
+        {label:'Order Size Anomaly',pct:4,color:'#b0ccf0'},
+      ],actions:true}
+    ]
+  }
+};
+
+function openModal(key) {
+  const d = NODES[key]; if(!d) return;
+  document.querySelectorAll('.node').forEach(n=>n.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('mTag').textContent = d.tag;
+  document.getElementById('mTag').style.cssText = d.ts + 'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block;';
+  document.getElementById('mTitle').textContent = d.title;
+  document.getElementById('mSub').textContent = d.sub;
+  const body = document.getElementById('mBody');
+  body.innerHTML = '';
+  d.sections.forEach(sec => {
+    const sd = document.createElement('div'); sd.className = 'info-sec';
+    const st = document.createElement('div'); st.className = 'info-sec-title'; st.textContent = sec.t; sd.appendChild(st);
+    if(sec.rows) sec.rows.forEach(r => {
+      const row = document.createElement('div'); row.className = 'info-row';
+      row.innerHTML = `<span class="info-key">${r.k}</span><span class="info-val">${r.v}</span>`;
+      sd.appendChild(row);
+    });
+    if(sec.mono){ const m=document.createElement('div'); m.className='mono-field'; m.textContent=sec.mono; sd.appendChild(m); }
+    if(sec.numbered){ const nl=document.createElement('div'); nl.className='num-list'; sec.numbered.forEach((item,i)=>{ const el=document.createElement('div'); el.className='num-item'; el.innerHTML=`<div class="num-badge">${i+1}</div><div class="num-text"><strong>${item.label}:</strong> ${item.text}</div>`; nl.appendChild(el); }); sd.appendChild(nl); }
+    if(sec.alert){ const a=document.createElement('div'); a.className='alert-badge'; a.innerHTML='<div class="pulse"></div>Trade #TRD-2024-8821 flagged as Anomalous · AAPL · 14:02:33 EST'; sd.appendChild(a); }
+    if(sec.bars){ const bw=document.createElement('div'); bw.className='mini-bars'; sec.bars.forEach(b=>{ bw.innerHTML+=`<div class="mini-bar-row"><div class="mbl">${b.label}</div><div class="mbt"><div class="mbf" style="background:${b.color};width:${b.pct}%;"></div></div><div class="mbp">${b.pct}%</div></div>`; }); sd.appendChild(bw); }
+    if(sec.actions){ const ar=document.createElement('div'); ar.className='act-row'; ar.innerHTML='<div class="act-btn approve">✓ &nbsp;Approve</div><div class="act-btn escalate">↑ &nbsp;Escalate</div>'; sd.appendChild(ar); }
+    body.appendChild(sd);
+  });
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); document.querySelectorAll('.node').forEach(n=>n.classList.remove('active')); }
+document.getElementById('overlay').addEventListener('click',e=>{ if(e.target===document.getElementById('overlay')) closeModal(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+</script>
+</body>
+</html>

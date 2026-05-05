@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dark Pool Intelligent Order Routing — Process Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+  --navy:#1c3557;--navy-pale:#edf3fb;--navy-border:#a8c4e0;
+  --exec:#1a6b35;--exec-pale:#edf7f1;--exec-border:#a8d9bc;
+  --amber:#b86a00;--amber-pale:#fff8ed;--amber-border:#f5c882;
+  --purple:#5b3faa;--purple-pale:#f3f0fb;--purple-border:#c4b0f0;
+  --teal:#0d7377;--teal-pale:#e6f7f7;--teal-border:#8ecece;
+  --red:#c04040;--red-pale:#fdf0f0;--red-border:#f0b8b8;
+  --opp:#1a6b35;--opp-pale:#edf7f1;--opp-border:#6dba80;
+  --opp-overlay:rgba(109,186,128,0.09);--opp-overlay-border:rgba(26,107,53,0.32);
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,0.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.nav-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--text-secondary);padding:5px 14px 5px 0;border-right:1px solid var(--border);margin-right:16px;background:none;border-top:none;border-bottom:none;border-left:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .15s}
+.nav-back:hover{color:var(--navy)}
+.nav-crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+.nav-crumb .active{color:var(--navy);font-weight:600}
+.nav-crumb .sep{color:var(--border)}
+.nav-badge{margin-left:auto;background:#fff3e0;color:#b86a00;border:1px solid #f5c882;border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;text-transform:uppercase;letter-spacing:.06em}
+
+/* PAGE */
+.page{max-width:1100px;margin:0 auto;padding:28px 24px 48px}
+.uc-num{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--navy);letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+.header-sub{font-size:14px;color:var(--text-secondary);max-width:700px;line-height:1.6;margin-bottom:12px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+.chip{font-size:11.5px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary)}
+.chip.green{background:var(--exec-pale);border-color:var(--exec-border);color:var(--exec)}
+.chip.navy{background:var(--navy-pale);border-color:var(--navy-border);color:var(--navy)}
+.chip.amber{background:var(--amber-pale);border-color:var(--amber-border);color:var(--amber)}
+.chip.purple{background:var(--purple-pale);border-color:var(--purple-border);color:var(--purple)}
+.chip.teal{background:var(--teal-pale);border-color:var(--teal-border);color:var(--teal)}
+.chip.red{background:var(--red-pale);border-color:var(--red-border);color:var(--red)}
+
+/* SUMMARY */
+.summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:3px solid transparent;box-shadow:var(--shadow-sm)}
+.sc-gap{border-left-color:#d06060}.sc-sol{border-left-color:#5aaa72}.sc-val{border-left-color:#4a7fd4}
+.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.sc-gap .sc-lbl{color:#c04040}.sc-sol .sc-lbl{color:#2e7a46}.sc-val .sc-lbl{color:#2a4faa}
+.sc-txt{font-size:13px;line-height:1.5}.sc-val .sc-txt{font-weight:600;color:var(--navy)}
+
+/* STRATEGY BANNER */
+.strategy-banner{background:var(--navy);border-radius:10px;padding:16px 22px;margin-bottom:24px;box-shadow:var(--shadow-md);border-left:5px solid #f5c882}
+.sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#f5c882;margin-bottom:6px}
+.sb-text{font-size:13.5px;color:rgba(255,255,255,.88);line-height:1.65}
+.sb-text strong{color:#fff}
+
+/* SECTION TITLES */
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.section-title h2{font-family:'DM Serif Display',serif;font-size:18px;color:var(--navy);letter-spacing:-.01em;white-space:nowrap}
+.section-title .s-line{flex:1;height:1px;background:var(--border)}
+
+/* MATURITY LADDER */
+.ladder-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px 18px;box-shadow:var(--shadow-sm);margin-bottom:28px}
+.ladder-intro{font-size:12.5px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5}
+.ladder-intro strong{color:var(--text-primary)}
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;position:relative}
+.ladder::before{content:'';position:absolute;top:22px;left:10%;right:10%;height:3px;background:linear-gradient(to right,#d0ccc6,#c8c4bc,var(--amber-border),var(--opp-border),var(--amber-border));border-radius:2px;z-index:0}
+.ladder-step{position:relative;z-index:1;border-radius:10px;padding:12px 10px 10px;cursor:pointer;transition:box-shadow .18s,transform .18s;border:1.5px solid transparent;text-align:center}
+.ladder-step:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.ladder-step.active{box-shadow:0 0 0 3px rgba(28,53,87,.15),var(--shadow-md)}
+.ls-1,.ls-2{background:#f5f4f1;border-color:#d0ccc6}
+.ls-3{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-4{background:var(--opp-pale);border-color:var(--opp-border)}
+.ls-5{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-num{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.ls-1 .ls-num,.ls-2 .ls-num{color:var(--text-muted)}
+.ls-3 .ls-num{color:var(--amber)}
+.ls-4 .ls-num{color:var(--opp)}
+.ls-5 .ls-num{color:var(--amber)}
+.ls-icon{font-size:22px;margin-bottom:5px;line-height:1}
+.ls-name{font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:3px}
+.ls-focus{font-size:11px;color:var(--text-secondary);line-height:1.3;margin-bottom:7px}
+.ls-btn{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.ls-1 .ls-btn,.ls-2 .ls-btn{background:#ece9e3;color:var(--text-secondary)}
+.ls-3 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.ls-4 .ls-btn{background:var(--opp-pale);color:var(--opp);border:1px solid var(--opp-border)}
+.ls-5 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.emerging-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+.ladder-legend{display:flex;align-items:center;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border-light)}
+.ll-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-secondary)}
+.ll-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ═══ MAIN DIAGRAM WRAPPER ═══ */
+.diagram-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-md);margin-bottom:28px}
+.diag-titlebar{background:var(--navy);padding:11px 20px;display:flex;align-items:center;gap:10px}
+.diag-titlebar span{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em}
+.diag-titlebar small{font-size:11.5px;color:rgba(255,255,255,.45)}
+
+/* Diagram body — fixed min-width for breathing room */
+.diagram-body{
+  padding:28px 24px 24px;
+  min-width:820px;
+  overflow-x:auto;
+  position:relative;
+}
+
+/* TRADER INTENT NODE — top centre */
+.intent-node{
+  margin:0 auto 0;
+  width:320px;
+  background:var(--navy);
+  border-radius:12px;
+  padding:14px 20px;
+  display:flex;align-items:center;gap:14px;
+  cursor:pointer;
+  transition:box-shadow .18s,transform .18s;
+  box-shadow:var(--shadow-md);
+  position:relative;
+  z-index:5;
+}
+.intent-node:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.intent-node.active{box-shadow:0 0 0 3px rgba(255,255,255,.3),var(--shadow-lg)}
+.intent-icon{font-size:24px;flex-shrink:0}
+.intent-text h3{font-family:'DM Serif Display',serif;font-size:14px;color:#fff;margin-bottom:2px}
+.intent-text p{font-size:11.5px;color:rgba(255,255,255,.6);line-height:1.4}
+.intent-btn{margin-left:auto;font-size:10px;font-weight:600;padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.15);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0;white-space:nowrap}
+.intent-btn:hover{background:rgba(255,255,255,.28)}
+
+/* Down arrow from intent to hub */
+.down-arrow-wrap{display:flex;justify-content:center;padding:10px 0 0;position:relative;z-index:4}
+.down-arrow-wrap svg{display:block}
+
+/* HUB + POOLS ROW */
+.hub-pools-row{
+  display:flex;
+  align-items:flex-start;
+  gap:28px;
+  margin-top:0;
+  position:relative;
+}
+
+/* MULTI-AGENT HUB */
+.hub-box{
+  flex-shrink:0;
+  width:290px;
+  background:var(--opp-overlay);
+  border:2px dashed var(--opp-overlay-border);
+  border-radius:14px;
+  padding:16px 16px 14px;
+  position:relative;
+  cursor:default;
+}
+.hub-title-row{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.hub-title-icon{font-size:18px}
+.hub-title-text{font-family:'DM Serif Display',serif;font-size:14px;color:var(--navy);letter-spacing:-.01em}
+.hub-title-btn{margin-left:auto;font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid var(--opp-border);background:var(--opp-pale);color:var(--opp);cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.hub-title-btn:hover{background:var(--exec-pale)}
+
+/* OODA loop label around hub */
+.ooda-ring{
+  position:absolute;
+  inset:-14px;
+  border-radius:20px;
+  border:1.5px dashed #c8d8c0;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* Agent rows inside hub */
+.agent-row{
+  display:flex;align-items:center;gap:10px;
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:9px;
+  padding:10px 12px;
+  margin-bottom:9px;
+  cursor:pointer;
+  transition:box-shadow .15s,transform .15s;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+  z-index:2;
+}
+.agent-row:last-child{margin-bottom:0}
+.agent-row:hover{box-shadow:var(--shadow-md);transform:translateX(2px)}
+.agent-row.active{border-color:var(--navy)!important;box-shadow:0 0 0 2px rgba(28,53,87,.12)}
+.agent-icon{font-size:18px;flex-shrink:0;width:28px;text-align:center}
+.agent-body{flex:1;min-width:0}
+.agent-name{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:2px}
+.agent-desc{font-size:10.5px;color:var(--text-secondary);line-height:1.35}
+.agent-tag{flex-shrink:0;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:6px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.tag-teal{background:var(--teal-pale);color:var(--teal)}
+.tag-opp{background:var(--opp-pale);color:var(--opp)}
+.tag-red{background:var(--red-pale);color:var(--red)}
+.agent-btn{font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;background:var(--navy-pale);color:var(--navy);flex-shrink:0;white-space:nowrap}
+
+/* POOLS COLUMN */
+.pools-col{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  padding-top:6px;
+}
+.pool-node{
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:10px;
+  padding:12px 14px;
+  cursor:pointer;
+  transition:box-shadow .18s,transform .18s;
+  box-shadow:var(--shadow-sm);
+  display:flex;align-items:center;gap:12px;
+  position:relative;
+}
+.pool-node:hover{box-shadow:var(--shadow-md);transform:translateX(2px)}
+.pool-node.active{border-color:var(--navy)!important;box-shadow:0 0 0 2px rgba(28,53,87,.12)}
+.pool-node.n-iex{border-left:4px solid var(--teal)}
+.pool-node.n-liquidnet{border-left:4px solid var(--navy)}
+.pool-node.n-pragma{border-left:4px solid var(--purple)}
+.pool-node.n-anon{border-left:4px solid var(--text-muted)}
+.pool-node.n-lit{border-left:4px solid var(--amber)}
+.pool-icon{font-size:20px;flex-shrink:0}
+.pool-body{flex:1;min-width:0}
+.pool-name{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:2px}
+.pool-desc{font-size:10.5px;color:var(--text-secondary);line-height:1.35}
+.pool-score{flex-shrink:0;text-align:right}
+.pool-fill{font-size:13px;font-weight:700;font-family:'DM Mono',monospace}
+.pool-fill-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em}
+.pool-btn{font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;background:var(--navy-pale);color:var(--navy);flex-shrink:0;white-space:nowrap}
+
+/* SVG ARROW OVERLAY */
+.arrow-svg{
+  position:absolute;
+  top:0;left:0;right:0;bottom:0;
+  pointer-events:none;
+  overflow:visible;
+}
+
+/* FEEDBACK VAULT */
+.vault-row{
+  display:flex;justify-content:center;
+  margin-top:28px;
+}
+.vault-node{
+  width:100%;
+  background:var(--opp-pale);
+  border:1.5px solid var(--opp-border);
+  border-top:3px solid var(--opp);
+  border-radius:12px;
+  padding:14px 18px;
+  cursor:pointer;
+  transition:box-shadow .18s,transform .18s;
+  box-shadow:var(--shadow-sm);
+  display:flex;align-items:center;gap:16px;
+}
+.vault-node:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.vault-node.active{border-color:var(--navy)!important;box-shadow:0 0 0 3px rgba(28,53,87,.12)}
+.vault-icon{font-size:26px;flex-shrink:0}
+.vault-body h3{font-family:'DM Serif Display',serif;font-size:14px;color:var(--navy);margin-bottom:3px}
+.vault-body p{font-size:12px;color:var(--text-secondary);line-height:1.5}
+.vault-metrics{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+.vm{background:var(--surface);border:1px solid var(--opp-border);border-radius:6px;padding:5px 10px;text-align:center;min-width:90px}
+.vm-val{font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:var(--opp)}
+.vm-lbl{font-size:9.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em}
+.vault-btn{margin-left:auto;font-size:11px;font-weight:600;padding:6px 14px;border-radius:7px;border:1.5px solid var(--opp);background:var(--opp-pale);color:var(--opp);cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0;white-space:nowrap}
+.vault-btn:hover{background:var(--opp);color:#fff}
+
+/* RESEARCH */
+.research{padding-top:24px;border-top:1px solid var(--border)}
+.research h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy);margin-bottom:16px;letter-spacing:-.01em}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.r-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.r-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:7px}
+.r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.r-rows{display:flex;flex-direction:column;gap:7px}
+.r-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.r-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:155px}
+.r-key::after{content:':'}
+.r-val{color:var(--text-secondary)}
+.threat-callout{background:var(--red-pale);border:1.5px solid var(--red-border);border-left:5px solid var(--red);border-radius:10px;padding:18px 20px;box-shadow:var(--shadow-sm)}
+.tc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--red);margin-bottom:6px}
+.tc-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--navy);margin-bottom:7px;letter-spacing:-.01em}
+.tc-body{font-size:13px;color:var(--text-secondary);line-height:1.65}
+.tc-body strong{color:var(--text-primary)}
+.ref-list{display:flex;flex-direction:column;gap:6px}
+.ref-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.ref-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--navy-pale);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.ref-txt{color:var(--text-secondary)}.ref-txt strong{color:var(--text-primary)}
+.page-footer{text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:28px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(20,18,14,.45);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(3px)}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:14px;width:540px;max-width:calc(100vw - 32px);max-height:calc(100vh - 60px);overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(12px) scale(.98);transition:transform .22s cubic-bezier(.34,1.56,.64,1)}
+.overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-hdr{padding:20px 22px 15px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2;border-radius:14px 14px 0 0}
+.m-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block}
+.m-title{font-family:'DM Serif Display',serif;font-size:19px;color:var(--navy);line-height:1.25;margin-bottom:4px;padding-right:30px}
+.m-sub{font-size:12.5px;color:var(--text-secondary);font-style:italic}
+.m-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:15px;font-family:'DM Sans',sans-serif;transition:background .12s}
+.m-close:hover{background:var(--border)}
+.m-body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:14px}
+.info-sec{display:flex;flex-direction:column;gap:7px}
+.info-sec-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);padding-bottom:5px;border-bottom:1px solid var(--border-light)}
+.info-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.info-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:165px}
+.info-key::after{content:':'}
+.info-val{color:var(--text-secondary)}
+.num-list{display:flex;flex-direction:column;gap:6px}
+.num-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.num-badge{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--navy-pale);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.num-badge.opp{background:var(--opp-pale);color:var(--opp)}
+.num-text{color:var(--text-secondary)}.num-text strong{color:var(--text-primary)}
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="nav-back" onclick="window.history.back()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11L5 7l4-4"/></svg>
+    Back to Matrix
+  </button>
+  <div class="nav-crumb">
+    <span>Equity Markets</span><span class="sep">/</span>
+    <span>Immediate Priorities</span><span class="sep">/</span>
+    <span class="active">Dark Pool Intelligent Order Routing</span>
+  </div>
+  <div class="nav-badge">🎯 Immediate Priority</div>
+</nav>
+
+<div class="page">
+
+  <div class="uc-num">Use Case #14 &nbsp;·&nbsp; Execution &nbsp;·&nbsp; Strategic Impact 8/10</div>
+  <h1>Dark Pool Intelligent Order Routing</h1>
+  <p class="header-sub">In a fragmented liquidity landscape with 20+ dark pools, a static routing rule is a liability. Liquidity appears to exist but vanishes the moment you try to interact with it — the "Liquidity Ghosting" problem. Agentic AI transforms the order from a passive instruction into an active hunter.</p>
+  <div class="chips">
+    <span class="chip green">Agentic AI</span>
+    <span class="chip green">Reinforcement Learning</span>
+    <span class="chip navy">Multi-Agent Orchestration</span>
+    <span class="chip red">Toxic Flow Detection</span>
+    <span class="chip amber">Partially Deployed</span>
+    <span class="chip green">Implementation Readiness: 7/10</span>
+  </div>
+
+  <div class="summary-row">
+    <div class="sc sc-gap"><div class="sc-lbl">The Gap</div><div class="sc-txt">Static "If-Then" routing rules cannot adapt to real-time liquidity conditions — dark pools exploited by predatory HFTs drain the institutional desk's alpha before the order is even filled.</div></div>
+    <div class="sc sc-sol"><div class="sc-lbl">AI Solution</div><div class="sc-txt">A three-agent system operating in a continuous OODA loop — Scout finds liquidity, Router executes, Sentry kills toxic connections — with a self-updating Venue Scorecard learning from every fill.</div></div>
+    <div class="sc sc-val"><div class="sc-lbl">Value Created</div><div class="sc-txt">15–40% improvement in execution quality; significant reduction in adverse selection costs; institutional alpha is protected rather than leaked to predatory algorithms.</div></div>
+  </div>
+
+  <!-- STRATEGY BANNER -->
+  <div class="strategy-banner">
+    <div class="sb-label">Strategic Framing — End of the Static Algorithm</div>
+    <div class="sb-text">"In a high-volatility 2026 market, a static routing rule is a liability. Agentic AI transforms the order from a <strong>passive instruction</strong> into an <strong>active hunter</strong> of liquidity — capable of identifying and avoiding toxic pools in real time, thereby protecting institutional alpha that static algorithms quietly surrender every day."</div>
+  </div>
+
+  <!-- MATURITY LADDER -->
+  <div class="section-title">
+    <h2>AI Maturity Ladder — Dark Pool Routing</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="ladder-wrap">
+    <p class="ladder-intro">Most institutional desks operate at <strong>Level 2–3</strong> today. The proposed architecture sits at <strong>Level 4</strong>. Level 5 is an emerging capability — not yet at scale.</p>
+    <div class="ladder">
+      <div class="ladder-step ls-1" onclick="openModal('l1')">
+        <div class="ls-num">Level 1</div>
+        <div class="ls-icon">🗺️</div>
+        <div class="ls-name">Static Routing</div>
+        <div class="ls-focus">Fixed If-Then rules</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-2" onclick="openModal('l2')">
+        <div class="ls-num">Level 2</div>
+        <div class="ls-icon">📊</div>
+        <div class="ls-name">Weighted Routing</div>
+        <div class="ls-focus">Historical fill rates</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-3" onclick="openModal('l3')">
+        <div class="ls-num">Level 3</div>
+        <div class="ls-icon">🌊</div>
+        <div class="ls-name">Adaptive Routing</div>
+        <div class="ls-focus">Real-time probability</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-4" onclick="openModal('l4')">
+        <div class="ls-num">Level 4</div>
+        <div class="ls-icon">🤖</div>
+        <div class="ls-name">Agentic Routing</div>
+        <div class="ls-focus">Multi-Agent OODA</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-5" onclick="openModal('l5')">
+        <div class="ls-num">Level 5</div>
+        <div class="ls-icon">🌐</div>
+        <div class="emerging-badge">⚡ Emerging</div>
+        <div class="ls-name">Sovereign AI</div>
+        <div class="ls-focus">Cross-asset liquidity</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+    </div>
+    <div class="ladder-legend">
+      <div class="ll-item"><div class="ll-dot" style="background:#c8c4bc;"></div>Current state — most desks today</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--amber);"></div>Emerging or scaling</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--opp);"></div>Proposed architecture</div>
+    </div>
+  </div>
+
+  <!-- MAIN DIAGRAM -->
+  <div class="section-title">
+    <h2>The Agentic Execution Architecture</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="diag-titlebar">
+      <span>Hub-and-Spoke: Multi-Agent Hub → Five Execution Venues</span>
+      <small>&nbsp;·&nbsp; OODA loop runs continuously &nbsp;·&nbsp; Click any element for detail</small>
+    </div>
+
+    <div class="diagram-body">
+
+      <!-- TRADER INTENT -->
+      <div class="intent-node" onclick="openModal('intent')">
+        <div class="intent-icon">🎯</div>
+        <div class="intent-text">
+          <h3>Trader Intent</h3>
+          <p>Execute 500k shares · max 2 bps slippage · AAPL</p>
+        </div>
+        <button class="intent-btn">Details →</button>
+      </div>
+
+      <!-- Down arrow -->
+      <div class="down-arrow-wrap">
+        <svg width="24" height="32" viewBox="0 0 24 32">
+          <line x1="12" y1="0" x2="12" y2="24" stroke="#c8c4bc" stroke-width="2"/>
+          <polygon points="12,32 6,20 18,20" fill="#c8c4bc"/>
+        </svg>
+      </div>
+
+      <!-- HUB + POOLS ROW -->
+      <div class="hub-pools-row" style="position:relative; align-items:stretch;">
+
+        <!-- SVG arrows (positioned absolutely over the whole row) -->
+        <svg id="arrowSvg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:1;" preserveAspectRatio="none">
+          <defs>
+            <marker id="arr-out" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L7,3 z" fill="#1a6b35"/>
+            </marker>
+            <marker id="arr-back" markerWidth="7" markerHeight="7" refX="2" refY="3" orient="auto">
+              <path d="M7,0 L7,6 L0,3 z" fill="#9e9b96"/>
+            </marker>
+          </defs>
+        </svg>
+
+        <!-- MULTI-AGENT HUB -->
+        <div class="hub-box" id="hubBox" style="position:relative;">
+          <div class="ooda-ring"></div>
+
+          <!-- OODA labels around the ring -->
+          <div style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--opp);background:var(--surface);padding:1px 7px;border-radius:8px;border:1px solid var(--opp-border);white-space:nowrap;z-index:10;pointer-events:none;">① OBSERVE</div>
+          <div style="position:absolute;right:-58px;top:50%;transform:translateY(-50%);font-size:9px;font-weight:700;color:var(--opp);background:var(--surface);padding:1px 7px;border-radius:8px;border:1px solid var(--opp-border);white-space:nowrap;z-index:10;pointer-events:none;">② ORIENT</div>
+          <div style="position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--opp);background:var(--surface);padding:1px 7px;border-radius:8px;border:1px solid var(--opp-border);white-space:nowrap;z-index:10;pointer-events:none;">③ DECIDE</div>
+          <div style="position:absolute;left:-52px;top:50%;transform:translateY(-50%);font-size:9px;font-weight:700;color:var(--opp);background:var(--surface);padding:1px 7px;border-radius:8px;border:1px solid var(--opp-border);white-space:nowrap;z-index:10;pointer-events:none;">④ ACT</div>
+
+          <div class="hub-title-row">
+            <div class="hub-title-icon">⚡</div>
+            <div class="hub-title-text">Multi-Agent Hub</div>
+            <button class="hub-title-btn" onclick="openModal('hub')">Details →</button>
+          </div>
+
+          <div class="agent-row" onclick="openModal('scout')">
+            <div class="agent-icon">🔦</div>
+            <div class="agent-body">
+              <div class="agent-name">Scout Agent</div>
+              <div class="agent-desc">Sends micro-pings to test liquidity without signalling size</div>
+            </div>
+            <div class="agent-tag tag-teal">Probe</div>
+            <button class="agent-btn">Details →</button>
+          </div>
+
+          <div class="agent-row" onclick="openModal('router')">
+            <div class="agent-icon">🚀</div>
+            <div class="agent-body">
+              <div class="agent-name">Router Agent (RL)</div>
+              <div class="agent-desc">Executes slices based on Scout feedback and probability scores</div>
+            </div>
+            <div class="agent-tag tag-opp">Execute</div>
+            <button class="agent-btn">Details →</button>
+          </div>
+
+          <div class="agent-row" onclick="openModal('sentry')">
+            <div class="agent-icon">🛡️</div>
+            <div class="agent-body">
+              <div class="agent-name">Sentry Agent</div>
+              <div class="agent-desc">Monitors for toxic flow; kills connection on predatory detection</div>
+            </div>
+            <div class="agent-tag tag-red">Protect</div>
+            <button class="agent-btn">Details →</button>
+          </div>
+        </div>
+
+        <!-- POOLS COLUMN -->
+        <div class="pools-col" id="poolsCol" style="position:relative;z-index:2;">
+
+          <div class="pool-node n-iex" id="pool0" onclick="openModal('iex')">
+            <div class="pool-icon">🔵</div>
+            <div class="pool-body">
+              <div class="pool-name">IEX Dark Pool</div>
+              <div class="pool-desc">Speed Bump + D-Limit protection against latency arbitrage</div>
+            </div>
+            <div class="pool-score">
+              <div class="pool-fill" style="color:var(--teal)">87%</div>
+              <div class="pool-fill-label">Fill Rate</div>
+            </div>
+            <button class="pool-btn">Details →</button>
+          </div>
+
+          <div class="pool-node n-liquidnet" id="pool1" onclick="openModal('liquidnet')">
+            <div class="pool-icon">🟣</div>
+            <div class="pool-body">
+              <div class="pool-name">Liquidnet</div>
+              <div class="pool-desc">Block specialist — AI surfaces natural institutional contra</div>
+            </div>
+            <div class="pool-score">
+              <div class="pool-fill" style="color:var(--navy)">79%</div>
+              <div class="pool-fill-label">Fill Rate</div>
+            </div>
+            <button class="pool-btn">Details →</button>
+          </div>
+
+          <div class="pool-node n-pragma" id="pool2" onclick="openModal('pragma')">
+            <div class="pool-icon">🟢</div>
+            <div class="pool-body">
+              <div class="pool-name">Pragma Securities</div>
+              <div class="pool-desc">Deep RL agents trained on unique microstructure of each pool</div>
+            </div>
+            <div class="pool-score">
+              <div class="pool-fill" style="color:var(--purple)">82%</div>
+              <div class="pool-fill-label">Fill Rate</div>
+            </div>
+            <button class="pool-btn">Details →</button>
+          </div>
+
+          <div class="pool-node n-anon" id="pool3" onclick="openModal('anon')">
+            <div class="pool-icon">⚫</div>
+            <div class="pool-body">
+              <div class="pool-name">Anonymous Pool</div>
+              <div class="pool-desc">Generic dark venue — higher adverse selection risk, monitored closely</div>
+            </div>
+            <div class="pool-score">
+              <div class="pool-fill" style="color:var(--amber)">61%</div>
+              <div class="pool-fill-label">Fill Rate</div>
+            </div>
+            <button class="pool-btn">Details →</button>
+          </div>
+
+          <div class="pool-node n-lit" id="pool4" onclick="openModal('lit')">
+            <div class="pool-icon">🟡</div>
+            <div class="pool-body">
+              <div class="pool-name">Lit Market (Fallback)</div>
+              <div class="pool-desc">Exchange-based execution — used only when dark liquidity is exhausted</div>
+            </div>
+            <div class="pool-score">
+              <div class="pool-fill" style="color:var(--amber)">100%</div>
+              <div class="pool-fill-label">Fill Rate</div>
+            </div>
+            <button class="pool-btn">Details →</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Down arrow to vault -->
+      <div class="down-arrow-wrap" style="margin-top:24px;">
+        <svg width="24" height="32" viewBox="0 0 24 32">
+          <line x1="12" y1="0" x2="12" y2="24" stroke="#6dba80" stroke-width="2"/>
+          <polygon points="12,32 6,20 18,20" fill="#6dba80"/>
+        </svg>
+      </div>
+
+      <!-- FEEDBACK VAULT -->
+      <div class="vault-node" onclick="openModal('vault')">
+        <div class="vault-icon">🗄️</div>
+        <div class="vault-body">
+          <h3>Feedback Vault — Venue Scorecard</h3>
+          <p>Self-updating database tracking every pool's performance. The agent's memory — what it learns shapes every future routing decision.</p>
+          <div class="vault-metrics">
+            <div class="vm"><div class="vm-val" style="color:var(--opp)">Fill Rate</div><div class="vm-lbl">% orders filled</div></div>
+            <div class="vm"><div class="vm-val" style="color:var(--navy)">Midpoint Δ</div><div class="vm-lbl">price improvement</div></div>
+            <div class="vm"><div class="vm-val" style="color:var(--red)">Adv. Select.</div><div class="vm-lbl">toxic flow score</div></div>
+            <div class="vm"><div class="vm-val" style="color:var(--amber)">Latency σ</div><div class="vm-lbl">jitter variance</div></div>
+          </div>
+        </div>
+        <button class="vault-btn">Details →</button>
+      </div>
+
+    </div><!-- end diagram-body -->
+  </div><!-- end diagram-wrap -->
+
+  <!-- RESEARCH -->
+  <div class="research">
+    <h2>Research Notes</h2>
+    <div class="r-grid">
+
+      <!-- Ping Trap Callout -->
+      <div class="threat-callout">
+        <div class="tc-label">⚠ Critical Risk — The Ping Trap</div>
+        <div class="tc-title">Predatory HFTs Are Hunting You in the Dark</div>
+        <div class="tc-body">High-Frequency Trading firms deploy <strong>"pinging" strategies</strong> — sending tiny micro-orders into dark pools specifically to detect whether a large institutional order ("whale") is hiding there. Once they find you, they race to lit markets to <strong>front-run your remaining order</strong>, buying shares at the current price and selling them back to you milliseconds later at a worse price. This is the Ping Trap. The Scout Agent's micro-ping strategy is the direct countermeasure — it probes pools in ways that reveal liquidity without revealing order size or intent, flipping the information asymmetry back in the institution's favour.</div>
+      </div>
+
+      <!-- Adverse Selection Callout -->
+      <div class="threat-callout">
+        <div class="tc-label">⚠ Data Challenge — Adverse Selection</div>
+        <div class="tc-title">Was Your Fill Good Luck or a Trap?</div>
+        <div class="tc-body">When an order gets filled in a dark pool, there are two possible explanations: you found a <strong>genuine natural contra</strong> (good — you got a fair price), or a sophisticated algorithm <strong>"picked you off"</strong> — filled your order knowing the price was about to move against you. Distinguishing these two outcomes is the core data challenge. The signal is called a <strong>"Markout"</strong> — the price move in the 10–30 seconds after the fill. A consistently negative markout for a specific pool means that pool has high adverse selection. The Sentry Agent tracks this in real time and progressively reduces allocation to pools with deteriorating markout profiles — eventually killing the connection entirely if the signal is strong enough.</div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--navy);"></div>OODA Loop — Why This Model Works</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">Observe</span><span class="r-val">Scout monitors fill/fade data across all pools simultaneously — identifying which pools have real liquidity vs. ghost liquidity right now</span></div>
+          <div class="r-row"><span class="r-key">Orient</span><span class="r-val">Router scores each pool 0–100 for the specific order size and ticker — accounting for current volatility, time of day, and historical markout profile</span></div>
+          <div class="r-row"><span class="r-key">Decide</span><span class="r-val">Agent decides to be Passive (wait for a natural match) or Aggressive (hit the midpoint) based on urgency, remaining order size, and time pressure</span></div>
+          <div class="r-row"><span class="r-key">Act</span><span class="r-val">Child orders are fanned out to selected pools simultaneously; Sentry monitors each fill in real time and re-routes failed slices instantly without human intervention</span></div>
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--opp);"></div>Who Is Building This</div>
+        <div class="ref-list">
+          <div class="ref-item"><div class="ref-num">1</div><div class="ref-txt"><strong>IEX (Signal + D-Limit)</strong> — pioneered the "Speed Bump" to neutralise latency arbitrage; now integrating agentic logic to dynamically evaluate venue quality in real time</div></div>
+          <div class="ref-item"><div class="ref-num">2</div><div class="ref-txt"><strong>Liquidnet (IA Trader)</strong> — AI surfaces block-trading opportunities that standard algorithms miss; specialises in natural institutional contra matching rather than HFT-populated pools</div></div>
+          <div class="ref-item"><div class="ref-num">3</div><div class="ref-txt"><strong>Pragma Securities</strong> — leading practitioner of Deep RL for execution; agents trained on the unique microstructure of each dark pool rather than generic market models</div></div>
+          <div class="ref-item"><div class="ref-num">4</div><div class="ref-txt"><strong>Virtu Financial (Frontier)</strong> — industry benchmark for predictive execution analytics; real-time adverse selection monitoring across multiple venues</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-footer">
+    Hexaware Financial Services &nbsp;·&nbsp; AI in Equity Markets &nbsp;·&nbsp; Use Case #14 &nbsp;·&nbsp; Preliminary Research 2026
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="m-tag" id="mTag"></div>
+      <div class="m-title" id="mTitle"></div>
+      <div class="m-sub" id="mSub"></div>
+      <button class="m-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="m-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+// ── DRAW SVG ARROWS between hub and pools ─────────────────────────────────────
+function drawArrows(){
+  const svg = document.getElementById('arrowSvg');
+  if(!svg) return;
+  const row = document.querySelector('.hub-pools-row');
+  const hub = document.getElementById('hubBox');
+  const poolsCol = document.getElementById('poolsCol');
+  if(!row||!hub||!poolsCol) return;
+  const rowRect = row.getBoundingClientRect();
+  const hubRect = hub.getBoundingClientRect();
+  const pools = poolsCol.querySelectorAll('.pool-node');
+  svg.innerHTML = `<defs>
+    <marker id="arr-out" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="#6dba80"/>
+    </marker>
+    <marker id="arr-back" markerWidth="7" markerHeight="7" refX="1" refY="3" orient="auto">
+      <path d="M7,0 L7,6 L0,3 z" fill="#c8c4bc"/>
+    </marker>
+  </defs>`;
+  // Hub right edge centre
+  const hx = hubRect.right - rowRect.left;
+  pools.forEach((pool, i) => {
+    const pr = pool.getBoundingClientRect();
+    const py = pr.top + pr.height/2 - rowRect.top;
+    const px = pr.left - rowRect.left;
+    const midX = hx + (px - hx) * 0.45;
+    // Outgoing (slice order) — solid green, offset up slightly
+    svg.innerHTML += `<path d="M${hx},${hubRect.top+hubRect.height/2 - rowRect.top} C${midX},${hubRect.top+hubRect.height/2 - rowRect.top} ${midX},${py-6} ${px},${py-6}"
+      fill="none" stroke="#6dba80" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#arr-out)"/>`;
+    // Incoming (fill/fade feedback) — dashed grey, offset down slightly
+    svg.innerHTML += `<path d="M${px},${py+6} C${midX},${py+6} ${midX},${hubRect.top+hubRect.height/2+6 - rowRect.top} ${hx},${hubRect.top+hubRect.height/2+6 - rowRect.top}"
+      fill="none" stroke="#c8c4bc" stroke-width="1.5" stroke-dasharray="3,3" marker-end="url(#arr-back)"/>`;
+  });
+  // Arrow legend
+  const ly = rowRect.height - 28;
+  svg.innerHTML += `
+    <line x1="10" y1="${ly}" x2="40" y2="${ly}" stroke="#6dba80" stroke-width="1.8" stroke-dasharray="5,3"/>
+    <polygon points="40,${ly} 34,${ly-4} 34,${ly+4}" fill="#6dba80"/>
+    <text x="44" y="${ly+4}" font-family="DM Sans" font-size="9.5" fill="#9e9b96">Order Slice Out</text>
+    <line x1="140" y1="${ly}" x2="170" y2="${ly}" stroke="#c8c4bc" stroke-width="1.5" stroke-dasharray="3,3"/>
+    <polygon points="170,${ly} 164,${ly-4} 164,${ly+4}" fill="#c8c4bc"/>
+    <text x="174" y="${ly+4}" font-family="DM Sans" font-size="9.5" fill="#9e9b96">Fill / Fade Feedback</text>`;
+}
+window.addEventListener('load', drawArrows);
+window.addEventListener('resize', drawArrows);
+
+// ── MODAL DATA ────────────────────────────────────────────────────────────────
+const NODES = {
+  l1:{tag:'Level 1 · Static',ts:'background:#ece9e3;color:#6b6760;',title:'Static Routing',sub:'Fixed If-Then rules — the order always follows the same path regardless of conditions',sections:[
+    {t:'How It Works',rows:[{k:'Logic',v:'"Always try Pool A first. If unfilled after 30 seconds, try Pool B. If still unfilled, go to the lit exchange." No dynamic adjustment, no learning.'},{k:'Who uses it',v:'Legacy institutional desks and regional brokers that have not yet invested in quantitative execution infrastructure'},{k:'The core problem',v:'Pool A\'s fill rate on any given day is completely unrelated to yesterday\'s fill rate. Markets change in minutes; static rules change in months'}]}
+  ]},
+  l2:{tag:'Level 2 · Weighted',ts:'background:#ece9e3;color:#6b6760;',title:'Weighted Routing',sub:'Routes based on historical fill rates — better than static, but always fighting the last war',sections:[
+    {t:'How It Works',rows:[{k:'Logic',v:'Each venue is assigned a weight based on its average fill rate over the past N days. Higher historical fill rate = more order flow routed there'},{k:'Improvement',v:'Better than static — a pool that has been consistently poor gets less flow. A consistently good pool gets more.'},{k:'The lag problem',v:'Historical fill rates are backward-looking. A pool that performed well last week may be toxic today due to a change in its participant mix or a new predatory HFT strategy'}]}
+  ]},
+  l3:{tag:'Level 3 · Adaptive',ts:'background:#fff8ed;color:#b86a00;',title:'Adaptive Routing',sub:'Real-time probability scores replace historical averages — Gradient Boosting adjusts weights intraday',sections:[
+    {t:'How It Works',rows:[{k:'Technology',v:'Gradient Boosting models trained on order book features — current fill rates, intraday volatility patterns, time-of-day effects, venue-specific liquidity cycles'},{k:'Real-time adjustment',v:'The model re-scores each pool every few seconds based on current conditions — not yesterday\'s averages but what is happening right now in this specific venue'},{k:'Remaining limitation',v:'Adaptive but still reactive — the model responds to what has happened, not to what is about to happen. It cannot proactively detect a ping trap before it fires'}]}
+  ]},
+  l4:{tag:'Level 4 · Proposed Architecture',ts:'background:#edf7f1;color:#1a6b35;',title:'Agentic Routing — Multi-Agent OODA',sub:'Three specialised agents operating in a continuous loop — the first system that actively hunts liquidity rather than passively requesting it',sections:[
+    {t:'The OODA Loop',rows:[{k:'Observe',v:'Scout Agent continuously monitors fill/fade signals across all 20+ pools — which pools are filling, which are fading (showing liquidity that disappears when touched)'},{k:'Orient',v:'Router Agent scores each pool 0–100 for the current order, factoring in size, ticker, volatility, time remaining, and the Scout\'s live feedback'},{k:'Decide',v:'Agent chooses Passive (wait for a natural match at midpoint) or Aggressive (actively seek a fill by crossing the spread) based on urgency and cost'},{k:'Act',v:'Child orders fanned out simultaneously; Sentry monitors each for toxic flow; failed slices instantly re-routed — all without human intervention'}]},
+    {t:'Why This Is Different',rows:[{k:'Active vs passive',v:'A static or adaptive SOR waits for liquidity to appear. The Agentic SOR sends the Scout ahead to confirm liquidity is real before committing the full slice'},{k:'Self-healing',v:'When a slice fails or triggers a toxic fill signal, the system corrects in milliseconds — no human needs to notice, diagnose, and intervene'},{k:'Continuous learning',v:'Every fill, every fade, every markout goes into the Feedback Vault and updates the Router\'s probability model for the next decision'}]}
+  ]},
+  l5:{tag:'Level 5 · Emerging Capability',ts:'background:#fff8ed;color:#b86a00;',title:'Sovereign AI — Cross-Asset Liquidity',sub:'An emerging capability: AI agents simultaneously trading equities, futures, and ETFs to disguise intent and source liquidity across asset boundaries',sections:[
+    {t:'What This Means',rows:[{k:'The concept',v:'Instead of routing 500,000 AAPL shares across dark pools, the Sovereign agent simultaneously executes equivalent exposure across AAPL stock, NASDAQ futures, and a Tech sector ETF — making the true intention undetectable'},{k:'Why it hides intent',v:'A predatory HFT watching only the equity dark pools cannot see the full picture. The institutional order leaves no single large footprint in any one market'},{k:'Status',v:'Emerging capability — being piloted by the most advanced quant funds and sell-side desks but not yet standardised or widely deployed'}]},
+    {t:'Why It Is Marked Emerging',rows:[{k:'Regulatory complexity',v:'Cross-asset execution at this scale raises regulatory questions around best execution obligations across different asset class jurisdictions'},{k:'Infrastructure requirements',v:'Requires unified real-time risk management across multiple asset classes simultaneously — infrastructure that most firms are still building'},{k:'Data requirements',v:'The agent needs high-quality cross-asset liquidity signals, which are harder to source and normalise than single-asset order book data'}]}
+  ]},
+  intent:{tag:'Trader Intent · Entry Point',ts:'background:#edf3fb;color:#1c3557;',title:'Trader Intent',sub:'The goal the entire system works backward from — set once, pursued autonomously',sections:[
+    {t:'What the Trader Sets',rows:[{k:'Target quantity',v:'"Execute 500,000 shares" — the total order that must be filled by end of the auction or session'},{k:'Slippage constraint',v:'"Maximum 2 basis points" — the maximum acceptable price deterioration from the arrival price. This is the cost ceiling the agent cannot breach'},{k:'Time horizon',v:'"Best efforts by market close" — or a tighter window like "within the next 45 minutes" — sets the urgency level that determines how aggressive the agent is allowed to be'},{k:'Ticker',v:'The specific security — determines which dark pools are relevant (not all pools have liquidity in every stock) and which historical data the model draws on'}]},
+    {t:'Why Intent-Setting Matters',rows:[{k:'Goal-oriented AI',v:'Unlike a static algorithm that follows rules, an Agentic SOR works backward from the goal — choosing whichever combination of venues, timing, and aggression achieves the intent at minimum cost'},{k:'Dynamic constraint',v:'As time passes and the remaining order shrinks or grows expensive to fill, the agent can tighten its own constraints — e.g. increasing aggression in the final minutes to ensure completion'}]}
+  ]},
+  hub:{tag:'Multi-Agent Hub · Core',ts:'background:#edf7f1;color:#1a6b35;',title:'Multi-Agent Hub',sub:'The orchestration layer — three specialised agents coordinating in real time inside a continuous OODA loop',sections:[
+    {t:'Why Three Agents Instead of One',rows:[{k:'Specialisation',v:'A single algorithm trying to probe, execute, and protect simultaneously makes too many trade-offs. Dedicated agents each optimise for one thing'},{k:'Parallelism',v:'Scout, Router, and Sentry all operate simultaneously. While the Router is executing a slice, the Scout is already probing the next pool and the Sentry is monitoring the current fill'},{k:'Independence',v:'If the Sentry detects a toxic fill in Pool C, it can kill that connection without interrupting the Router\'s simultaneous execution in Pool A and B'}]},
+    {t:'OODA Loop Cadence',rows:[{k:'Cycle time',v:'A full Observe-Orient-Decide-Act cycle completes in approximately 50–200 milliseconds — fast enough to respond to intraday liquidity shifts while slow enough to avoid over-trading'},{k:'Continuous vs event-driven',v:'The loop runs continuously, but most cycles result in no action — the agent monitors and waits until conditions meet its threshold for acting'}]}
+  ]},
+  scout:{tag:'Scout Agent · Probe',ts:'background:#e6f7f7;color:#0d7377;',title:'Scout Agent',sub:'Sent ahead of the order to confirm liquidity is real before the Router commits',sections:[
+    {t:'How It Works',rows:[{k:'Micro-pings',v:'The Scout sends tiny orders — typically 100–500 shares — into each pool to test whether displayed liquidity is genuine or "ghost" liquidity that will vanish when a large order arrives'},{k:'Fill/fade signal',v:'If the micro-ping fills quickly at midpoint: genuine liquidity detected. If the order goes unfilled or the pool\'s indicative price shifts on arrival: ghost liquidity — the Scout flags this pool as low-probability for the Router'},{k:'Size concealment',v:'The Scout\'s probes are deliberately small enough that they do not reveal the size of the parent order — a 200-share probe looks like normal retail flow, not a 500,000-share institutional order'}]},
+    {t:'Counter-Pinging',rows:[{k:'The threat',v:'Predatory HFTs deploy their own scouts to detect institutional scouts — looking for patterns of micro-pings that reveal a large order is building'},{k:'The defence',v:'The Scout randomises probe sizes, timing, and venue sequence — making its pattern statistically indistinguishable from normal market noise rather than a systematic search'}]}
+  ]},
+  router:{tag:'Router Agent · Execute',ts:'background:#edf7f1;color:#1a6b35;',title:'Router Agent (RL-based)',sub:'The execution engine — slices the parent order and routes each piece to the optimal venue in real time',sections:[
+    {t:'How It Routes',rows:[{k:'Probability scoring',v:'Each pool is scored 0–100 for the current slice: 100 = near-certain fill at midpoint with no adverse selection. 0 = ghost liquidity, high toxic flow risk'},{k:'Fan-out',v:'The Router simultaneously sends child orders to the top 2–3 pools by score — not sequentially but concurrently, maximising the chance of natural contra matching'},{k:'Passive vs aggressive',v:'"Passive" = submit a limit order at midpoint and wait. "Aggressive" = cross the spread to demand a fill. The Router chooses based on urgency (time remaining) vs. cost (slippage budget remaining)'}]},
+    {t:'Reinforcement Learning',rows:[{k:'How the RL model learns',v:'After every fill, the agent receives a reward signal: the difference between the execution price and the arrival price. Over thousands of fills, it learns which routing strategies in which market conditions produce the best outcomes'},{k:'Adversary modelling',v:'The RL model learns to predict how other algorithms in the pool will react to its orders — including predatory strategies. It learns to route in ways that minimise this predictability'}]}
+  ]},
+  sentry:{tag:'Sentry Agent · Protect',ts:'background:#fdf0f0;color:#c04040;',title:'Sentry Agent',sub:'The defence layer — monitors every fill for signs of toxic flow and acts before the damage is done',sections:[
+    {t:'What It Watches',rows:[{k:'Markout monitoring',v:'Tracks the price move in the 10–30 seconds after every fill. A consistently negative markout = the pool is filling orders that are about to move against the institution'},{k:'Latency anomalies',v:'If a pool\'s response time suddenly spikes — suggesting infrastructure stress or deliberate latency injection — the Sentry flags it before the Router sends more orders'},{k:'Fill pattern analysis',v:'If fills are suspiciously fast and consistently at the worst allowable price, the Sentry identifies this as a "toxic fill" pattern — the pool is likely populated by HFTs, not natural institutional contra'}]},
+    {t:'Actions It Can Take',rows:[{k:'Soft kill',v:'Reduce allocation to the pool — route less flow while continuing to monitor'},{k:'Hard kill',v:'Completely halt all orders to the pool — triggered when the adverse selection signal crosses a threshold that indicates systematic exploitation'},{k:'Alert',v:'Logs the event to the Feedback Vault and flags it for the desk\'s end-of-day review — feeding back into the Router\'s pool scoring for future sessions'}]}
+  ]},
+  iex:{tag:'Execution Venue · IEX',ts:'background:#e6f7f7;color:#0d7377;',title:'IEX Dark Pool',sub:'The "Speed Bump" pool — designed from the ground up to protect institutional orders from latency arbitrage',sections:[
+    {t:'What Makes IEX Different',rows:[{k:'Speed Bump',v:'IEX introduces a 350-microsecond delay on all incoming orders. This is long enough to prevent HFTs from front-running based on co-located speed advantages, but imperceptible to human traders'},{k:'D-Limit order type',v:'An IEX-specific order type that becomes non-executable when IEX\'s "Signal" model predicts imminent adverse price movement — protecting the resting order from being picked off'},{k:'Signal model',v:'A proprietary ML model that predicts when lit market prices are about to move, temporarily inhibiting fills in those moments to prevent adverse selection'}]},
+    {t:'Fit in the Agentic Architecture',rows:[{k:'Scout preference',v:'IEX is often the Scout\'s first probe target — its structural protections mean ghost liquidity is less common here than in unprotected pools'},{k:'Router weighting',v:'IEX typically scores high on adverse selection metrics in the Venue Scorecard — making it a preferred venue for large passive slices'}]}
+  ]},
+  liquidnet:{tag:'Execution Venue · Liquidnet',ts:'background:#edf3fb;color:#1c3557;',title:'Liquidnet',sub:'The block specialist — focuses on matching large institutional orders with natural contra, not HFT flow',sections:[
+    {t:'What Makes Liquidnet Different',rows:[{k:'Natural contra matching',v:'Liquidnet\'s network connects institutional buy-side directly with other institutional investors — there are no HFTs in the pool. Every fill is a genuine institution-to-institution match'},{k:'IA Trader',v:'Liquidnet\'s AI (Investment Analytics Trader) surfaces block-trading opportunities that standard algorithms miss — identifying when two institutions on opposite sides of a trade can be matched efficiently'},{k:'Minimum size',v:'Liquidnet imposes minimum order sizes (typically 5,000+ shares) that effectively exclude retail and HFT flow — ensuring natural institutional liquidity'}]},
+    {t:'Fit in the Agentic Architecture',rows:[{k:'Large slice preference',v:'The Router Agent preferentially routes larger slices to Liquidnet — smaller slices may not meet the minimum size threshold'},{k:'Patience required',v:'Liquidnet matches are not instant — the Router must be willing to wait for natural contra. The Sentry monitors for excessive wait times that signal the pool lacks liquidity for the specific ticker today'}]}
+  ]},
+  pragma:{tag:'Execution Venue · Pragma',ts:'background:#f3f0fb;color:#5b3faa;',title:'Pragma Securities',sub:'A quantitative execution specialist — their agents are trained on the unique microstructure of each dark pool',sections:[
+    {t:'What Makes Pragma Different',rows:[{k:'Deep RL specialisation',v:'Pragma\'s algorithms use Deep Reinforcement Learning specifically designed for dark pool execution — not a generic RL framework adapted from other domains'},{k:'Pool-specific models',v:'Pragma maintains separate RL models for each major dark pool — trained on that pool\'s specific microstructure, participant composition, and historical fill/fade patterns'},{k:'Pragma360 platform',v:'Their flagship execution platform provides real-time analytics on venue quality and is increasingly used by buy-side desks as an intelligence layer on top of their own execution infrastructure'}]},
+    {t:'Fit in the Agentic Architecture',rows:[{k:'Intelligence layer',v:'In the proposed architecture, Pragma\'s analytics feed the Feedback Vault — supplementing the institution\'s own markout data with Pragma\'s cross-client venue intelligence'},{k:'Execution partnership',v:'Some desks use Pragma as a direct execution partner for the Router Agent — outsourcing the RL execution layer while maintaining control of the Scout and Sentry functions internally'}]}
+  ]},
+  anon:{tag:'Execution Venue · Generic Pool',ts:'background:#ece9e3;color:#6b6760;',title:'Anonymous Dark Pool',sub:'A generic, unsponsored dark venue — higher adverse selection risk, used cautiously and monitored closely',sections:[
+    {t:'Why These Pools Exist',rows:[{k:'Proliferation',v:'There are 20+ dark pools operating in US equities alone. Many are operated by broker-dealers as internalisation engines — matching their own client flow before routing to external venues'},{k:'Liquidity fragmentation',v:'Each pool has slightly different participant composition and liquidity profile. Some periods certain anonymous pools have genuine institutional flow; at other times they are dominated by HFTs'},{k:'Lower cost',v:'Anonymous pools typically charge lower execution fees than named venues like IEX or Liquidnet — making them attractive when adverse selection risk is low'}]},
+    {t:'How the Agent Manages Them',rows:[{k:'Cautious Scout probing',v:'The Scout probes anonymous pools more aggressively — more micro-pings, smaller sizes — because their participant composition is less predictable'},{k:'Sentry on high alert',v:'The Sentry agent allocates more monitoring bandwidth to anonymous pools — markout tracking runs at higher frequency, and the kill threshold is lower than for named venues with known protections'}]}
+  ]},
+  lit:{tag:'Execution Venue · Lit Market (Fallback)',ts:'background:#fff8ed;color:#b86a00;',title:'Lit Market — Exchange Fallback',sub:'The venue of last resort — used only when dark liquidity is exhausted, accepting the cost of full market exposure',sections:[
+    {t:'When the Agent Routes Here',rows:[{k:'Dark exhaustion',v:'All dark pools have been probed, scored low, or rejected by the Sentry — the remaining order cannot be filled without accessing the lit market'},{k:'Time pressure',v:'As the order\'s deadline approaches (e.g. 10 minutes to market close), the urgency constraint overrides the cost constraint — the Router accepts lit market execution to guarantee fill'},{k:'Minimum size',v:'Small residual pieces (e.g. the final 5,000 shares of a 500,000 share order) are often swept to the lit market rather than continuing to probe dark pools for a de minimis quantity'}]},
+    {t:'The Trade-Off',rows:[{k:'Guaranteed fill',v:'The lit market will always fill the order — it is the market of last resort where anyone willing to accept the market price can transact'},{k:'Maximum exposure',v:'A large lit market order reveals the institution\'s intent to the entire market — every participant sees the order. This is precisely what dark pool routing was designed to avoid'},{k:'Market impact',v:'Routing a large block to the lit market at the wrong moment can move the price significantly against the institution — the very slippage the system was built to prevent'}]}
+  ]},
+  vault:{tag:'Feedback Vault · Self-Updating Memory',ts:'background:#edf7f1;color:#1a6b35;',title:'Feedback Vault — Venue Scorecard',sub:'The system\'s memory — every fill and every fade updates the scores that determine tomorrow\'s routing decisions',sections:[
+    {t:'What Gets Stored',rows:[{k:'Fill Rate',v:'What percentage of orders submitted to this pool actually get filled — broken down by order size, ticker, time of day, and volatility regime'},{k:'Midpoint Improvement',v:'Whether fills occurred at the midpoint (ideal), better than midpoint (rare but positive), or worse than midpoint (adverse selection signal)'},{k:'Adverse Selection Score',v:'The pool\'s average markout — how much the price moves against the institution in the 30 seconds after a fill. The most important metric for identifying toxic flow'},{k:'Latency Sigma',v:'The variance in pool response times — high variance (jitter) means the Router cannot reliably predict when orders will land, complicating the fan-out timing'}]},
+    {t:'The Venue Scorecard — Illustrative Snapshot',svg:'scorecard'},
+    {t:'How It Feeds Back',rows:[{k:'Real-time update',v:'Every fill updates the score immediately — the Router\'s next decision, seconds later, already incorporates the latest markout'},{k:'Session vs long-term',v:'Scores are maintained at two horizons: the current session (reacts to today\'s conditions) and long-term historical (reacts to structural changes in pool composition over months)'},{k:'Decay weighting',v:'Recent fills are weighted more heavily than older ones — a pool that was toxic last month but clean this week gets credit for the improvement'}]}
+  ]}
+};
+
+// ── Venue Scorecard SVG ───────────────────────────────────────────────────────
+const SCORECARD_SVG = `
+<svg viewBox="0 0 480 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;margin:8px 0 4px;">
+  <!-- Header -->
+  <rect x="0" y="0" width="480" height="26" rx="5" fill="#1c3557"/>
+  <text x="10" y="17" font-family="DM Mono" font-size="10" fill="white" font-weight="500">VENUE SCORECARD — Live Session Snapshot</text>
+  <!-- Column headers -->
+  <text x="10"  y="44" font-family="DM Sans" font-size="9.5" font-weight="700" fill="#9e9b96">VENUE</text>
+  <text x="155" y="44" font-family="DM Sans" font-size="9.5" font-weight="700" fill="#9e9b96">FILL RATE</text>
+  <text x="225" y="44" font-family="DM Sans" font-size="9.5" font-weight="700" fill="#9e9b96">MIDPOINT Δ</text>
+  <text x="310" y="44" font-family="DM Sans" font-size="9.5" font-weight="700" fill="#9e9b96">ADV. SELECT.</text>
+  <text x="400" y="44" font-family="DM Sans" font-size="9.5" font-weight="700" fill="#9e9b96">SCORE</text>
+  <!-- Divider -->
+  <line x1="0" y1="48" x2="480" y2="48" stroke="#e4e1da" stroke-width="1"/>
+  <!-- Row 1: IEX -->
+  <rect x="0" y="50" width="480" height="26" fill="#f4fbf6"/>
+  <text x="10"  y="67" font-family="DM Sans" font-size="11" font-weight="600" fill="#0d7377">IEX</text>
+  <text x="155" y="67" font-family="DM Mono" font-size="11" fill="#1a6b35">87%</text>
+  <text x="225" y="67" font-family="DM Mono" font-size="11" fill="#1a6b35">+0.12 bps</text>
+  <text x="310" y="67" font-family="DM Mono" font-size="11" fill="#1a6b35">LOW</text>
+  <rect x="398" y="54" width="34" height="14" rx="4" fill="#edf7f1" stroke="#6dba80" stroke-width="1"/>
+  <text x="415" y="65" text-anchor="middle" font-family="DM Mono" font-size="10.5" font-weight="700" fill="#1a6b35">91</text>
+  <!-- Row 2: Pragma -->
+  <rect x="0" y="76" width="480" height="26" fill="white"/>
+  <text x="10"  y="93" font-family="DM Sans" font-size="11" font-weight="600" fill="#5b3faa">Pragma</text>
+  <text x="155" y="93" font-family="DM Mono" font-size="11" fill="#1a6b35">82%</text>
+  <text x="225" y="93" font-family="DM Mono" font-size="11" fill="#1a6b35">+0.08 bps</text>
+  <text x="310" y="93" font-family="DM Mono" font-size="11" fill="#1a6b35">LOW</text>
+  <rect x="398" y="80" width="34" height="14" rx="4" fill="#edf7f1" stroke="#6dba80" stroke-width="1"/>
+  <text x="415" y="91" text-anchor="middle" font-family="DM Mono" font-size="10.5" font-weight="700" fill="#1a6b35">85</text>
+  <!-- Row 3: Liquidnet -->
+  <rect x="0" y="102" width="480" height="26" fill="#f4fbf6"/>
+  <text x="10"  y="119" font-family="DM Sans" font-size="11" font-weight="600" fill="#1c3557">Liquidnet</text>
+  <text x="155" y="119" font-family="DM Mono" font-size="11" fill="#9c6500">79%</text>
+  <text x="225" y="119" font-family="DM Mono" font-size="11" fill="#1a6b35">+0.04 bps</text>
+  <text x="310" y="119" font-family="DM Mono" font-size="11" fill="#1a6b35">LOW</text>
+  <rect x="398" y="106" width="34" height="14" rx="4" fill="#fff8ed" stroke="#f5c882" stroke-width="1"/>
+  <text x="415" y="117" text-anchor="middle" font-family="DM Mono" font-size="10.5" font-weight="700" fill="#b86a00">78</text>
+  <!-- Row 4: Anonymous -->
+  <rect x="0" y="128" width="480" height="26" fill="white"/>
+  <text x="10"  y="145" font-family="DM Sans" font-size="11" font-weight="600" fill="#6b6760">Anon Pool</text>
+  <text x="155" y="145" font-family="DM Mono" font-size="11" fill="#9c6500">61%</text>
+  <text x="225" y="145" font-family="DM Mono" font-size="11" fill="#c04040">−0.18 bps</text>
+  <text x="310" y="145" font-family="DM Mono" font-size="11" fill="#c04040">HIGH ⚠</text>
+  <rect x="398" y="132" width="34" height="14" rx="4" fill="#fdf0f0" stroke="#f0b8b8" stroke-width="1"/>
+  <text x="415" y="143" text-anchor="middle" font-family="DM Mono" font-size="10.5" font-weight="700" fill="#c04040">34</text>
+  <!-- Row 5: Lit Market -->
+  <rect x="0" y="154" width="480" height="26" fill="#fafaf8"/>
+  <text x="10"  y="171" font-family="DM Sans" font-size="11" font-weight="600" fill="#b86a00">Lit Market</text>
+  <text x="155" y="171" font-family="DM Mono" font-size="11" fill="#1a6b35">100%</text>
+  <text x="225" y="171" font-family="DM Mono" font-size="11" fill="#c04040">−0.42 bps</text>
+  <text x="310" y="171" font-family="DM Mono" font-size="11" fill="#9c6500">MED</text>
+  <rect x="398" y="158" width="34" height="14" rx="4" fill="#fff8ed" stroke="#f5c882" stroke-width="1"/>
+  <text x="415" y="169" text-anchor="middle" font-family="DM Mono" font-size="10.5" font-weight="700" fill="#b86a00">58</text>
+  <!-- Bottom note -->
+  <text x="0" y="188" font-family="DM Sans" font-size="9" fill="#9e9b96" font-style="italic">Score = composite of Fill Rate, Midpoint Δ, and Adverse Selection. Updated after every fill. Anon Pool flagged for Sentry review.</text>
+</svg>`;
+
+function openModal(key){
+  const d=NODES[key];if(!d)return;
+  document.querySelectorAll('.ladder-step,.intent-node,.agent-row,.pool-node,.vault-node').forEach(n=>n.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('mTag').textContent=d.tag;
+  document.getElementById('mTag').style.cssText=d.ts+'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block;';
+  document.getElementById('mTitle').textContent=d.title;
+  document.getElementById('mSub').textContent=d.sub;
+  const body=document.getElementById('mBody');body.innerHTML='';
+  d.sections.forEach(sec=>{
+    const sd=document.createElement('div');sd.className='info-sec';
+    const st=document.createElement('div');st.className='info-sec-title';st.textContent=sec.t;sd.appendChild(st);
+    if(sec.svg==='scorecard'){
+      const w=document.createElement('div');
+      w.style.cssText='background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 8px;margin-top:4px;overflow-x:auto;';
+      w.innerHTML=SCORECARD_SVG;
+      sd.appendChild(w);
+    }
+    if(sec.rows)sec.rows.forEach(r=>{const row=document.createElement('div');row.className='info-row';row.innerHTML=`<span class="info-key">${r.k}</span><span class="info-val">${r.v}</span>`;sd.appendChild(row);});
+    if(sec.numbered){const nl=document.createElement('div');nl.className='num-list';sec.numbered.forEach((item,i)=>{const el=document.createElement('div');el.className='num-item';el.innerHTML=`<div class="num-badge opp">${i+1}</div><div class="num-text"><strong>${item.label}:</strong> ${item.text}</div>`;nl.appendChild(el);});sd.appendChild(nl);}
+    body.appendChild(sd);
+  });
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  document.querySelectorAll('.ladder-step,.intent-node,.agent-row,.pool-node,.vault-node').forEach(n=>n.classList.remove('active'));
+}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target===document.getElementById('overlay'))closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+</script>
+</body>
+</html>

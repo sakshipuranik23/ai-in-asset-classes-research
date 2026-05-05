@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyclical vs Defensive Rotation — Process Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+  --navy:#1c3557;--navy-pale:#edf3fb;--navy-border:#a8c4e0;
+  --exec:#1a6b35;--exec-pale:#edf7f1;--exec-border:#a8d9bc;
+  --amber:#b86a00;--amber-pale:#fff8ed;--amber-border:#f5c882;
+  --purple:#5b3faa;--purple-pale:#f3f0fb;--purple-border:#c4b0f0;
+  --teal:#0d7377;--teal-pale:#e6f7f7;--teal-border:#8ecece;
+  --red:#c04040;--red-pale:#fdf0f0;--red-border:#f0b8b8;
+  --opp:#1a6b35;--opp-pale:#edf7f1;--opp-border:#6dba80;
+  --opp-overlay:rgba(109,186,128,0.09);--opp-overlay-border:rgba(26,107,53,0.32);
+  --gold:#9a7d0a;--gold-pale:#fefce8;--gold-border:#e8d97a;
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,0.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.nav-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--text-secondary);padding:5px 14px 5px 0;border-right:1px solid var(--border);margin-right:16px;background:none;border-top:none;border-bottom:none;border-left:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .15s}
+.nav-back:hover{color:var(--navy)}
+.nav-crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+.nav-crumb .active{color:var(--navy);font-weight:600}
+.nav-crumb .sep{color:var(--border)}
+.nav-badge{margin-left:auto;background:#fff3e0;color:#b86a00;border:1px solid #f5c882;border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;text-transform:uppercase;letter-spacing:.06em}
+
+/* PAGE */
+.page{max-width:1100px;margin:0 auto;padding:28px 24px 48px}
+.uc-num{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--navy);letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+.header-sub{font-size:14px;color:var(--text-secondary);max-width:700px;line-height:1.6;margin-bottom:12px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+.chip{font-size:11.5px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary)}
+.chip.green{background:var(--exec-pale);border-color:var(--exec-border);color:var(--exec)}
+.chip.navy{background:var(--navy-pale);border-color:var(--navy-border);color:var(--navy)}
+.chip.amber{background:var(--amber-pale);border-color:var(--amber-border);color:var(--amber)}
+.chip.purple{background:var(--purple-pale);border-color:var(--purple-border);color:var(--purple)}
+.chip.teal{background:var(--teal-pale);border-color:var(--teal-border);color:var(--teal)}
+.chip.gold{background:var(--gold-pale);border-color:var(--gold-border);color:var(--gold)}
+
+/* SUMMARY */
+.summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:3px solid transparent;box-shadow:var(--shadow-sm)}
+.sc-gap{border-left-color:#d06060}.sc-sol{border-left-color:#5aaa72}.sc-val{border-left-color:#4a7fd4}
+.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.sc-gap .sc-lbl{color:#c04040}.sc-sol .sc-lbl{color:#2e7a46}.sc-val .sc-lbl{color:#2a4faa}
+.sc-txt{font-size:13px;line-height:1.5}.sc-val .sc-txt{font-weight:600;color:var(--navy)}
+
+/* STRATEGY BANNER */
+.strategy-banner{background:var(--navy);border-radius:10px;padding:16px 22px;margin-bottom:24px;box-shadow:var(--shadow-md);border-left:5px solid #f5c882}
+.sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#f5c882;margin-bottom:6px}
+.sb-text{font-size:13.5px;color:rgba(255,255,255,.88);line-height:1.65}
+.sb-text strong{color:#fff}
+
+/* SECTION TITLES */
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.section-title h2{font-family:'DM Serif Display',serif;font-size:18px;color:var(--navy);letter-spacing:-.01em;white-space:nowrap}
+.section-title .s-line{flex:1;height:1px;background:var(--border)}
+
+/* MATURITY LADDER */
+.ladder-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px 18px;box-shadow:var(--shadow-sm);margin-bottom:28px}
+.ladder-intro{font-size:12.5px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5}
+.ladder-intro strong{color:var(--text-primary)}
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;position:relative}
+.ladder::before{content:'';position:absolute;top:22px;left:10%;right:10%;height:3px;background:linear-gradient(to right,#d0ccc6,#c8c4bc,var(--amber-border),var(--opp-border),var(--opp-border));border-radius:2px;z-index:0}
+.ladder-step{position:relative;z-index:1;border-radius:10px;padding:12px 10px 10px;cursor:pointer;transition:box-shadow .18s,transform .18s;border:1.5px solid transparent;text-align:center}
+.ladder-step:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.ladder-step.active{box-shadow:0 0 0 3px rgba(28,53,87,.15),var(--shadow-md)}
+.ls-1,.ls-2{background:#f5f4f1;border-color:#d0ccc6}
+.ls-3{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-4,.ls-5{background:var(--opp-pale);border-color:var(--opp-border)}
+.ls-num{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.ls-1 .ls-num,.ls-2 .ls-num{color:var(--text-muted)}
+.ls-3 .ls-num{color:var(--amber)}
+.ls-4 .ls-num,.ls-5 .ls-num{color:var(--opp)}
+.ls-icon{font-size:22px;margin-bottom:5px;line-height:1}
+.ls-name{font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:3px}
+.ls-focus{font-size:11px;color:var(--text-secondary);line-height:1.3;margin-bottom:7px}
+.ls-btn{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.ls-1 .ls-btn,.ls-2 .ls-btn{background:#ece9e3;color:var(--text-secondary)}
+.ls-3 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.ls-4 .ls-btn,.ls-5 .ls-btn{background:var(--opp-pale);color:var(--opp);border:1px solid var(--opp-border)}
+.ladder-legend{display:flex;align-items:center;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border-light)}
+.ll-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-secondary)}
+.ll-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ═══ MAIN DIAGRAM WRAPPER ═══ */
+.diagram-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-md);margin-bottom:28px}
+.diag-titlebar{background:var(--navy);padding:11px 20px;display:flex;align-items:center;gap:10px}
+.diag-titlebar span{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em}
+.diag-titlebar small{font-size:11.5px;color:rgba(255,255,255,.45)}
+
+/* ── TOP OUTPUT: Strategist Dashboard ────────────────────────────────── */
+.strat-dashboard{
+  background:var(--navy-pale);
+  border-bottom:1px solid var(--navy-border);
+  padding:16px 20px 14px;
+  cursor:pointer;
+  transition:background .15s;
+  position:relative;
+}
+.strat-dashboard:hover{background:#e4eef8}
+.strat-dashboard.active{outline:2px solid var(--navy);outline-offset:-2px}
+.sd-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--navy);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sd-btn{margin-left:auto;font-size:10px;font-weight:600;padding:2px 9px;border-radius:6px;border:1px solid var(--navy-border);background:var(--surface);color:var(--navy);cursor:pointer;font-family:'DM Sans',sans-serif}
+.sd-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+/* Regime heatmap panel */
+.sd-panel{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:12px 14px;box-shadow:var(--shadow-sm)}
+.sdp-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:10px}
+
+/* Regime transition heatmap */
+.heat-grid{display:grid;grid-template-columns:auto 1fr 1fr 1fr 1fr;gap:3px;font-size:9.5px}
+.heat-lbl-row{font-weight:700;color:var(--text-muted);padding:2px 4px;text-align:center}
+.heat-lbl-col{font-weight:700;color:var(--text-muted);padding:2px 5px;display:flex;align-items:center}
+.heat-cell{border-radius:4px;padding:4px 0;text-align:center;font-family:'DM Mono',monospace;font-size:9px;font-weight:600}
+
+/* Tilt indicator panel */
+.tilt-bar-wrap{display:flex;flex-direction:column;gap:8px}
+.tilt-row{display:flex;align-items:center;gap:8px}
+.tilt-sector{font-size:11px;font-weight:600;color:var(--text-secondary);width:90px;flex-shrink:0}
+.tilt-track{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden;position:relative}
+.tilt-fill{height:100%;border-radius:4px;transition:width .5s}
+.tilt-val{font-size:10.5px;font-weight:700;font-family:'DM Mono',monospace;width:36px;text-align:right;flex-shrink:0}
+
+/* Nowcast panel */
+.nowcast-row{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--border-light)}
+.nowcast-row:last-child{border-bottom:none}
+.nc-label{font-size:11px;font-weight:600;color:var(--text-secondary);width:60px;flex-shrink:0}
+.nc-official{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted)}
+.nc-ai{font-family:'DM Mono',monospace;font-size:11px;font-weight:700}
+.nc-delta{font-size:10px;padding:1px 6px;border-radius:4px;flex-shrink:0}
+
+/* ── MAIN FLOW AREA ──────────────────────────────────────────────────── */
+.flow-area{
+  display:grid;
+  grid-template-columns:200px 16px 1fr 16px 200px 16px 1fr 16px 180px;
+  gap:0;
+  align-items:center;
+  padding:20px 16px 16px;
+  background:var(--bg);
+  min-height:320px;
+  position:relative;
+  overflow:visible;
+}
+
+/* horizontal arrow between sections */
+.flow-arr{display:flex;align-items:center;flex-shrink:0}
+.fa-line{height:2px;background:#c8c4bc;flex:1;min-width:10px}
+.fa-head{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:7px solid #c8c4bc}
+.fa-opp .fa-line{background:var(--opp-border)}
+.fa-opp .fa-head{border-left-color:var(--opp-border)}
+
+/* ── SIGNAL FACTORY (left section) ───────────────────────────────────── */
+.factory-col{display:flex;flex-direction:column;gap:10px}
+.factory-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:2px;text-align:center}
+
+/* feed node */
+.feed-node{background:var(--surface);border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;cursor:pointer;transition:box-shadow .15s,transform .15s;box-shadow:var(--shadow-sm)}
+.feed-node:hover{box-shadow:var(--shadow-md);transform:translateX(2px)}
+.feed-node.active{border-color:var(--navy)!important;box-shadow:0 0 0 2px rgba(28,53,87,.12)}
+.fn-icon{font-size:16px;margin-bottom:3px}
+.fn-title{font-size:11px;font-weight:700;color:var(--text-primary);margin-bottom:2px}
+.fn-desc{font-size:10px;color:var(--text-secondary);line-height:1.35;margin-bottom:5px}
+.fn-btn{font-size:9.5px;font-weight:600;padding:2px 7px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.fn-navy .fn-btn{background:var(--navy-pale);color:var(--navy)}
+.fn-teal .fn-btn{background:var(--teal-pale);color:var(--teal)}
+.fn-navy{border-top:3px solid var(--navy)}
+.fn-teal{border-top:3px solid var(--teal)}
+
+/* ── CENTRAL REGIME GAUGE ────────────────────────────────────────────── */
+.regime-hub{
+  display:flex;flex-direction:column;
+  align-items:center;
+  background:var(--surface);
+  border:2px solid var(--opp-border);
+  border-radius:14px;
+  padding:14px 14px 12px;
+  box-shadow:var(--shadow-md);
+  cursor:pointer;
+  transition:box-shadow .2s,transform .2s;
+  position:relative;
+  z-index:5;
+  min-width:0;
+}
+.regime-hub:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.regime-hub.active{border-color:var(--navy)!important;box-shadow:0 0 0 3px rgba(28,53,87,.12),var(--shadow-lg)}
+.rh-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--opp);margin-bottom:10px;text-align:center}
+.rh-title{font-family:'DM Serif Display',serif;font-size:13px;color:var(--navy);margin-bottom:2px;text-align:center;letter-spacing:-.01em}
+.rh-sub{font-size:10px;color:var(--text-muted);text-align:center;margin-bottom:10px}
+
+/* Horizontal probability bars */
+.prob-bars{width:100%;display:flex;flex-direction:column;gap:6px}
+.pb-row{display:flex;align-items:center;gap:7px}
+.pb-label{font-size:10px;font-weight:600;color:var(--text-secondary);width:72px;flex-shrink:0}
+.pb-track{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.pb-fill{height:100%;border-radius:4px}
+.pb-pct{font-family:'DM Mono',monospace;font-size:10px;font-weight:700;width:28px;text-align:right;flex-shrink:0}
+
+.rh-btn{margin-top:10px;font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;border:1px solid var(--opp-border);background:var(--opp-pale);color:var(--opp);cursor:pointer;font-family:'DM Sans',sans-serif}
+.rh-regime-badge{display:inline-block;margin-top:6px;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+
+/* ── ROTATION SCORE ──────────────────────────────────────────────────── */
+.score-col{display:flex;flex-direction:column;gap:10px}
+.score-node{background:var(--surface);border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;cursor:pointer;transition:box-shadow .15s,transform .15s;box-shadow:var(--shadow-sm)}
+.score-node:hover{box-shadow:var(--shadow-md);transform:translateX(2px)}
+.score-node.active{border-color:var(--navy)!important;box-shadow:0 0 0 2px rgba(28,53,87,.12)}
+.sn-purple{border-top:3px solid var(--purple)}
+.sn-opp{border-top:3px solid var(--opp)}
+.sn-icon{font-size:16px;margin-bottom:3px}
+.sn-title{font-size:11px;font-weight:700;color:var(--text-primary);margin-bottom:2px}
+.sn-desc{font-size:10px;color:var(--text-secondary);line-height:1.35;margin-bottom:5px}
+.sn-btn{font-size:9.5px;font-weight:600;padding:2px 7px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.sn-purple .sn-btn{background:var(--purple-pale);color:var(--purple)}
+.sn-opp .sn-btn{background:var(--opp-pale);color:var(--opp)}
+
+/* Rotation score gauge */
+.rot-gauge{display:flex;align-items:center;gap:6px;margin:4px 0}
+.rot-track{flex:1;height:6px;background:linear-gradient(to right,#c04040,#e4e1da,#1a6b35);border-radius:3px;position:relative}
+.rot-needle{position:absolute;top:50%;transform:translate(-50%,-50%);width:3px;height:12px;background:var(--navy);border-radius:2px}
+.rot-labels{display:flex;justify-content:space-between;font-size:8.5px;color:var(--text-muted);margin-top:2px}
+
+/* ── PORTFOLIO TILT ──────────────────────────────────────────────────── */
+.tilt-col{display:flex;flex-direction:column;gap:0}
+.tilt-node{background:var(--opp-overlay);border:2px dashed var(--opp-overlay-border);border-radius:10px;padding:12px 13px;cursor:pointer;transition:box-shadow .15s,transform .15s}
+.tilt-node:hover{box-shadow:var(--shadow-md);transform:translateX(2px)}
+.tilt-node.active{border-color:var(--navy)!important}
+.tn-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--opp);margin-bottom:6px}
+.tn-title{font-family:'DM Serif Display',serif;font-size:13px;color:var(--navy);margin-bottom:4px;letter-spacing:-.01em}
+.tn-desc{font-size:10.5px;color:var(--text-secondary);line-height:1.4;margin-bottom:8px}
+/* Cyclical vs defensive bars */
+.cyc-def-bars{display:flex;flex-direction:column;gap:5px}
+.cdb-row{display:flex;align-items:center;gap:6px}
+.cdb-label{font-size:10px;font-weight:600;width:80px;flex-shrink:0}
+.cdb-track{flex:1;height:7px;background:var(--border);border-radius:3px;overflow:hidden}
+.cdb-fill{height:100%;border-radius:3px}
+.cdb-val{font-size:10px;font-weight:700;font-family:'DM Mono',monospace;width:28px;text-align:right}
+.tn-btn{margin-top:8px;font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid var(--opp-border);background:var(--opp-pale);color:var(--opp);cursor:pointer;font-family:'DM Sans',sans-serif}
+
+/* ── STRATEGIC ARCHIVE (below main flow) ─────────────────────────────── */
+.archive-bar{
+  background:var(--navy);
+  padding:14px 20px;
+  display:flex;align-items:center;gap:16px;
+  cursor:pointer;transition:background .15s;
+}
+.archive-bar:hover{background:var(--navy-light, #25446a)}
+.archive-bar.active{outline:2px solid rgba(255,255,255,.4);outline-offset:-2px}
+.ab-icon{font-size:22px;flex-shrink:0}
+.ab-body{flex:1}
+.ab-title{font-family:'DM Serif Display',serif;font-size:14px;color:#fff;margin-bottom:3px}
+.ab-desc{font-size:12px;color:rgba(255,255,255,.6);line-height:1.4}
+.ab-btn{font-size:11px;font-weight:600;padding:5px 13px;border-radius:7px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0}
+
+/* RESEARCH */
+.research{padding-top:24px;border-top:1px solid var(--border)}
+.research h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy);margin-bottom:16px;letter-spacing:-.01em}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.r-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.r-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:7px}
+.r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.r-rows{display:flex;flex-direction:column;gap:7px}
+.r-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.r-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:155px}
+.r-key::after{content:':'}
+.r-val{color:var(--text-secondary)}
+.threat-callout{background:var(--red-pale);border:1.5px solid var(--red-border);border-left:5px solid var(--red);border-radius:10px;padding:18px 20px;box-shadow:var(--shadow-sm)}
+.tc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--red);margin-bottom:6px}
+.tc-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--navy);margin-bottom:7px;letter-spacing:-.01em}
+.tc-body{font-size:13px;color:var(--text-secondary);line-height:1.65}
+.tc-body strong{color:var(--text-primary)}
+.ref-list{display:flex;flex-direction:column;gap:6px}
+.ref-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.ref-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--navy-pale);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.ref-txt{color:var(--text-secondary)}.ref-txt strong{color:var(--text-primary)}
+.page-footer{text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:28px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(20,18,14,.45);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(3px)}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:14px;width:560px;max-width:calc(100vw - 32px);max-height:calc(100vh - 60px);overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(12px) scale(.98);transition:transform .22s cubic-bezier(.34,1.56,.64,1)}
+.overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-hdr{padding:20px 22px 15px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2;border-radius:14px 14px 0 0}
+.m-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block}
+.m-title{font-family:'DM Serif Display',serif;font-size:19px;color:var(--navy);line-height:1.25;margin-bottom:4px;padding-right:30px}
+.m-sub{font-size:12.5px;color:var(--text-secondary);font-style:italic}
+.m-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:15px;font-family:'DM Sans',sans-serif;transition:background .12s}
+.m-close:hover{background:var(--border)}
+.m-body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:14px}
+.info-sec{display:flex;flex-direction:column;gap:7px}
+.info-sec-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);padding-bottom:5px;border-bottom:1px solid var(--border-light)}
+.info-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.info-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:165px}
+.info-key::after{content:':'}
+.info-val{color:var(--text-secondary)}
+.num-list{display:flex;flex-direction:column;gap:6px}
+.num-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.num-badge{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--navy-pale);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.num-badge.opp{background:var(--opp-pale);color:var(--opp)}
+.num-text{color:var(--text-secondary)}.num-text strong{color:var(--text-primary)}
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="nav-back" onclick="window.history.back()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11L5 7l4-4"/></svg>
+    Back to Matrix
+  </button>
+  <div class="nav-crumb">
+    <span>Equity Markets</span><span class="sep">/</span>
+    <span>Immediate Priorities</span><span class="sep">/</span>
+    <span class="active">Cyclical vs Defensive Rotation</span>
+  </div>
+  <div class="nav-badge">🎯 Immediate Priority</div>
+</nav>
+
+<div class="page">
+
+  <div class="uc-num">Use Case #11 &nbsp;·&nbsp; Pre-Trade &nbsp;·&nbsp; Strategic Impact 7/10</div>
+  <h1>Cyclical vs Defensive Rotation via Macro AI Signals</h1>
+  <p class="header-sub">Human advisors stay in cyclicals too long during a downturn — not because they lack data, but because of loss aversion and recency bias. The value here is not better data. It is a systematic, emotionless signal that forces the rotation the data already justifies.</p>
+  <div class="chips">
+    <span class="chip navy">Hidden Markov Models</span>
+    <span class="chip navy">NLP / LLM Sentiment</span>
+    <span class="chip gold">Nowcasting</span>
+    <span class="chip purple">Random Forests</span>
+    <span class="chip green">Reinforcement Learning</span>
+    <span class="chip amber">Partially Deployed</span>
+  </div>
+
+  <div class="summary-row">
+    <div class="sc sc-gap"><div class="sc-lbl">The Gap</div><div class="sc-txt">Official macro data (GDP, CPI) is released weeks after the period ends — by the time it's published, markets have already moved. Human portfolio managers compound this with behavioural biases that delay necessary rotations.</div></div>
+    <div class="sc sc-sol"><div class="sc-lbl">AI Solution</div><div class="sc-txt">A five-stage Macro-to-Micro pipeline: Nowcasting predicts official data before release, Hidden Markov Models identify the economic regime, and a Rotation Score drives automated portfolio tilts — systematically and without emotional delay.</div></div>
+    <div class="sc sc-val"><div class="sc-lbl">Value Created</div><div class="sc-txt">Rotating from cyclicals to defensives 2–4 weeks ahead of consensus converts a human lag into a systematic edge — capturing the inflection point before it becomes the prevailing market view.</div></div>
+  </div>
+
+  <!-- STRATEGY BANNER -->
+  <div class="strategy-banner">
+    <div class="sb-label">Strategic Framing — Systematic Discipline</div>
+    <div class="sb-text">"Human advisors are prone to <strong>Loss Aversion</strong> and <strong>Recency Bias</strong> — staying in cyclicals too long during a downturn because the last few months felt good. An AI-driven macro signal provides an <strong>emotional firewall</strong>, enforcing a systematic rotation based on cold data rather than the prevailing market mood. The machine has no feelings about last quarter's returns."</div>
+  </div>
+
+  <!-- MATURITY LADDER -->
+  <div class="section-title">
+    <h2>AI Maturity Ladder — Macro Rotation</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="ladder-wrap">
+    <p class="ladder-intro">Most institutional desks operate at <strong>Level 2–3</strong> today. The proposed architecture targets <strong>Level 4</strong>. Level 5 (Autonomous RL rotation) is operational at AQR and Two Sigma. Click any level for detail.</p>
+    <div class="ladder">
+      <div class="ladder-step ls-1" onclick="openModal('l1')">
+        <div class="ls-num">Level 1</div><div class="ls-icon">📰</div>
+        <div class="ls-name">Manual Review</div><div class="ls-focus">Quarterly human vote</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-2" onclick="openModal('l2')">
+        <div class="ls-num">Level 2</div><div class="ls-icon">🔔</div>
+        <div class="ls-name">Quantitative Alerts</div><div class="ls-focus">Rules-based PMI triggers</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-3" onclick="openModal('l3')">
+        <div class="ls-num">Level 3</div><div class="ls-icon">🌲</div>
+        <div class="ls-name">ML Regime Scoring</div><div class="ls-focus">Supervised regime classification</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-4" onclick="openModal('l4')">
+        <div class="ls-num">Level 4</div><div class="ls-icon">📡</div>
+        <div class="ls-name">Multimodal Nowcasting</div><div class="ls-focus">NLP + Alt Data prediction</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-5" onclick="openModal('l5')">
+        <div class="ls-num">Level 5</div><div class="ls-icon">🤖</div>
+        <div class="ls-name">Autonomous Rotation</div><div class="ls-focus">RL agents 24/7 zero-lag</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+    </div>
+    <div class="ladder-legend">
+      <div class="ll-item"><div class="ll-dot" style="background:#c8c4bc;"></div>Current state — most desks today</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--amber);"></div>Emerging — proposed architecture entry</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--opp);"></div>Opportunity — proposed and deployed at quant leaders</div>
+    </div>
+  </div>
+
+  <!-- MAIN DIAGRAM -->
+  <div class="section-title">
+    <h2>The Macro-to-Micro Tilt Architecture</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="diag-titlebar">
+      <span>Signal flows left to right · Regime Gauge at centre · Click any element for detail</span>
+      <small>&nbsp;·&nbsp; Left: what is happening &nbsp;·&nbsp; Right: what we do about it</small>
+    </div>
+
+    <!-- TOP LAYER: Strategist Dashboard -->
+    <div class="strat-dashboard" onclick="openModal('stratdash')">
+      <div class="sd-label">
+        🖥️ &nbsp;Strategist Dashboard — Output Layer
+        <button class="sd-btn">Details →</button>
+      </div>
+      <div class="sd-grid">
+
+        <!-- Regime Transition Heatmap -->
+        <div class="sd-panel">
+          <div class="sdp-title">Regime Transition Heatmap — Probability Matrix</div>
+          <div class="heat-grid">
+            <div class="heat-lbl-row"></div>
+            <div class="heat-lbl-row" style="color:var(--exec);">Expand</div>
+            <div class="heat-lbl-row" style="color:var(--amber);">Slowdn</div>
+            <div class="heat-lbl-row" style="color:var(--red);">Recess</div>
+            <div class="heat-lbl-row" style="color:var(--teal);">Recov</div>
+            <div class="heat-lbl-col" style="color:var(--exec);">Expand</div>
+            <div class="heat-cell" style="background:#c6efce;color:#375623;">72%</div>
+            <div class="heat-cell" style="background:#ffeb9c;color:#9c6500;">18%</div>
+            <div class="heat-cell" style="background:#ffcccc;color:#9c0006;">6%</div>
+            <div class="heat-cell" style="background:#f5f4f1;color:#9e9b96;">4%</div>
+            <div class="heat-lbl-col" style="color:var(--amber);">Slowdn</div>
+            <div class="heat-cell" style="background:#ffeb9c;color:#9c6500;">22%</div>
+            <div class="heat-cell" style="background:#ffeb9c;color:#9c6500;">58%</div>
+            <div class="heat-cell" style="background:#ffcccc;color:#9c0006;">16%</div>
+            <div class="heat-cell" style="background:#f5f4f1;color:#9e9b96;">4%</div>
+            <div class="heat-lbl-col" style="color:var(--red);">Recess</div>
+            <div class="heat-cell" style="background:#f5f4f1;color:#9e9b96;">8%</div>
+            <div class="heat-cell" style="background:#ffeb9c;color:#9c6500;">24%</div>
+            <div class="heat-cell" style="background:#ffcccc;color:#9c0006;">52%</div>
+            <div class="heat-cell" style="background:#c6efce;color:#375623;">16%</div>
+            <div class="heat-lbl-col" style="color:var(--teal);">Recov</div>
+            <div class="heat-cell" style="background:#c6efce;color:#375623;">42%</div>
+            <div class="heat-cell" style="background:#f5f4f1;color:#9e9b96;">12%</div>
+            <div class="heat-cell" style="background:#f5f4f1;color:#9e9b96;">6%</div>
+            <div class="heat-cell" style="background:#c6efce;color:#375623;">40%</div>
+          </div>
+        </div>
+
+        <!-- Tilt Indicator -->
+        <div class="sd-panel">
+          <div class="sdp-title">Live Tilt Indicator — Current Sector Exposure</div>
+          <div class="tilt-bar-wrap">
+            <div class="tilt-row"><span class="tilt-sector" style="color:var(--exec);">Utilities</span><div class="tilt-track"><div class="tilt-fill" style="width:78%;background:var(--exec);"></div></div><span class="tilt-val" style="color:var(--exec);">+2.1σ</span></div>
+            <div class="tilt-row"><span class="tilt-sector" style="color:var(--exec);">Cons. Staples</span><div class="tilt-track"><div class="tilt-fill" style="width:72%;background:var(--exec);"></div></div><span class="tilt-val" style="color:var(--exec);">+1.8σ</span></div>
+            <div class="tilt-row"><span class="tilt-sector" style="color:var(--text-muted);">Healthcare</span><div class="tilt-track"><div class="tilt-fill" style="width:50%;background:#c8c4bc;"></div></div><span class="tilt-val" style="color:var(--text-muted);">0.0σ</span></div>
+            <div class="tilt-row"><span class="tilt-sector" style="color:var(--red);">Technology</span><div class="tilt-track"><div class="tilt-fill" style="width:28%;background:var(--red);"></div></div><span class="tilt-val" style="color:var(--red);">−1.4σ</span></div>
+            <div class="tilt-row"><span class="tilt-sector" style="color:var(--red);">Industrials</span><div class="tilt-track"><div class="tilt-fill" style="width:18%;background:var(--red);"></div></div><span class="tilt-val" style="color:var(--red);">−1.9σ</span></div>
+            <div style="font-size:9.5px;color:var(--text-muted);font-style:italic;margin-top:4px;">Current regime: Late-Cycle Slowdown · Defensive tilt active</div>
+          </div>
+        </div>
+
+        <!-- Nowcast Panel -->
+        <div class="sd-panel">
+          <div class="sdp-title">Nowcast vs Official Data — Lead Time View</div>
+          <div style="margin-bottom:6px;">
+            <div class="nowcast-row">
+              <span class="nc-label">US GDP</span>
+              <span class="nc-official">Official: +2.1%</span>
+              <span class="nc-ai" style="color:var(--amber);">AI: +1.7%</span>
+              <span class="nc-delta" style="background:#fff3cd;color:#856404;">T−31d</span>
+            </div>
+            <div class="nowcast-row">
+              <span class="nc-label">US CPI</span>
+              <span class="nc-official">Official: 3.2%</span>
+              <span class="nc-ai" style="color:var(--exec);">AI: 3.1%</span>
+              <span class="nc-delta" style="background:#d4edda;color:#1a6b35;">T−18d</span>
+            </div>
+            <div class="nowcast-row">
+              <span class="nc-label">PMI</span>
+              <span class="nc-official">Official: 48.3</span>
+              <span class="nc-ai" style="color:var(--red);">AI: 47.1</span>
+              <span class="nc-delta" style="background:#fde8e8;color:#9a1f1f;">T−12d</span>
+            </div>
+          </div>
+          <div style="font-size:9.5px;color:var(--text-muted);font-style:italic;">T−Nd = AI predicted N days before official release. PMI sub-50 = contraction signal.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN HORIZONTAL FLOW -->
+    <div class="flow-area">
+
+      <!-- SIGNAL FACTORY — left -->
+      <div class="factory-col">
+        <div class="factory-title">Signal Factory</div>
+
+        <div class="feed-node fn-navy" onclick="openModal('macrodata')">
+          <div class="fn-icon">📊</div>
+          <div class="fn-title">Macro Data Ingestion</div>
+          <div class="fn-desc">GDP, CPI, PMI, Yield Curves — multi-frequency, standardised</div>
+          <button class="fn-btn">Details →</button>
+        </div>
+
+        <div class="feed-node fn-teal" onclick="openModal('sentiment')">
+          <div class="fn-icon">🗣️</div>
+          <div class="fn-title">Central Bank Sentiment</div>
+          <div class="fn-desc">Fed minutes, ECB speeches — Hawkish vs Dovish in real time</div>
+          <button class="fn-btn" style="background:var(--teal-pale);color:var(--teal);">Details →</button>
+        </div>
+
+        <div class="feed-node fn-navy" onclick="openModal('altdata')" style="border-top-color:var(--gold);">
+          <div class="fn-icon">🛰️</div>
+          <div class="fn-title">Alternative Data (Nowcast)</div>
+          <div class="fn-desc">Energy use, satellite logistics, credit card spend</div>
+          <button class="fn-btn" style="background:var(--gold-pale);color:var(--gold);">Details →</button>
+        </div>
+      </div>
+
+      <!-- ARROW 1 -->
+      <div class="flow-arr"><div class="fa-line"></div><div class="fa-head"></div></div>
+
+      <!-- REGIME GAUGE — centre hub -->
+      <div class="regime-hub" onclick="openModal('regimegauge')">
+        <div class="rh-label">⚙ Regime Engine</div>
+        <div class="rh-title">Hidden Markov Model</div>
+        <div class="rh-sub">Regime identification</div>
+        <div class="prob-bars">
+          <div class="pb-row">
+            <span class="pb-label" style="color:var(--exec);">Expansion</span>
+            <div class="pb-track"><div class="pb-fill" style="width:12%;background:var(--exec);"></div></div>
+            <span class="pb-pct" style="color:var(--exec);">12%</span>
+          </div>
+          <div class="pb-row">
+            <span class="pb-label" style="color:var(--amber);">Slowdown</span>
+            <div class="pb-track"><div class="pb-fill" style="width:61%;background:var(--amber);"></div></div>
+            <span class="pb-pct" style="color:var(--amber);">61%</span>
+          </div>
+          <div class="pb-row">
+            <span class="pb-label" style="color:var(--red);">Recession</span>
+            <div class="pb-track"><div class="pb-fill" style="width:22%;background:var(--red);"></div></div>
+            <span class="pb-pct" style="color:var(--red);">22%</span>
+          </div>
+          <div class="pb-row">
+            <span class="pb-label" style="color:var(--teal);">Recovery</span>
+            <div class="pb-track"><div class="pb-fill" style="width:5%;background:var(--teal);"></div></div>
+            <span class="pb-pct" style="color:var(--teal);">5%</span>
+          </div>
+        </div>
+        <div class="rh-regime-badge">⚠ Late-Cycle Slowdown</div>
+        <button class="rh-btn">Details →</button>
+      </div>
+
+      <!-- ARROW 2 -->
+      <div class="flow-arr fa-opp"><div class="fa-line"></div><div class="fa-head" style="border-left-color:var(--opp-border);"></div></div>
+
+      <!-- SIGNAL GENERATION — right-centre -->
+      <div class="score-col">
+        <div class="factory-title">Signal Generation</div>
+
+        <div class="score-node sn-purple" onclick="openModal('rotationscore')">
+          <div class="sn-icon">🎯</div>
+          <div class="sn-title">Rotation Score</div>
+          <div class="sn-desc">−1 (full defensive) to +1 (full cyclical)</div>
+          <!-- Score gauge -->
+          <div class="rot-gauge">
+            <span style="font-size:9px;color:var(--red);">−1</span>
+            <div class="rot-track" style="flex:1;">
+              <div class="rot-needle" style="left:28%;"></div>
+            </div>
+            <span style="font-size:9px;color:var(--exec);">+1</span>
+          </div>
+          <div class="rot-labels"><span style="color:var(--red);">Defensive</span><span style="color:var(--exec);">Cyclical</span></div>
+          <div style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:var(--red);margin-top:4px;">Score: −0.44 · Defensive tilt</div>
+          <button class="sn-btn" style="margin-top:6px;">Details →</button>
+        </div>
+
+        <div class="score-node sn-opp" onclick="openModal('optimizer')">
+          <div class="sn-icon">⚖️</div>
+          <div class="sn-title">Portfolio Optimizer</div>
+          <div class="sn-desc">Adjusts sector weights maintaining risk parity constraints</div>
+          <button class="sn-btn">Details →</button>
+        </div>
+      </div>
+
+      <!-- ARROW 3 -->
+      <div class="flow-arr fa-opp"><div class="fa-line"></div><div class="fa-head" style="border-left-color:var(--opp-border);"></div></div>
+
+      <!-- PORTFOLIO TILT — far right -->
+      <div class="tilt-node" onclick="openModal('portfoliotilt')">
+        <div class="tn-label">Proposed Architecture · Output</div>
+        <div class="tn-title">Portfolio Tilt</div>
+        <div class="tn-desc">Sector ETF weights adjusted systematically — no human sign-off required for routine tilts</div>
+        <div class="cyc-def-bars">
+          <div style="font-size:9.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Exposure Shift</div>
+          <div class="cdb-row">
+            <span class="cdb-label" style="color:var(--exec);">Defensives ▲</span>
+            <div class="cdb-track"><div class="cdb-fill" style="width:75%;background:var(--exec);"></div></div>
+            <span class="cdb-val" style="color:var(--exec);">+18%</span>
+          </div>
+          <div class="cdb-row">
+            <span class="cdb-label" style="color:var(--red);">Cyclicals ▼</span>
+            <div class="cdb-track"><div class="cdb-fill" style="width:60%;background:var(--red);"></div></div>
+            <span class="cdb-val" style="color:var(--red);">−14%</span>
+          </div>
+          <div class="cdb-row">
+            <span class="cdb-label" style="color:var(--text-muted);">Neutral</span>
+            <div class="cdb-track"><div class="cdb-fill" style="width:24%;background:#c8c4bc;"></div></div>
+            <span class="cdb-val" style="color:var(--text-muted);">−4%</span>
+          </div>
+        </div>
+        <button class="tn-btn">Details →</button>
+      </div>
+
+    </div><!-- end flow-area -->
+
+    <!-- STRATEGIC ARCHIVE — bottom strip -->
+    <div class="archive-bar" onclick="openModal('archive')">
+      <div class="ab-icon">📚</div>
+      <div class="ab-body">
+        <div class="ab-title">Strategic Archive — Regime Playbook</div>
+        <div class="ab-desc">How every sector performed in every historical regime shift: 2000, 2008, 2011, 2020, 2022. The model's empirical foundation — every rotation decision is grounded in what actually happened before.</div>
+      </div>
+      <button class="ab-btn" onclick="event.stopPropagation();openModal('archive')">Details →</button>
+    </div>
+
+  </div><!-- end diagram-wrap -->
+
+  <!-- RESEARCH -->
+  <div class="research">
+    <h2>Research Notes</h2>
+    <div class="r-grid">
+
+      <!-- False Signal + Correlated Crash Callout -->
+      <div class="threat-callout" style="grid-column:1/-1;">
+        <div class="tc-label">⚠ Two Critical Failure Modes</div>
+        <div class="tc-title">The False Signal Trap &amp; The Correlated Crash Problem</div>
+        <div class="tc-body">
+          <strong>The False Signal Trap:</strong> Government macro data is frequently revised. A preliminary GDP reading of −0.2% (recession signal) that triggers a full defensive rotation may be revised three weeks later to +0.4% (expansion). The AI has executed a costly, disruptive rebalancing based on data that turned out to be wrong. The mitigation is a <strong>confirmation window</strong> — the signal must persist for N consecutive data points before triggering a rotation, and data revision buffers down-weight preliminary readings relative to final ones. Nowcast signals from alternative data provide a pre-check before official releases.
+          <br><br>
+          <strong>The Correlated Crash Problem:</strong> The cyclical/defensive distinction assumes a relatively orderly economic environment. In a true liquidity crisis — 2008, March 2020 — the correlation between all assets approaches 1. Defensives sell off alongside cyclicals as investors liquidate everything to raise cash. The AI's sector-rotation model has no meaningful edge in this regime because the model's fundamental assumption (that sectors behave differently) temporarily breaks down. The only mitigation is a <strong>crisis regime flag</strong> — when cross-asset correlations spike above a threshold, the system switches from sector-rotation mode to pure risk reduction (raising cash, buying volatility hedges) until correlations normalise.
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--navy);"></div>Hidden Markov Models — Why This Algorithm</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">The core insight</span><span class="r-val">Economic regimes (Expansion, Slowdown, Recession, Recovery) are not directly observable — they are hidden states inferred from observable macro indicators. HMMs are specifically designed for this structure.</span></div>
+          <div class="r-row"><span class="r-key">Unsupervised</span><span class="r-val">Unlike supervised ML that requires labelled historical regimes, HMMs discover the regime structure from the data itself — it finds the clusters that best explain the observed macro patterns without being told what to look for.</span></div>
+          <div class="r-row"><span class="r-key">Transition probabilities</span><span class="r-val">The model outputs not just the current regime but the probability of transitioning to each other regime — this is what populates the Regime Heatmap in the Strategist Dashboard.</span></div>
+          <div class="r-row"><span class="r-key">Limitation</span><span class="r-val">HMMs assume regime transitions follow a fixed probability structure. Structural breaks — a pandemic, a war — can shift transition probabilities permanently, requiring model retraining.</span></div>
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--opp);"></div>Who Is Building This in 2026</div>
+        <div class="ref-list">
+          <div class="ref-item"><div class="ref-num">1</div><div class="ref-txt"><strong>AQR Capital Management</strong> — pioneer of factor investing; uses advanced ML to identify macro factors driving asset returns across full economic cycles; operates near Level 5 autonomy</div></div>
+          <div class="ref-item"><div class="ref-num">2</div><div class="ref-txt"><strong>Two Sigma (Venn)</strong> — Venn platform provides institutional-grade factor analysis, helping firms verify whether their "Defensive" tilt is actually protected against current macro risks in practice</div></div>
+          <div class="ref-item"><div class="ref-num">3</div><div class="ref-txt"><strong>BlackRock (Aladdin)</strong> — Macro Dashboard integrates GenAI to summarise the impact of geopolitical risk on specific sector allocations; the institutional standard for macro-aware portfolio risk management</div></div>
+          <div class="ref-item"><div class="ref-num">4</div><div class="ref-txt"><strong>Bridgewater Associates</strong> — "All Weather" strategy pioneered the systematic regime-based allocation concept; their approach is the empirical validation that macro rotation works across long time horizons</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-footer">
+    Hexaware Financial Services &nbsp;·&nbsp; AI in Equity Markets &nbsp;·&nbsp; Use Case #11 &nbsp;·&nbsp; Preliminary Research 2026
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="m-tag" id="mTag"></div>
+      <div class="m-title" id="mTitle"></div>
+      <div class="m-sub" id="mSub"></div>
+      <button class="m-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="m-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+// Regime Playbook SVG — heatmap of sector performance by regime
+const PLAYBOOK_SVG = `
+<svg viewBox="0 0 520 175" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;margin:6px 0;">
+  <rect x="0" y="0" width="520" height="22" rx="4" fill="#1c3557"/>
+  <text x="10" y="15" font-family="DM Mono" font-size="9.5" fill="white" font-weight="500">SECTOR PERFORMANCE BY REGIME — Historical Average Relative Return</text>
+  <!-- Column headers -->
+  <text x="110" y="38" text-anchor="middle" font-family="DM Sans" font-size="9.5" font-weight="700" fill="#1a6b35">EXPANSION</text>
+  <text x="220" y="38" text-anchor="middle" font-family="DM Sans" font-size="9.5" font-weight="700" fill="#b86a00">SLOWDOWN</text>
+  <text x="330" y="38" text-anchor="middle" font-family="DM Sans" font-size="9.5" font-weight="700" fill="#c04040">RECESSION</text>
+  <text x="440" y="38" text-anchor="middle" font-family="DM Sans" font-size="9.5" font-weight="700" fill="#0d7377">RECOVERY</text>
+  <line x1="0" y1="42" x2="520" y2="42" stroke="#e4e1da" stroke-width="1"/>
+  <!-- Rows -->
+  <!-- Technology -->
+  <rect x="0" y="44" width="520" height="20" fill="#f9f8f6"/>
+  <text x="5" y="58" font-family="DM Sans" font-size="10" font-weight="600" fill="#1a1814">Technology</text>
+  <rect x="65" y="46" width="90" height="16" rx="3" fill="#c6efce"/><text x="110" y="58" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#375623">+4.2%</text>
+  <rect x="175" y="46" width="90" height="16" rx="3" fill="#ffcccc"/><text x="220" y="58" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#9c0006">−2.8%</text>
+  <rect x="285" y="46" width="90" height="16" rx="3" fill="#ffcccc"/><text x="330" y="58" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#9c0006">−4.1%</text>
+  <rect x="395" y="46" width="90" height="16" rx="3" fill="#c6efce"/><text x="440" y="58" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#375623">+5.8%</text>
+  <!-- Utilities -->
+  <rect x="0" y="64" width="520" height="20" fill="white"/>
+  <text x="5" y="78" font-family="DM Sans" font-size="10" font-weight="600" fill="#1a1814">Utilities</text>
+  <rect x="65" y="66" width="90" height="16" rx="3" fill="#ffcccc"/><text x="110" y="78" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#9c0006">−1.8%</text>
+  <rect x="175" y="66" width="90" height="16" rx="3" fill="#c6efce"/><text x="220" y="78" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#375623">+2.4%</text>
+  <rect x="285" y="66" width="90" height="16" rx="3" fill="#c6efce"/><text x="330" y="78" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#375623">+3.1%</text>
+  <rect x="395" y="66" width="90" height="16" rx="3" fill="#ffeb9c"/><text x="440" y="78" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#9c6500">+0.4%</text>
+  <!-- Cons. Staples -->
+  <rect x="0" y="84" width="520" height="20" fill="#f9f8f6"/>
+  <text x="5" y="98" font-family="DM Sans" font-size="10" font-weight="600" fill="#1a1814">Cons. Staples</text>
+  <rect x="65" y="86" width="90" height="16" rx="3" fill="#ffcccc"/><text x="110" y="98" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#9c0006">−0.9%</text>
+  <rect x="175" y="86" width="90" height="16" rx="3" fill="#c6efce"/><text x="220" y="98" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#375623">+1.9%</text>
+  <rect x="285" y="86" width="90" height="16" rx="3" fill="#c6efce"/><text x="330" y="98" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#375623">+2.6%</text>
+  <rect x="395" y="86" width="90" height="16" rx="3" fill="#ffeb9c"/><text x="440" y="98" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#9c6500">+0.7%</text>
+  <!-- Financials -->
+  <rect x="0" y="104" width="520" height="20" fill="white"/>
+  <text x="5" y="118" font-family="DM Sans" font-size="10" font-weight="600" fill="#1a1814">Financials</text>
+  <rect x="65" y="106" width="90" height="16" rx="3" fill="#c6efce"/><text x="110" y="118" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#375623">+3.1%</text>
+  <rect x="175" y="106" width="90" height="16" rx="3" fill="#ffeb9c"/><text x="220" y="118" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#9c6500">−0.2%</text>
+  <rect x="285" y="106" width="90" height="16" rx="3" fill="#ffcccc"/><text x="330" y="118" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#9c0006">−5.8%</text>
+  <rect x="395" y="106" width="90" height="16" rx="3" fill="#c6efce"/><text x="440" y="118" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#375623">+4.4%</text>
+  <!-- Energy -->
+  <rect x="0" y="124" width="520" height="20" fill="#f9f8f6"/>
+  <text x="5" y="138" font-family="DM Sans" font-size="10" font-weight="600" fill="#1a1814">Energy</text>
+  <rect x="65" y="126" width="90" height="16" rx="3" fill="#c6efce"/><text x="110" y="138" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#375623">+2.7%</text>
+  <rect x="175" y="126" width="90" height="16" rx="3" fill="#ffeb9c"/><text x="220" y="138" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#9c6500">+0.3%</text>
+  <rect x="285" y="126" width="90" height="16" rx="3" fill="#ffcccc"/><text x="330" y="138" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#9c0006">−3.2%</text>
+  <rect x="395" y="126" width="90" height="16" rx="3" fill="#c6efce"/><text x="440" y="138" text-anchor="middle" font-family="DM Mono" font-size="10" font-weight="700" fill="#375623">+3.9%</text>
+  <!-- Legend -->
+  <rect x="5" y="153" width="10" height="8" rx="2" fill="#c6efce" stroke="#a8d9bc"/>
+  <text x="18" y="161" font-family="DM Sans" font-size="9" fill="#6b6760">Outperform</text>
+  <rect x="100" y="153" width="10" height="8" rx="2" fill="#ffeb9c" stroke="#f5c882"/>
+  <text x="113" y="161" font-family="DM Sans" font-size="9" fill="#6b6760">Neutral</text>
+  <rect x="175" y="153" width="10" height="8" rx="2" fill="#ffcccc" stroke="#f0b8b8"/>
+  <text x="188" y="161" font-family="DM Sans" font-size="9" fill="#6b6760">Underperform</text>
+  <text x="320" y="161" font-family="DM Sans" font-size="9" fill="#9e9b96" font-style="italic">Returns relative to broad market. Source: Historical analysis 1990–2025.</text>
+</svg>`;
+
+// Nowcast timing SVG
+const NOWCAST_SVG = `
+<svg viewBox="0 0 500 80" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;margin:6px 0;">
+  <!-- Timeline bar -->
+  <line x1="20" y1="40" x2="480" y2="40" stroke="#e4e1da" stroke-width="2"/>
+  <!-- Quarter end marker -->
+  <circle cx="80" cy="40" r="5" fill="#1c3557"/>
+  <text x="80" y="28" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#1c3557" font-weight="600">Q-End</text>
+  <!-- AI Nowcast marker -->
+  <circle cx="180" cy="40" r="6" fill="#1a6b35"/>
+  <text x="180" y="28" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#1a6b35" font-weight="700">AI Nowcast</text>
+  <text x="180" y="60" text-anchor="middle" font-family="DM Sans" font-size="8.5" fill="#1a6b35" font-style="italic">T+0 · First signal</text>
+  <!-- Edge window shading -->
+  <rect x="180" y="30" width="220" height="20" fill="rgba(26,107,53,0.1)" rx="3"/>
+  <text x="290" y="22" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#1a6b35" font-weight="700">← Edge Window (30–45 days) →</text>
+  <!-- Official release marker -->
+  <circle cx="400" cy="40" r="5" fill="#c04040"/>
+  <text x="400" y="28" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#c04040" font-weight="600">Official GDP</text>
+  <text x="400" y="60" text-anchor="middle" font-family="DM Sans" font-size="8.5" fill="#c04040" font-style="italic">T+45d · Markets react</text>
+  <!-- Arrow labels -->
+  <text x="20" y="75" font-family="DM Sans" font-size="8.5" fill="#9e9b96" font-style="italic">Q-End = quarter ends. AI predicts GDP 30–45 days before official release — and before consensus has moved.</text>
+</svg>`;
+
+const NODES = {
+  l1:{tag:'Level 1 · Manual',ts:'background:#ece9e3;color:#6b6760;',title:'Manual Review',sub:'A committee of humans reads the news, looks at charts, and votes on sector weights — once a quarter',sections:[
+    {t:'How It Works',rows:[{k:'Process',v:'An investment committee convenes quarterly to review macro conditions and agree on sector weightings. Decisions are driven by the most recent data, the most memorable recent event, and the dominant market narrative.'},{k:'The bias problem',v:'Quarterly reviews are too infrequent for a dynamic macro environment — the economy can shift meaningfully within a quarter. More fundamentally, human judgment is systematically distorted by recency bias and loss aversion.'},{k:'The edge given away',v:'By the time a human committee agrees on a rotation, the macro signal that warranted it has typically been in the data for 4–8 weeks. The consensus has formed and the market has already partially priced the move.'}]}
+  ]},
+  l2:{tag:'Level 2 · Quantitative Alerts',ts:'background:#ece9e3;color:#6b6760;',title:'Quantitative Alerts',sub:'Rules-based triggers when key indicators cross thresholds — faster than quarterly review but still reactive',sections:[
+    {t:'How It Works',rows:[{k:'Example rules',v:'"Alert when PMI falls below 50." "Alert when yield curve inverts." "Alert when CPI rises above 4%." Each trigger sends a notification to the portfolio manager for action.'},{k:'Improvement',v:'Faster than quarterly review — alerts fire within hours of data release. Removes the waiting-for-the-meeting problem.'},{k:'Remaining limitation',v:'Rules are static and single-dimensional. They cannot account for interactions between indicators (a PMI of 49 in a high-growth environment vs. a PMI of 49 heading into a rate-hiking cycle are very different signals). No regime context — just threshold breach.'}]}
+  ]},
+  l3:{tag:'Level 3 · ML Regime Scoring',ts:'background:#fff8ed;color:#b86a00;',title:'ML Regime Scoring',sub:'Supervised ML classifies the current market environment into one of 4–5 labelled economic regimes',sections:[
+    {t:'How It Works',rows:[{k:'Training approach',v:'Historical economic data is labelled by human experts into regime categories (Expansion, Slowdown, Recession, Recovery, Stagflation). An ML classifier is trained to recognise each regime from its macro indicator fingerprint.'},{k:'Output',v:'A probabilistic classification of the current environment — "75% probability of Late-Cycle Slowdown, 20% Early Recession, 5% Goldilocks" — updated with each new data release'},{k:'Improvement over Level 2',v:'Considers multiple indicators simultaneously and captures interactions between them. A PMI of 49 combined with a flat yield curve and rising unemployment reads differently from a PMI of 49 with a steep yield curve and falling unemployment.'}]},
+    {t:'Limitation',rows:[{k:'Supervised boundary',v:'Can only identify regimes it was trained on. Novel macro environments that combine unusual features (e.g., post-pandemic supply shock combined with liquidity tightening) may not map well to historical categories.'}]}
+  ]},
+  l4:{tag:'Level 4 · Proposed Architecture',ts:'background:#edf7f1;color:#1a6b35;',title:'Multimodal Nowcasting',sub:'NLP + Alternative Data predicts macro shifts 30–45 days before official government data confirms them',sections:[
+    {t:'The Nowcasting Edge',svg:'nowcast'},
+    {t:'How Nowcasting Works',rows:[{k:'Alternative data signals',v:'Energy consumption data (industrial activity proxy), satellite imagery of logistics and retail (consumer activity proxy), credit card transaction flows (consumer spending in real time), job posting volumes (labour market leading indicator)'},{k:'NLP layer',v:'Fed minutes, ECB speeches, and central bank communications are scored for hawkish vs dovish sentiment shift in real time — a Fed chair\'s choice of words can be the earliest signal of a policy change'},{k:'Synthesis',v:'A multimodal model combines the alternative data signals and NLP sentiment scores to generate a Nowcast of official macro indicators before they are published — giving the portfolio system a 30–45 day head start on the consensus'}]},
+    {t:'The Hidden Markov Model',rows:[{k:'Why HMM',v:'Unlike supervised ML, the HMM does not require pre-labelled regime categories. It finds the latent regime structure directly from the data — discovering that the economy moves between distinct states even without being told what those states are called'},{k:'Transition probabilities',v:'The HMM outputs not just the current regime probability but the probability of transitioning to each other regime — enabling the "Regime Heatmap" in the Strategist Dashboard to show where the economy is likely to go, not just where it currently is'},{k:'Unsupervised advantage',v:'When a genuinely novel macro environment emerges — a structural break — the HMM can identify a new regime cluster rather than forcing the data into a pre-existing category'}]}
+  ]},
+  l5:{tag:'Level 5 · Opportunity',ts:'background:#edf7f1;color:#1a6b35;',title:'Autonomous Rotation — RL Agents 24/7',sub:'Reinforcement Learning agents that continuously manage sector tilts with zero human lag — the system AQR and Two Sigma operate at today',sections:[
+    {t:'How It Works',rows:[{k:'Continuous operation',v:'Unlike a portfolio manager who reviews positions daily, the RL agent monitors macro signals continuously — 24 hours a day, 7 days a week. There is no overnight gap where a signal goes unacted on.'},{k:'Reward function',v:'The agent is trained to maximise risk-adjusted returns (Sharpe ratio) across historical regime data. It learns which tilts, executed at which speed, produce the best outcomes in each regime context'},{k:'Self-adaptation',v:'As new macro data arrives, the agent updates its state estimate and adjusts sector weights in real time — no scheduled rebalancing, just continuous optimisation against current conditions'}]},
+    {t:'Why This Is the Frontier',rows:[{k:'Zero emotional lag',v:'A human portfolio manager who has held Utilities for 6 months and is sitting on a small loss will be reluctant to add more even as the recession signal strengthens. The RL agent has no such anchor — it acts on the signal, not on P&L history'},{k:'Scalability',v:'The same RL system can simultaneously manage the macro tilt for hundreds of portfolios with different risk budgets — personalising the speed and magnitude of the rotation for each mandate without additional human resources'}]}
+  ]},
+  stratdash:{tag:'Strategist Dashboard · Output Layer',ts:'background:#edf3fb;color:#1c3557;',title:'Strategist Dashboard',sub:'The human-facing output — everything the portfolio manager needs to understand the current regime and the system\'s response to it',sections:[
+    {t:'Three Live Panels',rows:[{k:'Regime Transition Heatmap',v:'A transition probability matrix showing the likelihood of moving from the current regime to each other regime. Currently showing: 61% probability of staying in Slowdown, 22% probability of entering Recession — this is the basis for the defensive tilt.'},{k:'Live Tilt Indicator',v:'The current portfolio\'s deviation from neutral weights in standard deviations. Defensives (Utilities, Consumer Staples) at +2.1σ and +1.8σ overweight; Technology and Industrials at −1.4σ and −1.9σ underweight. The chart makes the rotation visible at a glance.'},{k:'Nowcast vs Official Panel',v:'A live comparison of AI-predicted macro indicators versus the latest official releases, with the lead time shown (T−18d = AI predicted 18 days before the official number came out). This demonstrates the information edge in real time.'}]},
+    {t:'Design Philosophy',rows:[{k:'Not a recommendation engine',v:'The dashboard does not say "do this." It shows what the model sees and what the system has already done in response — the human strategist reviews and can override if they have qualitative insight the model cannot capture'},{k:'Override logging',v:'When a human overrides a systematic rotation, the reason is logged — creating a record of when and why human judgment departed from the model, and enabling retrospective analysis of which overrides added or destroyed value'}]}
+  ]},
+  macrodata:{tag:'Signal Factory · Macro Data',ts:'background:#edf3fb;color:#1c3557;',title:'Macro Data Ingestion',sub:'Standardising multi-frequency economic data into a single consistent signal pipeline',sections:[
+    {t:'What Gets Ingested',rows:[{k:'GDP',v:'Quarterly — the broadest measure of economic output. Released with a 4–6 week lag. Used for regime classification but not for real-time signalling due to its lag.'},{k:'CPI / PCE',v:'Monthly — inflation measures. Critical for regime classification (stagflation vs goldilocks) and for predicting central bank response function'},{k:'PMI',v:'Monthly — Purchasing Managers Index. A leading indicator: values above 50 signal expansion, below 50 signal contraction. Released earlier than GDP and more responsive to turning points.'},{k:'Yield Curve',v:'Daily — the spread between short and long-term government bond yields. An inverted yield curve (short > long) has predicted every US recession for 50 years. Real-time and highly informative.'}]},
+    {t:'Multi-Frequency Challenge',rows:[{k:'The problem',v:'GDP is quarterly, CPI is monthly, PMI is monthly, yield curves are daily, credit card data is daily or weekly. Combining these into a coherent state estimate requires careful temporal alignment and weighting'},{k:'Solution',v:'State-space models (like Kalman filters) propagate the slow-frequency signals (GDP) forward in time using the fast-frequency signals (yield curves) to create a continuously updated estimate of economic conditions'}]}
+  ]},
+  sentiment:{tag:'Signal Factory · Sentiment',ts:'background:#e6f7f7;color:#0d7377;',title:'Central Bank Sentiment Extraction',sub:'Real-time scoring of Fed minutes, ECB announcements, and BoE speeches for Hawkish vs Dovish shifts',sections:[
+    {t:'Why Central Bank Language Matters',rows:[{k:'The mechanism',v:'Central banks telegraph policy changes through language before acting. A subtle shift from "patient" to "alert" in a Fed chair\'s speech can signal an imminent rate change weeks before the decision is made.'},{k:'Human reading speed',v:'A human analyst reads Fed minutes in 2–4 hours. An NLP model scores every sentence for hawkishness within seconds of release — acting on the signal before most human readers have finished the first paragraph.'},{k:'Consistency',v:'NLP scoring is consistent across documents — it does not react to the drama of a press conference or the personality of the speaker. It measures the language, not the theatre.'}]},
+    {t:'Technical Implementation',rows:[{k:'Model',v:'FinBERT or a custom financial LLM fine-tuned on central bank communications. Scores each paragraph on a Hawkish (−1) to Dovish (+1) scale.'},{k:'Shift detection',v:'The key signal is not the absolute score but the change in score versus the previous communication. A Fed that was "mildly dovish" and shifts to "neutral" is a more important signal than one that has been consistently dovish.'},{k:'Cross-central bank',v:'The model simultaneously processes communications from Fed, ECB, Bank of England, Bank of Japan, and RBI — capturing global monetary policy convergence and divergence that affects equity sector positioning'}]}
+  ]},
+  altdata:{tag:'Signal Factory · Alternative Data',ts:'background:#fefce8;color:#9a7d0a;',title:'Alternative Data — The Nowcasting Engine',sub:'High-frequency real-world data that predicts official macro numbers 30–45 days before they are released',sections:[
+    {t:'Data Sources',rows:[{k:'Energy consumption',v:'Industrial electricity and natural gas consumption data — a real-time proxy for manufacturing and industrial activity. When factories slow down, energy consumption falls before PMI or GDP captures it.'},{k:'Satellite logistics',v:'Satellite imagery of port activity, shipping container volumes, truck traffic patterns — measures the physical movement of goods through the economy in near-real time.'},{k:'Credit card spend',v:'Anonymised, aggregated credit card transaction data shows consumer spending trends by category (retail, restaurants, travel) before monthly retail sales data is published.'},{k:'Job postings',v:'Real-time labour market intelligence — the number and type of job postings is a leading indicator of hiring plans and economic confidence, typically turning 2–3 months before official unemployment data.'}]},
+    {t:'The Nowcasting Model',rows:[{k:'Methodology',v:'A regression model trained on historical relationships between alternative data signals and official macro releases. Given current alternative data, it estimates what the next official GDP or CPI number will say before it is released.'},{k:'Accuracy',v:'Nowcast models typically predict GDP growth within 0.3–0.5 percentage points of the final revised figure — accurate enough to determine regime direction even if the precise number differs.'},{k:'The revision problem',v:'Official macro data is frequently revised. The Nowcast anchors to the final revised data in its training, giving it a slight advantage over models that react to preliminary releases.'}]}
+  ]},
+  regimegauge:{tag:'Regime Engine · Central Hub',ts:'background:#edf7f1;color:#1a6b35;',title:'Regime Identification — Hidden Markov Model',sub:'The pivot point of the entire system — converting macro signals into a probabilistic regime estimate',sections:[
+    {t:'What the HMM Does',rows:[{k:'Inputs',v:'Normalised macro data (GDP trend, CPI level, PMI, yield curve shape), central bank sentiment score, and alternative data nowcast signals — all combined into a state vector'},{k:'Output',v:'A probability distribution across four regimes: Expansion, Slowdown, Recession, Recovery. Currently: Slowdown 61%, Recession 22%, Expansion 12%, Recovery 5%.'},{k:'Update frequency',v:'The regime estimate updates with every new data point — daily for yield curves and alternative data, monthly for PMI and CPI, quarterly for GDP. The probability distribution shifts continuously.'}]},
+    {t:'Why Probabilistic Output Matters',rows:[{k:'Not binary',v:'The system never says "we are in a Recession." It says "there is a 22% probability of Recession." This distinction is critical — a 22% recession probability warrants a different portfolio response than a 5% probability, even though neither is a confirmed recession.'},{k:'Smooth transitions',v:'Probabilistic output allows gradual, proportional portfolio tilts rather than binary all-or-nothing switches. As recession probability rises from 22% to 40%, the defensive tilt increases incrementally rather than triggering a sudden full rotation.'},{k:'Risk management',v:'The probability distribution is used directly in the Portfolio Optimizer\'s risk constraint — if recession probability is above 30%, maximum cyclical exposure is capped regardless of the rotation score.'}]}
+  ]},
+  rotationscore:{tag:'Signal Generation · Rotation Score',ts:'background:#f3f0fb;color:#5b3faa;',title:'Rotation Score',sub:'A single scalar from −1 to +1 that encodes the full regime analysis as an actionable portfolio instruction',sections:[
+    {t:'How the Score Is Generated',rows:[{k:'Inputs',v:'Regime probability distribution from the HMM, historical sector performance in each regime from the Regime Playbook, current portfolio positioning relative to neutral weights, and risk budget remaining'},{k:'Algorithm',v:'Random Forests and Neural Networks trained on historical regime-to-sector-performance relationships generate an expected outperformance estimate for each sector. The Rotation Score aggregates these into a single summary statistic.'},{k:'Current reading',v:'"−0.44" — a meaningful defensive tilt. The scale runs from −1 (maximum defensive positioning) to +1 (maximum cyclical positioning). Zero represents neutral market-weight exposure.'}]},
+    {t:'Interpreting the Score',rows:[{k:'0.0 to 0.3',v:'Mild tilt — modest overweight in the favoured bucket. Consistent with mild expansion or mid-cycle conditions.'},{k:'0.3 to 0.6',v:'Moderate tilt — meaningful sector deviation from neutral. Consistent with late-cycle or early recovery signals.'},{k:'0.6 to 1.0',v:'Strong tilt — significant departure from neutral weights. Reserved for high-confidence regime signals with strong historical precedent in the Playbook.'},{k:'Smoothing',v:'The score is smoothed over a rolling window to prevent whipsawing from single data revisions. The signal must be directionally consistent over N periods before the score moves to the next band.'}]}
+  ]},
+  optimizer:{tag:'Signal Generation · Optimizer',ts:'background:#edf7f1;color:#1a6b35;',title:'Portfolio Optimizer',sub:'Translating the Rotation Score into specific sector weights that respect risk constraints',sections:[
+    {t:'What the Optimizer Does',rows:[{k:'Starting point',v:'The neutral portfolio — sector weights that match the benchmark index (e.g., S&P 500 sector composition). This is the zero-risk baseline.'},{k:'Tilt instruction',v:'The Rotation Score specifies the direction and magnitude of deviation from neutral. The Optimizer determines which specific sectors to overweight and underweight to achieve the target tilt.'},{k:'Risk parity constraint',v:'The Optimizer ensures the tilt does not disproportionately increase portfolio volatility. It may underweight Technology by 3% and Financials by 2% rather than underweighting Technology by 5%, because Technology is more volatile and a larger bet would exceed the risk budget.'}]},
+    {t:'Constraints',rows:[{k:'Liquidity',v:'The Optimizer only tilts into sector ETFs with sufficient daily trading volume to execute the required position change without market impact'},{k:'Transaction cost',v:'Small tilts (< 0.5% of portfolio) may not be executed if transaction costs exceed the expected return from the tilt — the optimizer has a minimum threshold for action'},{k:'Mandate limits',v:'Some mandates have explicit sector constraints (e.g., "maximum 30% in any single sector"). These are hard constraints that override the tilt recommendation regardless of the signal strength'}]}
+  ]},
+  portfoliotilt:{tag:'Portfolio Output · Proposed Architecture',ts:'background:#edf7f1;color:#1a6b35;',title:'Portfolio Tilt',sub:'The systematic execution of the rotation — sector ETF weights adjusted with zero emotional friction',sections:[
+    {t:'Current Tilt (Late-Cycle Slowdown Regime)',rows:[{k:'Defensives overweight',v:'Utilities +18%, Consumer Staples +12% — sectors that generate stable earnings and dividends regardless of economic conditions. They underperform in expansion but protect in slowdown and recession.'},{k:'Cyclicals underweight',v:'Technology −14%, Industrials −10%, Financials −8% — sectors whose earnings are highly sensitive to economic growth. Strong in expansion, vulnerable in slowdown and recession.'},{k:'Neutral',v:'Healthcare and Materials held near market weight — healthcare has defensive characteristics but regulatory risk; materials have mixed cycle sensitivity.'}]},
+    {t:'Execution Mechanics',rows:[{k:'Instrument',v:'Sector ETFs (e.g., XLU for Utilities, XLK for Technology) are the primary implementation vehicle — highly liquid, low transaction costs, and can be adjusted in size without market impact'},{k:'Frequency',v:'At Level 4, the tilt is reviewed with each new macro data release and adjusted if the Rotation Score moves more than 0.1 in either direction. At Level 5, continuous adjustment.'},{k:'Human override',v:'The strategist can veto or modify any system-generated tilt — but the veto is logged and the system continues tracking what the systematic signal would have done, enabling retrospective attribution of human vs. system decisions'}]}
+  ]},
+  archive:{tag:'Strategic Archive · Historical Foundation',ts:'background:#edf3fb;color:#1c3557;',title:'Regime Playbook — Strategic Archive',sub:'The empirical foundation: how every sector behaved in every historical regime since 1990',sections:[
+    {t:'What the Playbook Contains',svg:'playbook'},
+    {t:'How It Is Used',rows:[{k:'Prior probabilities',v:'The Regime Playbook provides the base rates for the Portfolio Optimizer — "in historical Slowdown regimes, Utilities outperformed the broad market by +2.4% on average." This historical base rate is weighted with the current Rotation Score to generate position sizes.'},{k:'Confidence adjustment',v:'If current conditions closely resemble a historical episode (high cosine similarity between current macro fingerprint and a historical episode), the system increases its confidence and allows a larger tilt'},{k:'Crisis flags',v:'The Playbook explicitly includes crisis episodes (2008, 2020) where correlations broke down. When the cross-asset correlation signal exceeds the crisis threshold, the system switches to the "correlated crash" playbook — raising cash and buying tail hedges rather than rotating between sectors'}]}
+  ]}
+};
+
+function openModal(key){
+  const d=NODES[key];if(!d)return;
+  document.querySelectorAll('.ladder-step,.feed-node,.regime-hub,.score-node,.tilt-node,.archive-bar,.strat-dashboard').forEach(n=>n.classList.remove('active'));
+  if(event&&event.currentTarget)event.currentTarget.classList.add('active');
+  document.getElementById('mTag').textContent=d.tag;
+  document.getElementById('mTag').style.cssText=d.ts+'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block;';
+  document.getElementById('mTitle').textContent=d.title;
+  document.getElementById('mSub').textContent=d.sub;
+  const body=document.getElementById('mBody');body.innerHTML='';
+  d.sections.forEach(sec=>{
+    const sd=document.createElement('div');sd.className='info-sec';
+    const st=document.createElement('div');st.className='info-sec-title';st.textContent=sec.t;sd.appendChild(st);
+    if(sec.svg==='playbook'){const w=document.createElement('div');w.style.cssText='background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 8px;margin-top:4px;overflow-x:auto;';w.innerHTML=PLAYBOOK_SVG;sd.appendChild(w);}
+    if(sec.svg==='nowcast'){const w=document.createElement('div');w.style.cssText='background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 8px;margin-top:4px;overflow-x:auto;';w.innerHTML=NOWCAST_SVG;sd.appendChild(w);}
+    if(sec.rows)sec.rows.forEach(r=>{const row=document.createElement('div');row.className='info-row';row.innerHTML=`<span class="info-key">${r.k}</span><span class="info-val">${r.v}</span>`;sd.appendChild(row);});
+    body.appendChild(sd);
+  });
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  document.querySelectorAll('.ladder-step,.feed-node,.regime-hub,.score-node,.tilt-node,.archive-bar,.strat-dashboard').forEach(n=>n.classList.remove('active'));
+}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target===document.getElementById('overlay'))closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+</script>
+</body>
+</html>

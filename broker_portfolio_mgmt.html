@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-Powered Broker-Client Portfolio Management — Process Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+  --navy:#1c3557;--navy-pale:#edf3fb;--navy-border:#a8c4e0;
+  --exec:#1a6b35;--exec-pale:#edf7f1;--exec-border:#a8d9bc;
+  --amber:#b86a00;--amber-pale:#fff8ed;--amber-border:#f5c882;
+  --purple:#5b3faa;--purple-pale:#f3f0fb;--purple-border:#c4b0f0;
+  --teal:#0d7377;--teal-pale:#e6f7f7;--teal-border:#8ecece;
+  --opp:#1a6b35;--opp-pale:#edf7f1;--opp-border:#6dba80;
+  --opp-overlay:rgba(109,186,128,0.09);--opp-overlay-border:rgba(26,107,53,0.32);
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,0.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.nav-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--text-secondary);padding:5px 14px 5px 0;border-right:1px solid var(--border);margin-right:16px;background:none;border-top:none;border-bottom:none;border-left:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .15s}
+.nav-back:hover{color:var(--navy)}
+.nav-crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+.nav-crumb .active{color:var(--navy);font-weight:600}
+.nav-crumb .sep{color:var(--border)}
+.nav-badge{margin-left:auto;background:#fff3e0;color:#b86a00;border:1px solid #f5c882;border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;text-transform:uppercase;letter-spacing:.06em}
+
+/* PAGE */
+.page{max-width:1100px;margin:0 auto;padding:28px 24px 48px}
+.uc-num{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--navy);letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+.header-sub{font-size:14px;color:var(--text-secondary);max-width:700px;line-height:1.6;margin-bottom:12px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+.chip{font-size:11.5px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary)}
+.chip.green{background:var(--exec-pale);border-color:var(--exec-border);color:var(--exec)}
+.chip.navy{background:var(--navy-pale);border-color:var(--navy-border);color:var(--navy)}
+.chip.amber{background:var(--amber-pale);border-color:var(--amber-border);color:var(--amber)}
+.chip.purple{background:var(--purple-pale);border-color:var(--purple-border);color:var(--purple)}
+.chip.teal{background:var(--teal-pale);border-color:var(--teal-border);color:var(--teal)}
+
+/* SUMMARY */
+.summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:3px solid transparent;box-shadow:var(--shadow-sm)}
+.sc-gap{border-left-color:#d06060}.sc-sol{border-left-color:#5aaa72}.sc-val{border-left-color:#4a7fd4}
+.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.sc-gap .sc-lbl{color:#c04040}.sc-sol .sc-lbl{color:#2e7a46}.sc-val .sc-lbl{color:#2a4faa}
+.sc-txt{font-size:13px;line-height:1.5}.sc-val .sc-txt{font-weight:600;color:var(--navy)}
+
+/* EFFICIENCY BANNER */
+.eff-banner{
+  display:flex;align-items:center;gap:16px;
+  background:var(--navy);border-radius:10px;
+  padding:14px 20px;margin-bottom:24px;
+  box-shadow:var(--shadow-md);
+}
+.eff-stat{text-align:center;flex-shrink:0}
+.eff-num{font-family:'DM Serif Display',serif;font-size:32px;color:#fff;line-height:1}
+.eff-label{font-size:10px;font-weight:600;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.eff-divider{width:1px;height:40px;background:rgba(255,255,255,.2);flex-shrink:0}
+.eff-text{font-size:13px;color:rgba(255,255,255,.75);line-height:1.6}
+.eff-text strong{color:#fff;font-weight:600}
+
+/* SECTION TITLES */
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.section-title h2{font-family:'DM Serif Display',serif;font-size:18px;color:var(--navy);letter-spacing:-.01em;white-space:nowrap}
+.section-title .s-badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:2px 9px;border-radius:10px;flex-shrink:0}
+.s-badge.p1{background:var(--navy-pale);color:var(--navy);border:1px solid var(--navy-border)}
+.s-badge.p2{background:var(--opp-pale);color:var(--opp);border:1px solid var(--opp-border)}
+.section-title .s-line{flex:1;height:1px;background:var(--border)}
+
+/* DIAGRAM WRAPPER */
+.diag-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:visible;box-shadow:var(--shadow-md);margin-bottom:0}
+.diag-titlebar{background:var(--navy);padding:11px 20px;display:flex;align-items:center;gap:10px;border-radius:13px 13px 0 0}
+.diag-titlebar.green-bar{background:var(--opp)}
+.diag-titlebar span{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em}
+.diag-titlebar small{font-size:11.5px;color:rgba(255,255,255,.45)}
+
+/* SWIM LANES */
+.lane{display:flex;align-items:stretch;border-bottom:1px solid var(--border-light);min-height:110px;position:relative}
+.lane:last-child{border-bottom:none}
+.lane-lbl{width:100px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px 6px;border-right:2px solid var(--border)}
+.lane-lbl .li{font-size:18px;line-height:1}
+.lane-lbl .ln{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;text-align:center;line-height:1.3}
+.lane-lbl .lt{font-size:9px;font-weight:500;padding:2px 6px;border-radius:8px;text-transform:uppercase;letter-spacing:.05em}
+.lane.client .lane-lbl{background:#fdf8f2}.lane.client .ln{color:var(--amber)}.lane.client .lt{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.lane.ai-route .lane-lbl{background:#f2f6fc}.lane.ai-route .ln{color:var(--navy)}.lane.ai-route .lt{background:var(--navy-pale);color:var(--navy);border:1px solid var(--navy-border)}
+.lane-content{flex:1;display:flex;align-items:center;padding:14px 16px;gap:0;position:relative;overflow:visible}
+
+/* NODES */
+.node{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 11px;width:142px;cursor:pointer;transition:box-shadow .18s,transform .18s;box-shadow:var(--shadow-sm);flex-shrink:0;position:relative;z-index:2}
+.node:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.node.active{border-color:var(--navy)!important;box-shadow:0 0 0 3px rgba(28,53,87,.12),var(--shadow-md)}
+.node.n-grey{border-top:3px solid #b0aba4}
+.node.n-navy{border-top:3px solid var(--navy)}
+.node.n-amber{border-top:3px solid var(--amber)}
+.node.n-opp{border-top:3px solid var(--opp)}
+.node.n-teal{border-top:3px solid var(--teal)}
+.node.n-purple{border-top:3px solid var(--purple)}
+.n-icon{font-size:17px;margin-bottom:3px;line-height:1}
+.n-title{font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:3px}
+.n-desc{font-size:10.5px;color:var(--text-secondary);line-height:1.4;margin-bottom:7px}
+.n-btn{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.n-grey .n-btn{background:#f0ece6;color:var(--text-secondary)}
+.n-navy .n-btn{background:var(--navy-pale);color:var(--navy)}
+.n-amber .n-btn{background:var(--amber-pale);color:var(--amber)}
+.n-opp .n-btn{background:var(--opp-pale);color:var(--opp)}
+.n-teal .n-btn{background:var(--teal-pale);color:var(--teal)}
+.n-purple .n-btn{background:var(--purple-pale);color:var(--purple)}
+
+/* ARROWS */
+.arr{display:flex;align-items:center;flex-shrink:0;width:24px}
+.arr-line{height:2px;background:#c8c4bc;flex:1}
+.arr-head{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:7px solid #c8c4bc;flex-shrink:0}
+.arr.dashed .arr-line{background:none;border-top:2px dashed #c8c4bc;height:0}
+
+/* PROPOSED ARCH OVERLAY */
+.prop-wrap{display:flex;align-items:center;gap:0;position:relative}
+.prop-box{position:absolute;inset:-10px -8px -10px -8px;border:2px dashed var(--opp-overlay-border);background:var(--opp-overlay);border-radius:12px;pointer-events:none;z-index:1}
+.prop-label{position:absolute;top:-30px;right:0;display:flex;align-items:center;gap:5px;pointer-events:none;z-index:10}
+.prop-label span{font-size:10px;font-weight:700;color:var(--opp);background:var(--surface);padding:2px 9px;border-radius:20px;border:1.5px solid var(--opp-border);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
+
+/* ── HANDOFF CONNECTOR ───────────────────────────────────────────────── */
+.handoff{
+  margin:0;
+  background:linear-gradient(to bottom, var(--surface), var(--navy-pale), var(--opp-pale), var(--surface));
+  border-left:1px solid var(--border);
+  border-right:1px solid var(--border);
+  padding:20px 24px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+  position:relative;
+}
+.handoff-line{width:2px;height:20px;background:linear-gradient(to bottom,var(--navy),var(--opp));border-radius:2px}
+.handoff-node{
+  background:var(--surface);
+  border:2px solid var(--navy);
+  border-radius:12px;
+  padding:14px 24px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  box-shadow:var(--shadow-md);
+  cursor:pointer;
+  transition:box-shadow .18s,transform .18s;
+  max-width:600px;
+  width:100%;
+}
+.handoff-node:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.handoff-node.active{box-shadow:0 0 0 3px rgba(28,53,87,.15),var(--shadow-lg)}
+.handoff-icon{font-size:28px;flex-shrink:0}
+.handoff-text h3{font-family:'DM Serif Display',serif;font-size:15px;color:var(--navy);margin-bottom:3px}
+.handoff-text p{font-size:12px;color:var(--text-secondary);line-height:1.5}
+.handoff-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.handoff-pill{font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px}
+.hp-navy{background:var(--navy-pale);color:var(--navy);border:1px solid var(--navy-border)}
+.hp-opp{background:var(--opp-pale);color:var(--opp);border:1px solid var(--opp-border)}
+.hp-amber{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.handoff-btn{margin-left:auto;font-size:11px;font-weight:600;padding:5px 12px;border-radius:7px;border:1.5px solid var(--navy);background:var(--navy-pale);color:var(--navy);cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0;transition:background .15s}
+.handoff-btn:hover{background:var(--navy);color:#fff}
+
+/* ── NBA CIRCULAR DIAGRAM ────────────────────────────────────────────── */
+.nba-wrap{
+  background:var(--surface);
+  border:2px dashed var(--opp-overlay-border);
+  border-radius:14px;
+  box-shadow:var(--shadow-md);
+  overflow:hidden;
+  margin-bottom:28px;
+}
+.nba-inner-bg{background:var(--opp-overlay)}
+.nba-titlebar{background:var(--opp);padding:11px 20px;display:flex;align-items:center;gap:10px}
+.nba-titlebar span{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em}
+.nba-titlebar small{font-size:11.5px;color:rgba(255,255,255,.5)}
+.opp-badge{margin-left:auto;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:20px;font-size:10px;font-weight:700;padding:2px 10px;text-transform:uppercase;letter-spacing:.07em}
+
+.nba-body{
+  background:var(--opp-overlay);
+  padding:28px 24px 24px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:0;
+}
+
+/* Circle container */
+.orbit-container{
+  position:relative;
+  width:580px;
+  height:500px;
+  flex-shrink:0;
+}
+
+/* Centre hub */
+.hub{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:148px;height:148px;
+  background:var(--navy);
+  border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;
+  cursor:pointer;
+  box-shadow:var(--shadow-lg);
+  transition:box-shadow .2s,transform .2s;
+  z-index:10;
+}
+.hub:hover{transform:translate(-50%,-50%) scale(1.05);box-shadow:0 8px 32px rgba(28,53,87,.35)}
+.hub.active{box-shadow:0 0 0 4px rgba(255,255,255,.5),var(--shadow-lg)}
+.hub-icon{font-size:28px;line-height:1}
+.hub-title{font-family:'DM Serif Display',serif;font-size:13px;color:#fff;text-align:center;line-height:1.2;padding:0 10px}
+.hub-sub{font-size:10px;color:rgba(255,255,255,.55);text-align:center;padding:0 10px}
+.hub-btn{font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.15);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:2px;transition:background .15s}
+.hub-btn:hover{background:rgba(255,255,255,.3)}
+
+/* Orbit nodes — positioned absolutely */
+.orbit-node{
+  position:absolute;
+  width:148px;
+  background:var(--surface);
+  border:1.5px solid var(--opp-border);
+  border-radius:10px;
+  padding:10px 11px;
+  cursor:pointer;
+  transition:box-shadow .18s,transform .18s;
+  box-shadow:var(--shadow-sm);
+  z-index:5;
+}
+.orbit-node:hover{box-shadow:var(--shadow-md)}
+.orbit-node.active{border-color:var(--navy)!important;box-shadow:0 0 0 3px rgba(28,53,87,.12),var(--shadow-md)}
+/* Position each node around the circle */
+/* Top */
+.on-top{top:0;left:50%;transform:translateX(-50%);border-top:3px solid var(--teal)}
+/* Top-right */
+.on-tr{top:90px;right:0;border-top:3px solid var(--purple)}
+/* Bottom-right */
+.on-br{bottom:90px;right:0;border-top:3px solid var(--amber)}
+/* Bottom */
+.on-bot{bottom:0;left:50%;transform:translateX(-50%);border-top:3px solid var(--exec)}
+/* Top-left */
+.on-tl{top:90px;left:0;border-top:3px solid var(--navy)}
+
+.on-icon{font-size:17px;margin-bottom:3px;line-height:1}
+.on-num{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:2px}
+.on-title{font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:3px}
+.on-desc{font-size:10.5px;color:var(--text-secondary);line-height:1.4;margin-bottom:7px}
+.on-btn{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;background:var(--opp-pale);color:var(--opp)}
+.on-top .on-btn{background:var(--teal-pale);color:var(--teal)}
+.on-tr .on-btn{background:var(--purple-pale);color:var(--purple)}
+.on-br .on-btn{background:var(--amber-pale);color:var(--amber)}
+.on-bot .on-btn{background:var(--exec-pale);color:var(--exec)}
+.on-tl .on-btn{background:var(--navy-pale);color:var(--navy)}
+
+/* SVG arrows overlaid on orbit */
+.orbit-svg{position:absolute;inset:0;pointer-events:none;z-index:3}
+
+/* ── RESEARCH SECTION ─────────────────────────────────────────────── */
+.research{padding-top:24px;border-top:1px solid var(--border)}
+.research h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy);margin-bottom:16px;letter-spacing:-.01em}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.r-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.r-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:7px}
+.r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.r-rows{display:flex;flex-direction:column;gap:7px}
+.r-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.r-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:152px}
+.r-key::after{content:':'}
+.r-val{color:var(--text-secondary)}
+
+/* VENDOR TABLE */
+.vendor-table{width:100%;border-collapse:collapse;font-size:13px}
+.vendor-table th{background:var(--navy);color:#fff;padding:8px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em}
+.vendor-table td{padding:9px 12px;border-bottom:1px solid var(--border-light);color:var(--text-secondary);vertical-align:top;line-height:1.5}
+.vendor-table td:first-child{font-weight:600;color:var(--text-primary);white-space:nowrap}
+.vendor-table tr:last-child td{border-bottom:none}
+.vendor-table tr:nth-child(even) td{background:#fafaf8}
+
+.page-footer{text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:28px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(20,18,14,.45);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(3px)}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:14px;width:540px;max-width:calc(100vw - 32px);max-height:calc(100vh - 60px);overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(12px) scale(.98);transition:transform .22s cubic-bezier(.34,1.56,.64,1)}
+.overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-hdr{padding:20px 22px 15px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2;border-radius:14px 14px 0 0}
+.m-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block}
+.m-title{font-family:'DM Serif Display',serif;font-size:19px;color:var(--navy);line-height:1.25;margin-bottom:4px;padding-right:30px}
+.m-sub{font-size:12.5px;color:var(--text-secondary);font-style:italic}
+.m-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:15px;font-family:'DM Sans',sans-serif;transition:background .12s}
+.m-close:hover{background:var(--border)}
+.m-body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:14px}
+.info-sec{display:flex;flex-direction:column;gap:7px}
+.info-sec-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);padding-bottom:5px;border-bottom:1px solid var(--border-light)}
+.info-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.info-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:165px}
+.info-key::after{content:':'}
+.info-val{color:var(--text-secondary)}
+.num-list{display:flex;flex-direction:column;gap:6px}
+.num-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.num-badge{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--navy-pale);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.num-badge.opp{background:var(--opp-pale);color:var(--opp)}
+.num-text{color:var(--text-secondary)}
+.num-text strong{color:var(--text-primary)}
+.highlight-box{background:var(--opp-pale);border:1px solid var(--opp-border);border-left:3px solid var(--opp);border-radius:7px;padding:10px 13px;font-size:13px;color:var(--text-primary);line-height:1.55}
+.highlight-box strong{color:var(--opp)}
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="nav-back" onclick="window.history.back()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11L5 7l4-4"/></svg>
+    Back to Matrix
+  </button>
+  <div class="nav-crumb">
+    <span>Equity Markets</span><span class="sep">/</span>
+    <span>Immediate Priorities</span><span class="sep">/</span>
+    <span class="active">AI-Powered Broker-Client Portfolio Management</span>
+  </div>
+  <div class="nav-badge">🎯 Immediate Priority</div>
+</nav>
+
+<div class="page">
+
+  <div class="uc-num">Use Case #29 &nbsp;·&nbsp; Client-Facing &nbsp;·&nbsp; Strategic Impact 9/10</div>
+  <h1>AI-Powered Broker-Client Portfolio Management</h1>
+  <p class="header-sub">A broker's capacity has always been capped by cognitive load — how many clients they can genuinely remember and serve. AI lifts that ceiling by handling memory, administration, and pattern detection, freeing the broker to focus entirely on relationships and emotional intelligence.</p>
+  <div class="chips">
+    <span class="chip navy">GenAI / LLM</span>
+    <span class="chip green">Agentic Workflows</span>
+    <span class="chip teal">Propensity Modelling</span>
+    <span class="chip purple">Conversational AI</span>
+    <span class="chip amber">Partially Deployed</span>
+    <span class="chip green">Implementation Readiness: 8/10</span>
+  </div>
+
+  <div class="summary-row">
+    <div class="sc sc-gap"><div class="sc-lbl">The Gap</div><div class="sc-txt">Brokers spend 60–70% of their time on non-revenue admin — meeting notes, CRM entry, compliance docs — leaving little capacity to proactively serve a large client book.</div></div>
+    <div class="sc sc-sol"><div class="sc-lbl">AI Solution</div><div class="sc-txt">A two-phase system: Phase 1 routes clients to the right broker using AI matching; Phase 2 runs a perpetual NBA engine that prioritises who to call, what to say, and handles all follow-up automatically.</div></div>
+    <div class="sc sc-val"><div class="sc-lbl">Value Created</div><div class="sc-txt">A broker managing 200 clients today can serve 500–1,000 with AI handling the admin and alerting — without losing the personal touch that drives retention.</div></div>
+  </div>
+
+  <!-- EFFICIENCY FRONTIER BANNER -->
+  <div class="eff-banner">
+    <div class="eff-stat">
+      <div class="eff-num">60–70%</div>
+      <div class="eff-label">Admin Tax</div>
+    </div>
+    <div class="eff-divider"></div>
+    <div class="eff-stat">
+      <div class="eff-num">50%</div>
+      <div class="eff-label">Discovery Time Saved</div>
+    </div>
+    <div class="eff-divider"></div>
+    <div class="eff-stat">
+      <div class="eff-num">5×</div>
+      <div class="eff-label">Client Capacity</div>
+    </div>
+    <div class="eff-divider"></div>
+    <div class="eff-text"><strong>The Efficiency Frontier:</strong> In the past, a broker's capacity was capped by cognitive load — how many people they could remember. AI increases this capacity by handling memory and admin, allowing the broker to focus entirely on relationship management and emotional intelligence.</div>
+  </div>
+
+  <!-- ═══ PHASE 1: INTELLIGENT ROUTING ════════════════════════════════ -->
+  <div class="section-title">
+    <div class="s-badge p1">Phase 1</div>
+    <h2>Intelligent Client-Broker Routing</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="diag-wrap" style="margin-bottom:0;border-radius:14px 14px 0 0;">
+    <div class="diag-titlebar">
+      <span>From Client Intake to Matched Broker — The Right Expert, Every Time</span>
+      <small>&nbsp;·&nbsp; Click any node for detail</small>
+    </div>
+
+    <!-- CLIENT LANE -->
+    <div class="lane client" style="min-height:90px;">
+      <div class="lane-lbl">
+        <div class="li">👤</div>
+        <div class="ln">Client / Sales</div>
+        <div class="lt">Input</div>
+      </div>
+      <div class="lane-content" style="padding-top:14px;padding-bottom:12px;align-items:flex-start;overflow:visible;">
+        <div style="width:142px;flex-shrink:0;padding:6px 0;font-size:11px;color:var(--text-muted);font-style:italic;line-height:1.4;">Client submits PFS or Sales enters lead intent into CRM</div>
+        <div class="arr"><div class="arr-line"></div><div class="arr-head"></div></div>
+        <div style="width:142px;flex-shrink:0;padding:6px 0;font-size:11px;color:var(--text-muted);font-style:italic;line-height:1.4;">Client need identified and tagged by system</div>
+        <div class="arr"><div class="arr-line"></div><div class="arr-head"></div></div>
+        <div style="width:142px;flex-shrink:0;padding:6px 0;font-size:11px;color:var(--text-muted);font-style:italic;line-height:1.4;">Best-matched SME broker presented</div>
+        <div class="arr"><div class="arr-line"></div><div class="arr-head"></div></div>
+        <div style="width:142px;flex-shrink:0;padding:6px 0;font-size:11px;color:var(--text-muted);font-style:italic;line-height:1.4;">Meeting auto-scheduled; client brief sent to broker</div>
+      </div>
+    </div>
+
+    <!-- AI ENGINE LANE -->
+    <div class="lane ai-route" style="min-height:126px;">
+      <div class="lane-lbl">
+        <div class="li">⚙️</div>
+        <div class="ln">AI Routing Engine</div>
+        <div class="lt">Automated</div>
+      </div>
+      <div class="lane-content" style="padding-top:14px;padding-bottom:12px;overflow:visible;">
+
+        <!-- Node 1: Intake -->
+        <div class="node n-grey" onclick="openModal('intake')">
+          <div class="n-icon">📋</div>
+          <div class="n-title">Intake</div>
+          <div class="n-desc">LLM parses unstructured client intent from PFS or CRM lead</div>
+          <button class="n-btn">Details →</button>
+        </div>
+        <div class="arr"><div class="arr-line"></div><div class="arr-head"></div></div>
+
+        <!-- Node 2: Profiling -->
+        <div class="node n-navy" onclick="openModal('profiling')">
+          <div class="n-icon">🏷️</div>
+          <div class="n-title">Profiling</div>
+          <div class="n-desc">ML classifies core investment need and behavioural persona</div>
+          <button class="n-btn">Details →</button>
+        </div>
+        <div class="arr"><div class="arr-line"></div><div class="arr-head"></div></div>
+
+        <!-- Proposed arch overlay: SME Lookup + Handshake -->
+        <div class="prop-wrap" style="gap:0;">
+          <div class="prop-box"></div>
+          <div class="prop-label" style="top:-30px;right:0;">
+            <svg width="28" height="22" viewBox="0 0 28 22" fill="none" style="position:relative;top:2px;">
+              <path d="M24 2 C24 12, 8 8, 4 18" stroke="#1a6b35" stroke-width="1.8" stroke-dasharray="3,2" fill="none" stroke-linecap="round"/>
+              <polygon points="4,18 2,12 8,14" fill="#1a6b35"/>
+            </svg>
+            <span>Proposed Architecture</span>
+          </div>
+
+          <!-- Node 3: SME Lookup -->
+          <div class="node n-opp" onclick="openModal('smelookup')" style="position:relative;z-index:3;">
+            <div class="n-icon">🔎</div>
+            <div class="n-title">SME Lookup</div>
+            <div class="n-desc">Matches client profile to broker by skill, capacity & track record</div>
+            <button class="n-btn">Details →</button>
+          </div>
+          <div class="arr" style="position:relative;z-index:3;"><div class="arr-line"></div><div class="arr-head"></div></div>
+
+          <!-- Node 4: The Handshake -->
+          <div class="node n-opp" onclick="openModal('handshake')" style="position:relative;z-index:3;">
+            <div class="n-icon">🤝</div>
+            <div class="n-title">The Handshake</div>
+            <div class="n-desc">Workflow agent auto-schedules meeting and generates Client Persona Brief</div>
+            <button class="n-btn">Details →</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ HANDOFF CONNECTOR ════════════════════════════════════════════ -->
+  <div class="handoff">
+    <div class="handoff-line"></div>
+    <div class="handoff-node" onclick="openModal('handoff')">
+      <div class="handoff-icon">📦</div>
+      <div class="handoff-text">
+        <h3>Phase 1 → Phase 2 Handoff: The Knowledge Package</h3>
+        <p>Everything the routing engine learned about the client is packaged and transferred to the NBA engine the moment the broker-client match is confirmed.</p>
+        <div class="handoff-pills">
+          <div class="handoff-pill hp-navy">Client Persona Brief</div>
+          <div class="handoff-pill hp-opp">Broker Pre-populated Task</div>
+          <div class="handoff-pill hp-amber">First Meeting Scheduled</div>
+          <div class="handoff-pill hp-navy">Intent Tags</div>
+          <div class="handoff-pill hp-opp">Verbal Promises Extracted</div>
+        </div>
+      </div>
+      <button class="handoff-btn">Details →</button>
+    </div>
+    <div class="handoff-line"></div>
+  </div>
+
+  <!-- ═══ PHASE 2: NBA ENGINE ══════════════════════════════════════════ -->
+  <div class="section-title" style="margin-top:8px;">
+    <div class="s-badge p2">Phase 2</div>
+    <h2>Next Best Action (NBA) Engine — The Broker's Daily Cycle</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="nba-wrap">
+    <div class="nba-titlebar">
+      <span>The Perpetual Broker Intelligence Loop</span>
+      <small>&nbsp;·&nbsp; Repeats every working day &nbsp;·&nbsp; Hub = Broker Command Centre &nbsp;·&nbsp; Click any node for detail</small>
+      <div class="opp-badge">🟢 Proposed Architecture</div>
+    </div>
+    <div class="nba-body">
+      <div class="orbit-container">
+
+        <!-- SVG ARROWS (orbit connectors) -->
+        <svg class="orbit-svg" viewBox="0 0 580 500" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="oarr" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L7,3 z" fill="#6dba80"/>
+            </marker>
+          </defs>
+          <!-- Circle guide (faint) -->
+          <circle cx="290" cy="250" r="165" fill="none" stroke="#c8d8c0" stroke-width="1.5" stroke-dasharray="6,4"/>
+          <!-- Clockwise arrows between nodes -->
+          <!-- Top → Top-right -->
+          <path d="M 350 72 Q 440 100 450 165" fill="none" stroke="#6dba80" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#oarr)"/>
+          <!-- Top-right → Bottom-right -->
+          <path d="M 462 235 Q 475 320 440 368" fill="none" stroke="#6dba80" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#oarr)"/>
+          <!-- Bottom-right → Bottom -->
+          <path d="M 390 415 Q 350 450 290 452" fill="none" stroke="#6dba80" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#oarr)"/>
+          <!-- Bottom → Top-left -->
+          <path d="M 200 452 Q 130 435 118 368" fill="none" stroke="#6dba80" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#oarr)"/>
+          <!-- Top-left → Top -->
+          <path d="M 118 235 Q 128 130 218 78" fill="none" stroke="#6dba80" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#oarr)"/>
+          <!-- Step labels on arcs -->
+          <text x="432" y="148" font-family="DM Sans" font-size="9.5" fill="#6b6760" text-anchor="middle">①</text>
+          <text x="480" y="305" font-family="DM Sans" font-size="9.5" fill="#6b6760" text-anchor="middle">②</text>
+          <text x="342" y="472" font-family="DM Sans" font-size="9.5" fill="#6b6760" text-anchor="middle">③</text>
+          <text x="138" y="420" font-family="DM Sans" font-size="9.5" fill="#6b6760" text-anchor="middle">④</text>
+          <text x="148" y="148" font-family="DM Sans" font-size="9.5" fill="#6b6760" text-anchor="middle">⑤</text>
+        </svg>
+
+        <!-- CENTRE HUB -->
+        <div class="hub" onclick="openModal('commandcentre')">
+          <div class="hub-icon">🖥️</div>
+          <div class="hub-title">Broker Command Centre</div>
+          <div class="hub-sub">Opens every morning</div>
+          <button class="hub-btn">Details →</button>
+        </div>
+
+        <!-- ORBIT NODE 1: Prioritisation (top) -->
+        <div class="orbit-node on-top" onclick="openModal('prioritisation')">
+          <div class="on-num">Step 1</div>
+          <div class="on-icon">📊</div>
+          <div class="on-title">Prioritisation</div>
+          <div class="on-desc">Propensity models rank 500 clients by urgency each morning</div>
+          <button class="on-btn">Details →</button>
+        </div>
+
+        <!-- ORBIT NODE 2: Preparation (top-right) -->
+        <div class="orbit-node on-tr" onclick="openModal('preparation')">
+          <div class="on-num">Step 2</div>
+          <div class="on-icon">📝</div>
+          <div class="on-title">Preparation</div>
+          <div class="on-desc">GenAI synthesises last 3 meetings, trades & news into a 1-page brief</div>
+          <button class="on-btn">Details →</button>
+        </div>
+
+        <!-- ORBIT NODE 3: Engagement (bottom-right) -->
+        <div class="orbit-node on-br" onclick="openModal('engagement')">
+          <div class="on-num">Step 3</div>
+          <div class="on-icon">🎙️</div>
+          <div class="on-title">Engagement</div>
+          <div class="on-desc">Conversational AI listens, tags action items & tracks sentiment</div>
+          <button class="on-btn">Details →</button>
+        </div>
+
+        <!-- ORBIT NODE 4: Execution (bottom) -->
+        <div class="orbit-node on-bot" onclick="openModal('execution')">
+          <div class="on-num">Step 4</div>
+          <div class="on-icon">⚡</div>
+          <div class="on-title">Execution</div>
+          <div class="on-desc">Agentic AI auto-drafts follow-up email and updates CRM records</div>
+          <button class="on-btn">Details →</button>
+        </div>
+
+        <!-- ORBIT NODE 5: Monitoring (top-left) -->
+        <div class="orbit-node on-tl" onclick="openModal('monitoring')">
+          <div class="on-num">Step 5</div>
+          <div class="on-icon">🔔</div>
+          <div class="on-title">Monitoring</div>
+          <div class="on-desc">Anomaly detection alerts broker only when client behaviour deviates</div>
+          <button class="on-btn">Details →</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- RESEARCH -->
+  <div class="research">
+    <h2>Research Notes</h2>
+    <div class="r-grid">
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:#c04040;"></div>The Two Core Bottlenecks</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">The Admin Tax</span><span class="r-val">Brokers spend 60–70% of their time on non-revenue activities — meeting notes, CRM entry, compliance documentation — leaving barely 30% for actual client relationships</span></div>
+          <div class="r-row"><span class="r-key">Hidden Opportunity Gap</span><span class="r-val">With 500 clients, a broker cannot know that Client #342 just had a $1M liquidity event unless the client calls — AI surfaces these moments before the window closes</span></div>
+          <div class="r-row"><span class="r-key">Context Switching Penalty</span><span class="r-val">Moving between 10 different client meetings daily causes "memory rot" — details get lost and the personal touch that drives retention quietly disappears</span></div>
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--opp);"></div>AI Value-Add: Three Capabilities</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">Automated Personalisation</span><span class="r-val">Instead of a generic market update, AI drafts 500 slightly different emails referencing each client's specific holdings — at the push of one button</span></div>
+          <div class="r-row"><span class="r-key">Sentiment-Driven Retention</span><span class="r-val">AI analyses tone of emails and calls to flag "At-Risk" clients before they move their assets to a competitor — turning reactive into proactive</span></div>
+          <div class="r-row"><span class="r-key">Intelligent Segmentation</span><span class="r-val">Clients clustered not just by wealth, but by behavioural profile — "The Nervous Saver" vs "The Aggressive Speculator" — allowing tailored advice at scale</span></div>
+        </div>
+      </div>
+
+      <div class="r-card" style="grid-column:1/-1;">
+        <div class="r-title"><div class="r-dot" style="background:var(--navy);"></div>Vendor Ecosystem — The B2B Stack</div>
+        <table class="vendor-table">
+          <thead>
+            <tr><th>Category</th><th>Key Players</th><th>What They Do</th><th>Where They Fit</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>AI-Native CRMs</td>
+              <td>Altitude, Salesforce Financial Services Cloud</td>
+              <td>The system of record that suggests what to do next — lead scoring, interaction summaries, next best action recommendations</td>
+              <td>Broker Command Centre hub — the dashboard the broker opens every morning</td>
+            </tr>
+            <tr>
+              <td>Meeting Assistants</td>
+              <td>Jump AI, Zocks, Finmate</td>
+              <td>Eliminate the admin tax — transcribe meetings, extract verbal promises, auto-update CRM fields, draft follow-up emails</td>
+              <td>Steps 2, 3, 4 of the NBA cycle — Preparation, Engagement, and Execution</td>
+            </tr>
+            <tr>
+              <td>Routing Intelligence</td>
+              <td>Hermetic AI, Salesforce Einstein</td>
+              <td>Smart lead routing that assigns clients to the right broker based on expertise, territory, and capacity — not round-robin</td>
+              <td>Phase 1 — SME Lookup and Handshake nodes</td>
+            </tr>
+            <tr>
+              <td>Analytics & Intelligence</td>
+              <td>Morningstar Direct, BlackRock Aladdin</td>
+              <td>Deep portfolio analytics — stress tests, risk exposure analysis, factor attribution — that help the broker explain why a portfolio is positioned a certain way</td>
+              <td>Feeds the Preparation brief and the Monitoring anomaly engine</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-footer">
+    Hexaware Financial Services &nbsp;·&nbsp; AI in Equity Markets &nbsp;·&nbsp; Use Case #29 &nbsp;·&nbsp; Preliminary Research 2026
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="m-tag" id="mTag"></div>
+      <div class="m-title" id="mTitle"></div>
+      <div class="m-sub" id="mSub"></div>
+      <button class="m-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="m-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+const NODES = {
+  intake:{tag:'Phase 1 · Intake',ts:'background:#ece9e3;color:#6b6760;',title:'Client Intake',sub:'The entry point — capturing unstructured client intent and converting it into actionable data',sections:[
+    {t:'Two Input Sources',rows:[{k:'Personal Finance Session',v:'Client fills out a self-service questionnaire describing their financial goals, risk tolerance, investment horizon, and specific areas of interest in plain language — e.g. "I want to hedge my business against inflation using Commodities"'},{k:'Sales CRM Lead',v:'A sales representative enters notes and metadata from their initial conversation with the prospect, including verbal cues and stated priorities'}]},
+    {t:'AI Role — LLM Intent Parsing',rows:[{k:'Technology',v:'LLM (Large Language Model) — processes free-form text and extracts structured intent signals'},{k:'What it extracts',v:'Asset class preference, risk appetite signals, time horizon, specific concerns, life stage context (e.g. business owner, pre-retirement, new liquidity event)'},{k:'Why LLM and not a form',v:'Clients express financial intent in messy, human language. A dropdown form loses nuance. An LLM captures "I\'m nervous about inflation eating into my retirement savings" as a structured signal: risk-averse, inflation-sensitive, long-horizon'}]}
+  ]},
+  profiling:{tag:'Phase 1 · Profiling',ts:'background:#edf3fb;color:#1c3557;',title:'Client Profiling',sub:'Classifying the client\'s core investment need and behavioural persona for accurate matching',sections:[
+    {t:'Classification Output',rows:[{k:'Primary tag',v:'The dominant investment need — e.g. "Commodities-Focus," "High-Yield Bond-Focus," "Equity Growth," "Capital Preservation"'},{k:'Behavioural persona',v:'A secondary classification that describes how the client makes decisions — "The Nervous Saver" (needs reassurance, low risk), "The Aggressive Speculator" (high risk tolerance, short horizon), "The Strategic Delegator" (wants outcomes, not explanations)'},{k:'Technology',v:'ML classification model trained on historical client-broker match outcomes and client behavioural patterns'}]},
+    {t:'Why This Matters',rows:[{k:'Current state',v:'Without profiling, leads are assigned round-robin — a Forex specialist gets a client who needs equity advice, and spends the first three meetings "discovering" the mismatch'},{k:'With AI profiling',v:'The client\'s need is identified before the first meeting. Discovery time drops by 50%. The broker walks in already knowing what the client actually wants'}]}
+  ]},
+  smelookup:{tag:'Phase 1 · Proposed Architecture',ts:'background:#edf7f1;color:#1a6b35;',title:'SME Lookup — Intelligent Broker Matching',sub:'Finding the right subject matter expert for each client profile — not the next available broker',sections:[
+    {t:'Three Matching Criteria',numbered:[{label:'SME Tags',text:'Each broker in the directory is tagged with their asset class expertise, product knowledge, and client type experience — e.g. "Energy Futures," "HNW Equity," "Institutional Fixed Income"'},{label:'Current Capacity',text:'The Capacity Auditor checks how many active clients the broker currently manages versus their optimal load — ensuring the matched broker isn\'t already overloaded'},{label:'Past Success with Similar Personas',text:'Historical match data shows which brokers have retained clients with similar behavioural profiles — "The Nervous Saver" persona is routed to brokers with high retention on that segment'}]},
+    {t:'The Value of Skill-Based Routing',rows:[{k:'Old model',v:'Round-robin — whoever is next in the queue gets the lead, regardless of fit'},{k:'New model',v:'A client interested in Forex is never assigned to an Equity specialist. A high-anxiety client is never assigned to a broker whose style is blunt and data-heavy'},{k:'Impact',v:'50% reduction in time spent in the "Discovery Phase" — the early meetings where client and broker are simply figuring out if the relationship will work'}]}
+  ]},
+  handshake:{tag:'Phase 1 · Proposed Architecture',ts:'background:#edf7f1;color:#1a6b35;',title:'The Handshake — Automated Warm Introduction',sub:'The moment of match confirmation — auto-scheduling the first meeting and briefing the broker before they say hello',sections:[
+    {t:'What the Workflow Agent Does',rows:[{k:'Auto-scheduling',v:'The first client-broker meeting is scheduled automatically — no back-and-forth emails. Calendar availability is checked for both parties and a slot is booked with a pre-populated agenda'},{k:'Client Persona Brief',v:'A one-page document is generated for the broker: "Based on the PFS, this client needs Commodities expertise. They chose you because of your experience in Energy futures. Here are 3 specific concerns they mentioned in their intro."'},{k:'Verbal promise extraction',v:'Tools like Zocks or Jump AI extract specific commitments made by the sales team during the pitch — "we can get you monthly performance reports" — and map them as high-priority tasks for the broker, ensuring continuity'}]},
+    {t:'Why This Prevents Churn',rows:[{k:'The problem',v:'Sales teams often make promises during the pitch that never reach the assigned broker — the client arrives for their first meeting and the broker has no context'},{k:'The solution',v:'The brief and extracted promises travel with the client file. The broker\'s first words are already informed. The personal touch that closes relationships starts on day one, not month three'}]}
+  ]},
+  handoff:{tag:'Phase 1 → Phase 2 · Knowledge Transfer',ts:'background:#edf3fb;color:#1c3557;',title:'The Handoff — Knowledge Package',sub:'The bridge between routing and active management — everything learned in Phase 1 becomes the starting state for Phase 2',sections:[
+    {t:'What Gets Transferred',numbered:[{label:'Client Persona Brief',text:'The one-page document from the Handshake — investment need, behavioural profile, specific concerns, and why this broker was matched'},{label:'Intent Tags',text:'The structured ML classification output — asset class focus, risk profile, time horizon, life stage context'},{label:'Broker Pre-populated Task',text:'The first action item already created in the broker\'s NBA feed — "Introduction call with [Client Name] — Commodities focus, inflation concern"'},{label:'Verbal Promises Extracted',text:'Any commitments made by sales during the pitch, flagged as high-priority tasks so nothing falls through the cracks'},{label:'First Meeting Confirmed',text:'Calendar invite already sent to both parties — the broker arrives prepared, not discovering'}]},
+    {t:'Why the Handoff Matters',rows:[{k:'Data continuity',v:'Without this bridge, Phase 1 and Phase 2 are disconnected — the routing engine\'s intelligence is wasted because the NBA engine starts from zero'},{k:'Relationship continuity',v:'The client\'s experience is seamless — they never have to repeat themselves. The broker already knows their story before the first conversation'},{k:'System design principle',v:'The handoff enforces the idea that client intelligence is a persistent, growing asset — not something rebuilt from scratch at each stage'}]}
+  ]},
+  commandcentre:{tag:'Phase 2 · Broker Hub',ts:'background:#edf3fb;color:#1c3557;',title:'Broker Command Centre',sub:'The dashboard the broker opens every morning — the hub that all five NBA cycle stages revolve around',sections:[
+    {t:'What the Broker Sees',rows:[{k:'Next Best Action Feed',v:'Not a list of trades to execute — a ranked list of conversations to have. "Call Sarah Chen — her portfolio has 40% tech exposure ahead of Fed announcement tomorrow." "Email James Park — he missed last quarter\'s rebalancing window."'},{k:'Client Risk Flags',v:'Anomaly alerts from the Monitoring step — clients whose behaviour has deviated from historical patterns in a way that signals churn risk or a hidden opportunity'},{k:'Daily Brief',v:'A summary of market events relevant to the broker\'s specific book of clients — not generic market news, but "here\'s what happened today that affects your clients specifically"'}]},
+    {t:'The Augmented CRM Underneath',rows:[{k:'What it stores',v:'Not just phone numbers — intent, sentiment, life goals, updated by AI after every interaction. The CRM is alive, not a static address book'},{k:'Unified client brain',v:'Every call transcript, email exchange, trade, market event, and life event for each client is stored, indexed, and surfaced when the broker needs it'},{k:'Access pattern',v:'The broker never searches. The system surfaces. The right information appears at the right moment — before the call, not during it'}]}
+  ]},
+  prioritisation:{tag:'Phase 2 · Step 1',ts:'background:#e6f7f7;color:#0d7377;',title:'Prioritisation',sub:'Every morning, AI ranks the broker\'s entire client book by urgency — who needs a call today',sections:[
+    {t:'How the Ranking Works',rows:[{k:'Technology',v:'Propensity models — ML models that calculate the probability of a specific client event occurring based on behavioural signals'},{k:'Churn risk score',v:'Which clients are showing early signs of dissatisfaction — reduced engagement, unread emails, negative sentiment in recent communications'},{k:'Opportunity score',v:'Which clients may have experienced a liquidity event, a life change, or a portfolio shift that creates a timely conversation topic'},{k:'Life event triggers',v:'Clients approaching retirement age, recently married or divorced, with businesses showing revenue changes — events that alter financial needs'}]},
+    {t:'The Hidden Opportunity Gap',rows:[{k:'The problem',v:'With 500 clients, Client #342\'s $1M liquidity event goes unnoticed until they call — by which time they may have already contacted a competitor'},{k:'The solution',v:'AI surfaces this client at the top of the broker\'s priority list the moment the signal appears — the broker calls first'},{k:'Future scope',v:'The mechanism for detecting liquidity events will depend on what data integrations the organisation has in place — bank feed connections, custody data, public records, or CRM activity patterns'}]}
+  ]},
+  preparation:{tag:'Phase 2 · Step 2',ts:'background:#f3f0fb;color:#5b3faa;',title:'Preparation',sub:'Before every client interaction, GenAI prepares the broker with everything they need to know in 60 seconds',sections:[
+    {t:'The 1-Page Brief',rows:[{k:'Technology',v:'GenAI Meeting Assistant — tools like Jump AI synthesise multiple data sources into a structured, scannable brief'},{k:'What it contains',v:'Summary of the last 3 meetings, recent trades, current portfolio performance, relevant market news, and any open action items from previous conversations'},{k:'Tone guidance',v:'The brief also includes a sentiment note — "Client expressed anxiety about inflation in the last call. Lead with reassurance before discussing strategy."'}]},
+    {t:'Why This Eliminates Context Switching',rows:[{k:'The problem',v:'"Context switching penalty" — a broker moving between 10 meetings daily cannot hold the nuance of each client relationship in memory. Details get lost.'},{k:'The solution',v:'The brief reconstructs the full context of the relationship in 60 seconds. The broker walks into every call as if they\'ve been thinking about this client all week'},{k:'Impact',v:'The personal touch that drives retention — "she remembered I mentioned my daughter\'s wedding" — becomes scalable across 500 clients'}]}
+  ]},
+  engagement:{tag:'Phase 2 · Step 3',ts:'background:#fff8ed;color:#b86a00;',title:'Engagement',sub:'AI listens to the actual client interaction (with consent) and captures everything so the broker doesn\'t have to',sections:[
+    {t:'During the Call',rows:[{k:'Technology',v:'Conversational AI — real-time transcription and analysis of voice calls or video meetings'},{k:'Action item tagging',v:'Every commitment made during the call is automatically flagged — "Client asked for a revised portfolio allocation by Friday" becomes a task in the broker\'s NBA feed immediately'},{k:'Sentiment tracking',v:'"Client sounded anxious about inflation" is captured as a sentiment tag that updates the client\'s profile and may elevate their risk score for the Monitoring step'},{k:'Consent requirement',v:'Recording and analysis requires explicit client consent — this is both a legal and trust requirement. Systems like Zocks are designed with consent workflows built in'}]},
+    {t:'What Gets Captured',rows:[{k:'Explicit data',v:'Action items, decisions made, products discussed, objections raised'},{k:'Implicit signals',v:'Tone of voice, hesitation patterns, topics that generated emotional responses — the soft data that tells you more than the words'},{k:'Compliance record',v:'The full interaction log is stored in the Compliance Vault equivalent — regulators can access a complete record of every client-broker communication'}]}
+  ]},
+  execution:{tag:'Phase 2 · Step 4',ts:'background:#edf7f1;color:#1a6b35;',title:'Execution',sub:'After every client interaction, AI handles all the follow-up so the broker can move to the next call',sections:[
+    {t:'What Happens Automatically',rows:[{k:'Follow-up email',v:'Agentic AI drafts a personalised follow-up email summarising the call\'s key points, confirming any commitments made, and including any materials discussed — broker reviews and sends with one click'},{k:'CRM update',v:'All fields relevant to the interaction are updated automatically — last contact date, topics discussed, sentiment score, open tasks, next scheduled touchpoint'},{k:'Action item routing',v:'Any action items from the Engagement step are automatically created as tasks in the broker\'s NBA feed with deadlines and priority levels'}]},
+    {t:'The Admin Tax Eliminated',rows:[{k:'Current state',v:'After a 30-minute client call, the broker spends another 20–30 minutes writing notes, updating the CRM, drafting a follow-up, and scheduling the next touchpoint'},{k:'With AI execution',v:'The broker spends 2 minutes reviewing the AI-generated outputs and clicking send. The other 28 minutes go toward the next client relationship'},{k:'Tools',v:'Agentic workflow tools like Pathfinder+ and Zocks are specifically built for this step — CRM field population from meeting transcripts is a core product feature'}]}
+  ]},
+  monitoring:{tag:'Phase 2 · Step 5',ts:'background:#edf3fb;color:#1c3557;',title:'Monitoring',sub:'AI watches all 500 clients simultaneously so the broker doesn\'t have to — surfacing only genuine anomalies',sections:[
+    {t:'How Anomaly Detection Works',rows:[{k:'Technology',v:'ML-based anomaly detection — models that learn each client\'s baseline behaviour and flag deviations'},{k:'Behavioural baseline',v:'Each client\'s historical pattern is modelled: how often they log in, how quickly they respond to emails, how frequently they trade, what topics they ask about'},{k:'Deviation triggers',v:'"Client who normally responds within 4 hours hasn\'t opened the last 3 emails." "Client who never asks about risk suddenly requested a full portfolio stress test." These deviations surface as priority alerts'}]},
+    {t:'Alert Types',rows:[{k:'Churn risk',v:'Declining engagement metrics combined with known competitor activity in the client\'s segment — flag for an urgent retention call'},{k:'Hidden opportunity',v:'Client\'s portfolio has become significantly misaligned with their stated goals due to market movement — flag for a rebalancing conversation'},{k:'Life event signal',v:'Unusual activity that might indicate a major life event — large cash withdrawal, sudden interest in estate planning topics, change in risk appetite questions'}]},
+    {t:'Why This Scales',rows:[{k:'Human limit',v:'A broker can actively monitor 20–30 clients at depth. Beyond that, signals get missed'},{k:'AI limit',v:'The monitoring engine runs continuously across all 500 clients simultaneously, 24 hours a day. Every client gets the same level of attention the broker gives their top 10'},{k:'The output',v:'The broker arrives at the Command Centre each morning with only the clients who need attention today — not 500 names to scan'}]}
+  ]}
+};
+
+function openModal(key){
+  const d=NODES[key];if(!d)return;
+  document.querySelectorAll('.node,.orbit-node,.hub,.handoff-node,.ladder-step').forEach(n=>n.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('mTag').textContent=d.tag;
+  document.getElementById('mTag').style.cssText=d.ts+'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block;';
+  document.getElementById('mTitle').textContent=d.title;
+  document.getElementById('mSub').textContent=d.sub;
+  const body=document.getElementById('mBody');body.innerHTML='';
+  d.sections.forEach(sec=>{
+    const sd=document.createElement('div');sd.className='info-sec';
+    const st=document.createElement('div');st.className='info-sec-title';st.textContent=sec.t;sd.appendChild(st);
+    if(sec.rows)sec.rows.forEach(r=>{const row=document.createElement('div');row.className='info-row';row.innerHTML=`<span class="info-key">${r.k}</span><span class="info-val">${r.v}</span>`;sd.appendChild(row);});
+    if(sec.numbered){const nl=document.createElement('div');nl.className='num-list';sec.numbered.forEach((item,i)=>{const el=document.createElement('div');el.className='num-item';el.innerHTML=`<div class="num-badge opp">${i+1}</div><div class="num-text"><strong>${item.label}:</strong> ${item.text}</div>`;nl.appendChild(el);});sd.appendChild(nl);}
+    body.appendChild(sd);
+  });
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('overlay').classList.remove('open');document.querySelectorAll('.node,.orbit-node,.hub,.handoff-node').forEach(n=>n.classList.remove('active'));}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target===document.getElementById('overlay'))closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+</script>
+</body>
+</html>
