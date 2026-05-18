@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Yield Curve Modelling — Process Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+  --teal:#0d7377;--teal-pale:#e6f7f7;--teal-border:#8ecece;
+  --navy:#1c3557;--navy-pale:#edf3fb;--navy-border:#a8c4e0;
+  --exec:#1a6b35;--exec-pale:#edf7f1;--exec-border:#a8d9bc;
+  --amber:#b86a00;--amber-pale:#fff8ed;--amber-border:#f5c882;
+  --purple:#5b3faa;--purple-pale:#f3f0fb;--purple-border:#c4b0f0;
+  --red:#c04040;--red-pale:#fdf0f0;--red-border:#f0b8b8;
+  --opp-overlay:rgba(13,115,119,0.07);--opp-overlay-border:rgba(13,115,119,0.28);
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,0.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.nav-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--text-secondary);padding:5px 14px 5px 0;border-right:1px solid var(--border);margin-right:16px;background:none;border-top:none;border-bottom:none;border-left:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .15s}
+.nav-back:hover{color:var(--teal)}
+.nav-crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+.nav-crumb .active{color:var(--teal);font-weight:600}
+.nav-crumb .sep{color:var(--border)}
+.nav-badge{margin-left:auto;background:var(--teal-pale);color:var(--teal);border:1px solid var(--teal-border);border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;text-transform:uppercase;letter-spacing:.06em}
+
+/* PAGE */
+.page{max-width:1100px;margin:0 auto;padding:28px 24px 48px}
+.uc-num{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--teal);letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+.header-sub{font-size:14px;color:var(--text-secondary);max-width:700px;line-height:1.6;margin-bottom:12px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+.chip{font-size:11.5px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary)}
+.chip.teal{background:var(--teal-pale);border-color:var(--teal-border);color:var(--teal)}
+.chip.navy{background:var(--navy-pale);border-color:var(--navy-border);color:var(--navy)}
+.chip.amber{background:var(--amber-pale);border-color:var(--amber-border);color:var(--amber)}
+.chip.purple{background:var(--purple-pale);border-color:var(--purple-border);color:var(--purple)}
+.chip.green{background:var(--exec-pale);border-color:var(--exec-border);color:var(--exec)}
+
+/* SUMMARY */
+.summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:3px solid transparent;box-shadow:var(--shadow-sm)}
+.sc-gap{border-left-color:#d06060}.sc-sol{border-left-color:var(--teal)}.sc-val{border-left-color:#4a7fd4}
+.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.sc-gap .sc-lbl{color:#c04040}.sc-sol .sc-lbl{color:var(--teal)}.sc-val .sc-lbl{color:#2a4faa}
+.sc-txt{font-size:13px;line-height:1.5}.sc-val .sc-txt{font-weight:600;color:var(--teal)}
+
+/* STRATEGY BANNER */
+.strategy-banner{background:var(--teal);border-radius:10px;padding:16px 22px;margin-bottom:24px;box-shadow:var(--shadow-md);border-left:5px solid #f5c882}
+.sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#f5c882;margin-bottom:6px}
+.sb-text{font-size:13.5px;color:rgba(255,255,255,.88);line-height:1.65}
+.sb-text strong{color:#fff}
+
+/* SECTION TITLES */
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.section-title h2{font-family:'DM Serif Display',serif;font-size:18px;color:var(--teal);letter-spacing:-.01em;white-space:nowrap}
+.section-title .s-line{flex:1;height:1px;background:var(--border)}
+
+/* MATURITY LADDER */
+.ladder-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px 18px;box-shadow:var(--shadow-sm);margin-bottom:28px}
+.ladder-intro{font-size:12.5px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5}
+.ladder-intro strong{color:var(--text-primary)}
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;position:relative}
+.ladder::before{content:'';position:absolute;top:22px;left:10%;right:10%;height:3px;background:linear-gradient(to right,#d0ccc6,#c8c4bc,var(--amber-border),var(--teal-border),var(--amber-border));border-radius:2px;z-index:0}
+.ladder-step{position:relative;z-index:1;border-radius:10px;padding:12px 10px 10px;cursor:pointer;transition:box-shadow .18s,transform .18s;border:1.5px solid transparent;text-align:center}
+.ladder-step:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.ladder-step.active{box-shadow:0 0 0 3px rgba(13,115,119,.15),var(--shadow-md)}
+.ls-1,.ls-2{background:#f5f4f1;border-color:#d0ccc6}
+.ls-3{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-4{background:var(--teal-pale);border-color:var(--teal-border)}
+.ls-5{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-num{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.ls-1 .ls-num,.ls-2 .ls-num{color:var(--text-muted)}
+.ls-3 .ls-num{color:var(--amber)}
+.ls-4 .ls-num{color:var(--teal)}
+.ls-5 .ls-num{color:var(--amber)}
+.ls-icon{font-size:22px;margin-bottom:5px;line-height:1}
+.ls-name{font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:3px}
+.ls-focus{font-size:11px;color:var(--text-secondary);line-height:1.3;margin-bottom:7px}
+.ls-btn{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.ls-1 .ls-btn,.ls-2 .ls-btn{background:#ece9e3;color:var(--text-secondary)}
+.ls-3 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.ls-4 .ls-btn{background:var(--teal-pale);color:var(--teal);border:1px solid var(--teal-border)}
+.ls-5 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.std-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.emerging-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.ladder-legend{display:flex;align-items:center;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border-light)}
+.ll-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-secondary)}
+.ll-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ═══ DIAGRAM ═══ */
+.diagram-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:visible;box-shadow:var(--shadow-md);margin-bottom:28px}
+.diag-titlebar{background:var(--teal);padding:11px 20px;display:flex;align-items:center;gap:10px;border-radius:13px 13px 0 0}
+.diag-titlebar span{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em}
+.diag-titlebar small{font-size:11.5px;color:rgba(255,255,255,.45)}
+.diagram-inner{padding:20px 20px 0;display:flex;flex-direction:column;gap:0}
+
+/* ── CURVE COCKPIT ─────────────────────────────────────────────────────── */
+.cockpit{
+  background:var(--navy-pale);border:1.5px solid var(--navy-border);
+  border-radius:12px;padding:16px 18px 14px;
+  margin-bottom:18px;cursor:pointer;transition:box-shadow .15s;
+}
+.cockpit:hover{box-shadow:var(--shadow-md)}
+.cockpit.active{box-shadow:0 0 0 3px rgba(13,115,119,.12)}
+.cockpit-toprow{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.cockpit-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--navy)}
+.cockpit-btn{margin-left:auto;font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid var(--navy-border);background:var(--surface);color:var(--navy);cursor:pointer;font-family:'DM Sans',sans-serif}
+.cockpit-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:14px}
+.cockpit-panel{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:12px 14px;box-shadow:var(--shadow-sm)}
+.cp-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:10px}
+
+/* Spread alerts */
+.spread-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-light);font-size:11.5px}
+.spread-row:last-child{border-bottom:none}
+.spread-pair{font-weight:600;color:var(--text-primary);flex:1}
+.spread-val{font-family:'DM Mono',monospace;font-size:11.5px}
+.spread-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px}
+.sb-normal{background:var(--exec-pale);color:var(--exec)}
+.sb-wide{background:var(--amber-pale);color:var(--amber)}
+.sb-alert{background:var(--red-pale);color:var(--red)}
+
+/* What-If Simulator */
+.whatsim-body{display:flex;flex-direction:column;gap:8px}
+.slider-row{display:flex;flex-direction:column;gap:4px}
+.slider-label{display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:var(--text-primary)}
+.slider-track{height:6px;background:var(--border);border-radius:3px;position:relative}
+.slider-fill{height:100%;border-radius:3px;background:var(--teal)}
+.slider-thumb{position:absolute;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;background:var(--teal);border:2px solid #fff;box-shadow:var(--shadow-sm)}
+.curve-preview{margin-top:6px;background:var(--bg);border-radius:6px;padding:6px 8px}
+.cp-label-row{display:flex;justify-content:space-between;font-size:9.5px;color:var(--text-muted);margin-bottom:4px}
+
+/* ── PIPELINE ──────────────────────────────────────────────────────────── */
+.pipeline-section{
+  border:2px dashed var(--opp-overlay-border);
+  background:var(--opp-overlay);
+  border-radius:12px;padding:18px 16px 16px;
+  position:relative;
+}
+.prop-label{position:absolute;top:-14px;right:16px;display:flex;align-items:center;gap:5px}
+.prop-label span{font-size:10px;font-weight:700;color:var(--teal);background:var(--surface);padding:2px 9px;border-radius:20px;border:1.5px solid var(--teal-border);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
+
+.pipeline-row{display:flex;align-items:flex-start;gap:0}
+
+.pnode{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;flex:1;min-width:0;cursor:pointer;transition:box-shadow .18s,transform .18s;box-shadow:var(--shadow-sm);position:relative;z-index:2}
+.pnode:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.pnode.active{border-color:var(--teal)!important;box-shadow:0 0 0 3px rgba(13,115,119,.12)}
+.pnode.n-teal{border-top:3px solid var(--teal)}
+.pnode.n-teal2{border-top:3px solid #148f94}
+.pnode.n-purple{border-top:3px solid var(--purple)}
+.pnode.n-navy{border-top:3px solid var(--navy)}
+.pnode.n-exec{border-top:3px solid var(--exec)}
+.pn-stage{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:2px}
+.pn-icon{font-size:17px;margin-bottom:3px;line-height:1}
+.pn-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:3px;line-height:1.3}
+.pn-desc{font-size:10.5px;color:var(--text-secondary);line-height:1.35;margin-bottom:6px}
+.pn-btn{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.n-teal .pn-btn,.n-teal2 .pn-btn{background:var(--teal-pale);color:var(--teal)}
+.n-purple .pn-btn{background:var(--purple-pale);color:var(--purple)}
+.n-navy .pn-btn{background:var(--navy-pale);color:var(--navy)}
+.n-exec .pn-btn{background:var(--exec-pale);color:var(--exec)}
+
+.parr{display:flex;align-items:center;flex-shrink:0;width:18px;padding-top:38px}
+.parr-line{height:2px;background:#c8c4bc;flex:1}
+.parr-head{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:7px solid #c8c4bc;flex-shrink:0}
+
+/* PCA latent factors badge inside Surface Modelling */
+.pca-chips{display:flex;gap:5px;flex-wrap:wrap;margin:5px 0}
+.pca-chip{font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid}
+.pca-level{background:#e8f5f5;color:var(--teal);border-color:var(--teal-border)}
+.pca-slope{background:var(--navy-pale);color:var(--navy);border-color:var(--navy-border)}
+.pca-curv{background:var(--purple-pale);color:var(--purple);border-color:var(--purple-border)}
+
+/* BondPulse bridge */
+.bp-bridge{
+  display:flex;align-items:center;gap:12px;
+  background:linear-gradient(135deg,var(--teal-pale),#e8f5f5);
+  border:1.5px solid var(--teal-border);
+  border-radius:10px;padding:12px 18px;
+  margin-top:14px;cursor:pointer;transition:box-shadow .15s;
+}
+.bp-bridge:hover{box-shadow:var(--shadow-md)}
+.bp-bridge.active{box-shadow:0 0 0 3px rgba(13,115,119,.12)}
+.bp-icon{font-size:22px;flex-shrink:0}
+.bp-body{flex:1}
+.bp-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);margin-bottom:3px}
+.bp-title{font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:2px;font-family:'DM Serif Display',serif;letter-spacing:-.01em}
+.bp-desc{font-size:12px;color:var(--text-secondary);line-height:1.45}
+.bp-btn{font-size:11px;font-weight:600;padding:5px 13px;border-radius:7px;border:1.5px solid var(--teal);background:var(--teal);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0}
+
+/* Macro Sentry strip */
+.macro-sentry{
+  display:flex;align-items:center;gap:12px;
+  background:var(--navy);border-radius:0 0 13px 13px;
+  padding:12px 20px;
+}
+.ms-icon{font-size:18px}
+.ms-body{flex:1}
+.ms-title{font-size:12.5px;font-weight:700;color:#fff}
+.ms-desc{font-size:11px;color:rgba(255,255,255,.55)}
+.ms-feeds{display:flex;gap:8px;margin-top:5px}
+.ms-feed{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.2)}
+
+/* RESEARCH */
+.research{padding-top:24px;border-top:1px solid var(--border)}
+.research h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--teal);margin-bottom:16px;letter-spacing:-.01em}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.r-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.r-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:7px}
+.r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.r-rows{display:flex;flex-direction:column;gap:7px}
+.r-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.r-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:155px}
+.r-key::after{content:':'}
+.r-val{color:var(--text-secondary)}
+.threat-callout{background:var(--red-pale);border:1.5px solid var(--red-border);border-left:5px solid var(--red);border-radius:10px;padding:18px 20px;box-shadow:var(--shadow-sm)}
+.tc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--red);margin-bottom:6px}
+.tc-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--teal);margin-bottom:7px;letter-spacing:-.01em}
+.tc-body{font-size:13px;color:var(--text-secondary);line-height:1.65}
+.tc-body strong{color:var(--text-primary)}
+.ref-list{display:flex;flex-direction:column;gap:6px}
+.ref-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.ref-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--teal-pale);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.ref-txt{color:var(--text-secondary)}.ref-txt strong{color:var(--text-primary)}
+.page-footer{text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:28px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(20,18,14,.45);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(3px)}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:14px;width:540px;max-width:calc(100vw - 32px);max-height:calc(100vh - 60px);overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(12px) scale(.98);transition:transform .22s cubic-bezier(.34,1.56,.64,1)}
+.overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-hdr{padding:20px 22px 15px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2;border-radius:14px 14px 0 0}
+.m-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block}
+.m-title{font-family:'DM Serif Display',serif;font-size:19px;color:var(--teal);line-height:1.25;margin-bottom:4px;padding-right:30px}
+.m-sub{font-size:12.5px;color:var(--text-secondary);font-style:italic}
+.m-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:15px;font-family:'DM Sans',sans-serif;transition:background .12s}
+.m-close:hover{background:var(--border)}
+.m-body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:14px}
+.info-sec{display:flex;flex-direction:column;gap:7px}
+.info-sec-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);padding-bottom:5px;border-bottom:1px solid var(--border-light)}
+.info-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.info-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:165px}
+.info-key::after{content:':'}
+.info-val{color:var(--text-secondary)}
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="nav-back" onclick="window.history.back()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11L5 7l4-4"/></svg>
+    Back to Matrix
+  </button>
+  <div class="nav-crumb">
+    <span>Fixed Income</span><span class="sep">/</span>
+    <span>Opacity &amp; Information Asymmetry</span><span class="sep">/</span>
+    <span class="active">AI Yield Curve Modelling</span>
+  </div>
+  <div class="nav-badge">📊 Opacity &amp; Info Asymmetry</div>
+</nav>
+
+<div class="page">
+
+  <div class="uc-num">Use Case #5 &nbsp;·&nbsp; Rate Modelling &nbsp;·&nbsp; Strategic Impact 8/10</div>
+  <h1>AI Yield Curve Modelling — The Multi-Curve Neural Engine</h1>
+  <p class="header-sub">Every bond use case — pricing, risk, credit spread analysis, collateral valuation — depends on the discount rate. A flaw in the yield curve model doesn't stay in the curve. It cascades into billions of dollars of mispricing across the entire fixed income stack. In 2026, AI treats the yield curve not as a static line but as a dynamic, multi-dimensional surface.</p>
+  <div class="chips">
+    <span class="chip teal">Neural Networks / Gaussian Processes</span>
+    <span class="chip navy">Bayesian Inference</span>
+    <span class="chip purple">LSTM / RNNs</span>
+    <span class="chip teal">PCA + Deep Learning</span>
+    <span class="chip amber">NLP Sentiment (Fed/RBI/ECB)</span>
+    <span class="chip green">Implementation Readiness: 7/10</span>
+  </div>
+
+  <div class="summary-row">
+    <div class="sc sc-gap"><div class="sc-lbl">The Gap</div><div class="sc-txt">The LIBOR → multi-curve transition (SOFR, €STR, SONIA, MIBOR) made traditional linear models obsolete. No single-curve model can maintain spread consistency across four simultaneously moving rate benchmarks without AI-level parameter flexibility.</div></div>
+    <div class="sc sc-sol"><div class="sc-lbl">AI Solution</div><div class="sc-txt">A five-stage pipeline fuses OIS swap data, central bank sentiment, and macro nowcasts into a Neural Surface — modelling the full multi-curve term structure with calibrated uncertainty bounds and 3–6 month forward predictions.</div></div>
+    <div class="sc sc-val"><div class="sc-lbl">Value Created</div><div class="sc-txt">Institutional-grade duration management for every portfolio — predicting rate hikes before they hit the headlines, enabling BondPulse to offer retail investors a forward-looking "Rate Protection Score" for the first time.</div></div>
+  </div>
+
+  <!-- STRATEGY BANNER -->
+  <div class="strategy-banner">
+    <div class="sb-label">Strategic Framing — The Brain of the Bond Stack</div>
+    <div class="sb-text">"While most retail platforms use simple, lagging interest rate data, BondPulse is powered by a <strong>Multi-Curve Neural Engine</strong> — predicting rate hikes before they hit the headlines. This allows us to offer investors <strong>Institutional-Grade Duration Management</strong>, protecting their principal by anticipating curve shifts that traditional models miss entirely."</div>
+  </div>
+
+  <!-- MATURITY LADDER -->
+  <div class="section-title">
+    <h2>AI Maturity Ladder — Yield Curve Modelling</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="ladder-wrap">
+    <p class="ladder-intro">Levels 1–2 remain standard at smaller institutions. Level 3 was the common industry standard in 2024. <strong>Level 4 is the 2026 frontier</strong> — the proposed architecture. Level 5 carries systemic risk concerns identical to autonomous liquidity rebalancing. Click any level for detail.</p>
+    <div class="ladder">
+      <div class="ladder-step ls-1" onclick="openModal('l1')">
+        <div class="ls-num">Level 1</div><div class="ls-icon">📐</div>
+        <div class="ls-name">Parametric</div><div class="ls-focus">Nelson-Siegel smoothing</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-2" onclick="openModal('l2')">
+        <div class="ls-num">Level 2</div><div class="ls-icon">〰️</div>
+        <div class="ls-name">Splines</div><div class="ls-focus">Cubic Spline fitting</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-3" onclick="openModal('l3')">
+        <div class="ls-num">Level 3</div>
+        <div class="ls-icon">🌲</div>
+        <div class="std-badge">📅 2024 Standard</div>
+        <div class="ls-name">ML-Enhanced</div><div class="ls-focus">Regression Trees + macro</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-4" onclick="openModal('l4')">
+        <div class="ls-num">Level 4</div><div class="ls-icon">🧠</div>
+        <div class="ls-name">Neural Surfaces</div><div class="ls-focus">Deep Learning + GP + NLP</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-5" onclick="openModal('l5')">
+        <div class="ls-num">Level 5</div><div class="ls-icon">🤖</div>
+        <div class="emerging-badge">⚠ Systemic Risk</div>
+        <div class="ls-name">Sovereign Agent</div><div class="ls-focus">Auto-executes swap hedges</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+    </div>
+    <div class="ladder-legend">
+      <div class="ll-item"><div class="ll-dot" style="background:#c8c4bc;"></div>Legacy — still common at smaller institutions</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--amber);"></div>2024 standard / systemic risk flag</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--teal);"></div>Proposed architecture — 2026 frontier</div>
+    </div>
+  </div>
+
+  <!-- MAIN DIAGRAM -->
+  <div class="section-title">
+    <h2>The Multi-Curve Neural Engine Architecture</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="diag-titlebar">
+      <span>Curve Cockpit above · Five-stage pipeline below · Macro Sentry anchors the bottom</span>
+      <small>&nbsp;·&nbsp; Click any element for detail</small>
+    </div>
+
+    <div class="diagram-inner">
+
+      <!-- CURVE COCKPIT -->
+      <div class="cockpit" onclick="openModal('cockpit')">
+        <div class="cockpit-toprow">
+          <span style="font-size:16px;">📡</span>
+          <span class="cockpit-label">Curve Cockpit — Multi-Curve Surface · What-If Simulator · Spread Alerts</span>
+          <button class="cockpit-btn">Details →</button>
+        </div>
+        <div class="cockpit-grid">
+
+          <!-- Panel 1: Multi-Curve Surface SVG -->
+          <div class="cockpit-panel">
+            <div class="cp-title">Multi-Curve Surface — SOFR vs Corporate (Live)</div>
+            <svg viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
+              <defs>
+                <linearGradient id="sofr-fill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#0d7377" stop-opacity="0.15"/>
+                  <stop offset="100%" stop-color="#0d7377" stop-opacity="0.02"/>
+                </linearGradient>
+                <linearGradient id="corp-fill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#5b3faa" stop-opacity="0.15"/>
+                  <stop offset="100%" stop-color="#5b3faa" stop-opacity="0.02"/>
+                </linearGradient>
+              </defs>
+              <!-- Axes -->
+              <line x1="36" y1="10" x2="36" y2="148" stroke="#e4e1da" stroke-width="1.5"/>
+              <line x1="36" y1="148" x2="310" y2="148" stroke="#e4e1da" stroke-width="1.5"/>
+              <!-- Y axis labels -->
+              <text x="30" y="14" text-anchor="end" font-family="DM Mono" font-size="8" fill="#9e9b96">6%</text>
+              <text x="30" y="50" text-anchor="end" font-family="DM Mono" font-size="8" fill="#9e9b96">5%</text>
+              <text x="30" y="86" text-anchor="end" font-family="DM Mono" font-size="8" fill="#9e9b96">4%</text>
+              <text x="30" y="122" text-anchor="end" font-family="DM Mono" font-size="8" fill="#9e9b96">3%</text>
+              <!-- Grid lines -->
+              <line x1="36" y1="50" x2="310" y2="50" stroke="#f0ede6" stroke-width="1" stroke-dasharray="3,3"/>
+              <line x1="36" y1="86" x2="310" y2="86" stroke="#f0ede6" stroke-width="1" stroke-dasharray="3,3"/>
+              <line x1="36" y1="122" x2="310" y2="122" stroke="#f0ede6" stroke-width="1" stroke-dasharray="3,3"/>
+              <!-- X axis labels -->
+              <text x="36" y="160" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#9e9b96">3M</text>
+              <text x="80" y="160" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#9e9b96">1Y</text>
+              <text x="130" y="160" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#9e9b96">2Y</text>
+              <text x="190" y="160" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#9e9b96">5Y</text>
+              <text x="250" y="160" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#9e9b96">10Y</text>
+              <text x="304" y="160" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#9e9b96">30Y</text>
+              <!-- SOFR curve (teal) — slightly inverted then normalising -->
+              <path d="M36,95 C55,92 70,90 80,84 C100,74 120,74 130,76 C160,80 190,72 250,65 C275,62 290,60 304,58"
+                fill="url(#sofr-fill)" stroke="none"/>
+              <path d="M36,95 C55,92 70,90 80,84 C100,74 120,74 130,76 C160,80 190,72 250,65 C275,62 290,60 304,58"
+                fill="none" stroke="#0d7377" stroke-width="2.5" stroke-linejoin="round"/>
+              <!-- Corporate curve (purple) — spread above SOFR -->
+              <path d="M36,72 C55,70 70,67 80,62 C100,54 120,52 130,54 C160,58 190,50 250,44 C275,41 290,39 304,37"
+                fill="url(#corp-fill)" stroke="none"/>
+              <path d="M36,72 C55,70 70,67 80,62 C100,54 120,52 130,54 C160,58 190,50 250,44 C275,41 290,39 304,37"
+                fill="none" stroke="#5b3faa" stroke-width="2" stroke-dasharray="5,3" stroke-linejoin="round"/>
+              <!-- Confidence interval band (shaded region around SOFR) -->
+              <path d="M130,70 C160,74 190,66 250,59 C275,56 290,54 304,52 L304,64 C290,66 275,68 250,71 C190,78 160,86 130,82 Z"
+                fill="rgba(13,115,119,0.08)" stroke="none"/>
+              <!-- Spread annotation -->
+              <line x1="190" y1="50" x2="190" y2="72" stroke="#f5c882" stroke-width="1.5" stroke-dasharray="3,2"/>
+              <text x="196" y="63" font-family="DM Sans" font-size="8.5" font-weight="700" fill="#b86a00">+148bps</text>
+              <text x="196" y="73" font-family="DM Sans" font-size="7.5" fill="#9e9b96">spread</text>
+              <!-- Legend -->
+              <line x1="40" y1="172" x2="58" y2="172" stroke="#0d7377" stroke-width="2.5"/>
+              <text x="62" y="175" font-family="DM Sans" font-size="8" fill="#6b6760">SOFR</text>
+              <line x1="100" y1="172" x2="118" y2="172" stroke="#5b3faa" stroke-width="2" stroke-dasharray="4,2"/>
+              <text x="122" y="175" font-family="DM Sans" font-size="8" fill="#6b6760">Corporate</text>
+              <rect x="175" y="166" width="10" height="8" rx="2" fill="rgba(13,115,119,0.15)"/>
+              <text x="188" y="175" font-family="DM Sans" font-size="8" fill="#6b6760">95% CI</text>
+            </svg>
+          </div>
+
+          <!-- Panel 2: What-If Simulator -->
+          <div class="cockpit-panel">
+            <div class="cp-title">What-If Simulator — Macro Slider</div>
+            <div class="whatsim-body">
+              <div class="slider-row">
+                <div class="slider-label"><span>Inflation Shock</span><span style="color:var(--red);font-family:'DM Mono',monospace;">+25bps</span></div>
+                <div class="slider-track">
+                  <div class="slider-fill" style="width:65%;"></div>
+                  <div class="slider-thumb" style="left:65%;"></div>
+                </div>
+              </div>
+              <div class="slider-row">
+                <div class="slider-label"><span>Fed Rate Path</span><span style="color:var(--amber);font-family:'DM Mono',monospace;">Hold</span></div>
+                <div class="slider-track">
+                  <div class="slider-fill" style="width:50%;background:var(--amber);"></div>
+                  <div class="slider-thumb" style="left:50%;background:var(--amber);"></div>
+                </div>
+              </div>
+              <div class="slider-row">
+                <div class="slider-label"><span>Credit Spread</span><span style="color:var(--exec);font-family:'DM Mono',monospace;">−10bps</span></div>
+                <div class="slider-track">
+                  <div class="slider-fill" style="width:35%;background:var(--exec);"></div>
+                  <div class="slider-thumb" style="left:35%;background:var(--exec);"></div>
+                </div>
+              </div>
+              <div class="curve-preview">
+                <div class="cp-label-row"><span style="font-size:9px;font-weight:600;color:var(--text-muted);">IMPACT ON CURVE</span><span style="font-size:9px;color:var(--red);">↑ Bear Steepening</span></div>
+                <svg viewBox="0 0 200 50" style="width:100%;display:block;">
+                  <!-- Baseline -->
+                  <path d="M10,38 C30,35 60,33 80,32 C110,31 140,28 170,24 C182,22 190,21 198,20" fill="none" stroke="#c8c4bc" stroke-width="1.5" stroke-dasharray="3,2"/>
+                  <!-- Shocked curve -->
+                  <path d="M10,42 C30,38 60,34 80,31 C110,28 140,23 170,16 C182,13 190,11 198,9" fill="none" stroke="#c04040" stroke-width="2"/>
+                  <text x="10" y="48" font-family="DM Sans" font-size="7" fill="#9e9b96">3M</text>
+                  <text x="194" y="48" font-family="DM Sans" font-size="7" fill="#9e9b96">30Y</text>
+                  <text x="60" y="12" font-family="DM Sans" font-size="7.5" font-weight="600" fill="#c04040">+25bps shock → long end steepens</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 3: Spread Alerts -->
+          <div class="cockpit-panel">
+            <div class="cp-title">Spread Alerts — Deviation from Fair Value</div>
+            <div class="spread-row">
+              <span class="spread-pair">SOFR vs €STR</span>
+              <span class="spread-val" style="color:var(--teal);">+23bps</span>
+              <span class="spread-badge sb-normal">Fair Value</span>
+            </div>
+            <div class="spread-row">
+              <span class="spread-pair">Corp vs SOFR</span>
+              <span class="spread-val" style="color:var(--amber);">+148bps</span>
+              <span class="spread-badge sb-wide">Wide +12</span>
+            </div>
+            <div class="spread-row">
+              <span class="spread-pair">5Y–2Y Spread</span>
+              <span class="spread-val" style="color:var(--red);">−42bps</span>
+              <span class="spread-badge sb-alert">⚠ Inverted</span>
+            </div>
+            <div class="spread-row">
+              <span class="spread-pair">SOFR vs MIBOR</span>
+              <span class="spread-val" style="color:var(--teal);">+185bps</span>
+              <span class="spread-badge sb-normal">Fair Value</span>
+            </div>
+            <div style="font-size:9.5px;color:var(--text-muted);font-style:italic;margin-top:8px;">5Y–2Y inversion active for 14 days — historically precedes credit spread widening by 3–6 weeks.</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- DOWN ARROW -->
+      <div style="display:flex;justify-content:center;padding:10px 0;">
+        <svg width="24" height="28" viewBox="0 0 24 28"><line x1="12" y1="0" x2="12" y2="20" stroke="#8ecece" stroke-width="2"/><polygon points="12,28 6,16 18,16" fill="#8ecece"/></svg>
+      </div>
+
+      <!-- PIPELINE -->
+      <div class="pipeline-section">
+        <div class="prop-label">
+          <svg width="28" height="22" viewBox="0 0 28 22" fill="none" style="position:relative;top:2px;">
+            <path d="M24 2 C24 12, 8 8, 4 18" stroke="#0d7377" stroke-width="1.8" stroke-dasharray="3,2" fill="none" stroke-linecap="round"/>
+            <polygon points="4,18 2,12 8,14" fill="#0d7377"/>
+          </svg>
+          <span>Proposed Architecture — Level 4 · Neural Surface</span>
+        </div>
+
+        <div class="pipeline-row">
+
+          <!-- Stage 1: Data Harvesting -->
+          <div class="pnode n-teal" onclick="openModal('harvest')">
+            <div class="pn-stage">Stage 1</div><div class="pn-icon">🌾</div>
+            <div class="pn-title">Data Harvesting</div>
+            <div class="pn-desc">OIS swaps, futures, on-the-run Treasury yields fused and synchronised at millisecond resolution</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <!-- Stage 2: Sentiment Injection -->
+          <div class="pnode n-teal2" onclick="openModal('sentiment')">
+            <div class="pn-stage">Stage 2</div><div class="pn-icon">🗣️</div>
+            <div class="pn-title">Sentiment Injection</div>
+            <div class="pn-desc">Fed / RBI / ECB minutes parsed — Hawkish/Dovish shift quantified as a numerical vector</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <!-- Stage 3: Surface Modelling -->
+          <div class="pnode n-purple" onclick="openModal('surface')">
+            <div class="pn-stage">Stage 3</div><div class="pn-icon">🧠</div>
+            <div class="pn-title">Surface Modelling</div>
+            <div class="pn-desc">Neural Networks + Gaussian Processes model the full multi-curve term structure</div>
+            <div class="pca-chips">
+              <span class="pca-chip pca-level">Level</span>
+              <span class="pca-chip pca-slope">Slope</span>
+              <span class="pca-chip pca-curv">Curvature</span>
+            </div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <!-- Stage 4: Uncertainty Calibration -->
+          <div class="pnode n-navy" onclick="openModal('uncertainty')">
+            <div class="pn-stage">Stage 4</div><div class="pn-icon">🎯</div>
+            <div class="pn-title">Uncertainty Calibration</div>
+            <div class="pn-desc">Bayesian Inference assigns confidence intervals — widens them when the model detects it's in unfamiliar territory</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <!-- Stage 5: Prediction -->
+          <div class="pnode n-exec" onclick="openModal('prediction')">
+            <div class="pn-stage">Stage 5</div><div class="pn-icon">🔮</div>
+            <div class="pn-title">Prediction</div>
+            <div class="pn-desc">LSTM generates 3–6 month forward curve with scenario probabilities — feeds the Curve Cockpit</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+
+        </div>
+
+        <!-- BondPulse bridge -->
+        <div class="bp-bridge" onclick="openModal('bondpulse')">
+          <div class="bp-icon">🧠</div>
+          <div class="bp-body">
+            <div class="bp-label">→ Powers Consumer Product</div>
+            <div class="bp-title">BondPulse — Institutional-Grade Duration Management for Retail</div>
+            <div class="bp-desc">This is the brain of BondPulse. The same Neural Surface that predicts rate hikes for Tier-1 banks becomes BondPulse's <em>"Rate Protection Score"</em> — telling retail investors how their bond portfolio would be affected by a +50bps rate move, in plain language, before it happens.</div>
+          </div>
+          <div class="bp-btn" onclick="event.stopPropagation();openModal('bondpulse')">Details →</div>
+        </div>
+
+      </div>
+
+      <!-- MACRO SENTRY STRIP -->
+      <div class="macro-sentry">
+        <div class="ms-icon">⚙️</div>
+        <div class="ms-body">
+          <div class="ms-title">Bottom Layer — Macro Sentry · Real-Time Economic Data Feeds</div>
+          <div class="ms-desc">Ensures the Neural Surface nowcasts the economy — not historical averages</div>
+          <div class="ms-feeds">
+            <span class="ms-feed">CPI</span>
+            <span class="ms-feed">Unemployment</span>
+            <span class="ms-feed">PMI</span>
+            <span class="ms-feed">GDP Nowcast</span>
+            <span class="ms-feed">Central Bank Speeches</span>
+            <span class="ms-feed">Yield Curve Data</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RESEARCH -->
+  <div class="research">
+    <h2>Research Notes</h2>
+    <div class="r-grid">
+
+      <!-- Crowded Trade Feedback Loop -->
+      <div class="threat-callout">
+        <div class="tc-label">⚠ Critical Risk — The Crowded Trade Feedback Loop</div>
+        <div class="tc-title">When Every AI Predicts Steepening, the Curve Flattens</div>
+        <div class="tc-body">The mechanism is precise: every major AI yield curve model predicts the same curve steepening. Every fund manager using these models buys the long end of the curve simultaneously, driving long-end yields down. The collective buying pressure <strong>flattens the curve</strong> — the opposite of what was predicted. The models then read the flattening as a new input, generate revised predictions, trigger new trades, and the feedback loop compounds into a <strong>Model Meltdown</strong> — cascading model errors driven by the models themselves. The mitigations are deliberately decentralising: <strong>model heterogeneity</strong> (different institutions should use different feature sets and training windows to avoid identical predictions), <strong>position-size-adjusted signal delivery</strong> (large holders act on earlier, less precise signals rather than the same precise signal simultaneously), and <strong>confidence threshold gates</strong> that prevent automatic position-taking unless the model's confidence exceeds a much higher bar than historical norms — forcing human review in ambiguous conditions where crowding risk is highest.</div>
+      </div>
+
+      <!-- Black Swan Inversion -->
+      <div class="threat-callout">
+        <div class="tc-label">⚠ Model Risk — The Black Swan Inversion</div>
+        <div class="tc-title">A Model That Never Saw 2022 Cannot Predict 2026</div>
+        <div class="tc-body">The 2022–2024 yield curve inversion — where 2-year Treasury yields exceeded 10-year yields by over 100 basis points for more than two years — was the most severe and sustained inversion in four decades. Most ML models trained on 2010–2021 data predicted inversions would be <strong>brief and self-correcting</strong> because that is what all the training data showed. They persisted for over two years. The failure mode is <strong>directional bias</strong>: the model confidently generates the wrong prediction because it is operating outside its training distribution without knowing it. The fix is multi-layered: the <strong>Bayesian Uncertainty Calibration</strong> step (Stage 4) is the primary architectural response — it widens confidence intervals when the model detects current conditions are dissimilar to training data, signalling that the prediction should be treated as low-confidence. The <strong>Macro Sentry</strong> (bottom layer) continuously checks whether incoming macro data matches any historical regime the model was trained on — flagging structural breaks as a separate alert before the model produces a biased prediction.</div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--teal);"></div>The Multi-Curve Complexity Problem</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">Why multi-curve matters</span><span class="r-val">Post-LIBOR, four major risk-free rates operate simultaneously: SOFR (US), €STR (Eurozone), SONIA (UK), MIBOR (India). Each reflects different central bank regimes, credit characteristics, and liquidity conditions — they do not move in lockstep.</span></div>
+          <div class="r-row"><span class="r-key">Basis Risk</span><span class="r-val">A model predicting the SOFR curve and €STR curve independently will produce spread predictions that imply arbitrage opportunities that do not exist in practice. The multi-curve model must maintain spread consistency across all four curves simultaneously — a substantially harder problem than single-curve prediction.</span></div>
+          <div class="r-row"><span class="r-key">PCA + Deep Learning</span><span class="r-val">PCA reduces the yield curve to three latent factors (Level, Slope, Curvature) that explain ~99% of historical variance. Deep Learning then detects when the current curve is being driven by a fourth factor — typically a structural break — that PCA cannot capture within its three-factor framework.</span></div>
+          <div class="r-row"><span class="r-key">Gaussian Processes</span><span class="r-val">Provide calibrated uncertainty estimates at each point on the curve — not just a single predicted yield, but a probability distribution. The 95% confidence interval band on the Curve Cockpit SVG is produced by the GP layer, not the neural network.</span></div>
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--navy);"></div>Competitor Landscape — Rate Tech</div>
+        <div class="ref-list">
+          <div class="ref-item"><div class="ref-num">1</div><div class="ref-txt"><strong>Bloomberg (YAS / YC)</strong> — integrated deep learning into their standard yield curve functions; provides AI-fitted curves alongside traditional ones. The ubiquitous baseline that every other system is compared against.</div></div>
+          <div class="ref-item"><div class="ref-num">2</div><div class="ref-txt"><strong>Tradeweb</strong> — using AI for "Automated Netting" — helping users trade multiple points on the curve simultaneously to reduce execution costs and curve exposure in one transaction.</div></div>
+          <div class="ref-item"><div class="ref-num">3</div><div class="ref-txt"><strong>Murex (MX.3)</strong> — Adjoint Algorithmic Differentiation (AAD) + ML calculates Greeks (rate sensitivity) across thousands of curve points in seconds — the risk management layer that sits above the curve model.</div></div>
+          <div class="ref-item"><div class="ref-num">4</div><div class="ref-txt"><strong>Numerix</strong> — leading Fast Calibration specialist; AI agents calibrate complex SABR (Stochastic Alpha Beta Rho) volatility models 1,000× faster than traditional methods — enabling real-time options pricing on the curve.</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-footer">
+    Hexaware Financial Services &nbsp;·&nbsp; AI in Fixed Income Markets &nbsp;·&nbsp; Opacity &amp; Information Asymmetry &nbsp;·&nbsp; Preliminary Research 2026
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="m-tag" id="mTag"></div>
+      <div class="m-title" id="mTitle"></div>
+      <div class="m-sub" id="mSub"></div>
+      <button class="m-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="m-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+const NODES={
+  l1:{tag:'Level 1 · Parametric',ts:'background:#ece9e3;color:#6b6760;',title:'Nelson-Siegel',sub:'Basic mathematical smoothing — the standard model since the 1980s',sections:[
+    {t:'How It Works',rows:[{k:'Method',v:'A three-parameter equation describes the yield curve: a long-run level factor, a slope factor that decays toward zero at long maturities, and a curvature factor with a hump at medium maturities. The three parameters are calibrated to market data.'},{k:'Still widely used',v:'Nelson-Siegel and its extension (Nelson-Siegel-Svensson) are used by central banks worldwide including the ECB, Bundesbank, and Bank of England for official curve publication.'},{k:'The failure mode',v:'The model assumes a smooth, well-behaved curve. In high-volatility environments — rate hiking cycles, acute inversions — the curve develops "kinks" at specific maturities that the parametric form cannot capture without overfitting.'}]}
+  ]},
+  l2:{tag:'Level 2 · Splines',ts:'background:#ece9e3;color:#6b6760;',title:'Cubic Splines',sub:'Piecewise polynomial fitting — better at kinks, but no predictive capability',sections:[
+    {t:'How It Works',rows:[{k:'Method',v:'The curve is divided into segments at "knot points" (typically at key maturities: 3M, 1Y, 2Y, 5Y, 10Y, 30Y). A cubic polynomial is fitted to each segment, with constraints ensuring smooth joins between segments.'},{k:'Advantage over Nelson-Siegel',v:'Splines can fit complex curve shapes including inversions and humps at specific maturities — they are not constrained by the functional form that makes Nelson-Siegel rigid.'},{k:'What it still lacks',v:'Splines fit the current curve well but have no predictive capability. They describe where rates are, not where they are going. And in sparse data regions (very long maturities), splines can produce unstable extrapolations.'}]}
+  ]},
+  l3:{tag:'Level 3 · 2024 Standard',ts:'background:#fff8ed;color:#b86a00;',title:'ML-Enhanced — Regression Trees',sub:'Macro variables tilt the curve — common in 2024, being superseded by neural surfaces in 2026',sections:[
+    {t:'What It Does',rows:[{k:'Technology',v:'Gradient boosted regression trees use macro variables (CPI, unemployment, PMI, Fed target rate) alongside market data to predict curve movements. The macro variables "tilt" the fitted curve based on the economic regime.'},{k:'Improvement',v:'Captures the relationship between macroeconomic conditions and the curve shape — a Nelson-Siegel model cannot distinguish between the same curve shape in a low-inflation vs high-inflation environment. Regression trees can.'},{k:'Remaining limitation',v:'Regression trees are fundamentally non-parametric and do not extrapolate well beyond their training distribution. The 2022 inversion regime was outside the training distribution of most 2021-trained tree models, producing systematically biased predictions.'}]}
+  ]},
+  l4:{tag:'Level 4 · Proposed Architecture',ts:'background:#e6f7f7;color:#0d7377;',title:'Neural Surfaces — Deep Learning + Gaussian Processes',sub:'The 2026 frontier: full multi-curve term structure modelling with calibrated uncertainty and central bank sentiment',sections:[
+    {t:'Neural Network Component',rows:[{k:'Architecture',v:'Deep feed-forward networks (or LSTMs for temporal dependencies) trained on the full multi-curve dataset — all four major risk-free rates simultaneously — learning the joint dynamics of the SOFR/€STR/SONIA/MIBOR surface.'},{k:'What it captures',v:'Non-linear relationships between curve points, between different curves, and between macro variables and curve shapes — including interactions that no human analyst has previously specified as rules.'},{k:'PCA initialization',v:'The network is initialised using PCA-identified factors (Level, Slope, Curvature) as the starting representation, accelerating training convergence and improving interpretability of intermediate layers.'}]},
+    {t:'Gaussian Process Component',rows:[{k:'Role',v:'A GP layer sits on top of the neural network and provides probabilistic outputs — at each maturity, a full probability distribution of possible yields, not just a point estimate.'},{k:'Why this matters',v:'Traders need to know not just the expected 5-year SOFR rate, but how uncertain that prediction is. A GP confidence interval that widens dramatically at the 10-year point tells the trader that the model has low confidence in the long end — and they should price options accordingly.'},{k:'Computational cost',v:'GPs scale quadratically with data points, which becomes expensive. Sparse GP approximations (inducing point methods) make this tractable for real-time applications.'}]}
+  ]},
+  l5:{tag:'Level 5 · ⚠ Systemic Risk',ts:'background:#fff8ed;color:#b86a00;',title:'Sovereign Agent — Autonomous Hedging',sub:'AI predicts a curve shift and automatically executes swap trades — marked amber for systemic risk identical to liquidity auto-rebalancing',sections:[
+    {t:'What It Means',rows:[{k:'The capability',v:'An autonomous agent monitors the Neural Surface predictions continuously. When it detects a predicted curve steepening above a confidence threshold, it automatically executes receive-fixed, pay-floating swap trades to hedge duration exposure — without human sign-off.'},{k:'The systemic risk',v:'Interest rate swaps operate at notional values that can be hundreds of times the underlying portfolio size. If multiple sovereign agents simultaneously execute the same hedge — all paying fixed on 5-year swaps when the model predicts steepening — the collective market impact on the swap market can be destabilising.'},{k:'Regulatory position',v:'The Bank for International Settlements (BIS) and multiple central banks have explicitly flagged algorithmic swap execution as a source of potential market instability. Most regulated entities require a human in the loop for derivative execution above defined notional thresholds.'}]},
+    {t:'Viable Use Cases',rows:[{k:'Small position automation',v:'Autonomous hedging is viable for small notional positions below regulatory reporting thresholds — micro-hedges that would be too expensive for human attention but too small to create systemic risk'},{k:'Draft recommendations',v:'The agent generates the hedge recommendation with full rationale — expected curve move, target swap structure, notional, duration impact — for a human trader to review and execute within a defined time window'}]}
+  ]},
+  cockpit:{tag:'Curve Cockpit · Output Layer',ts:'background:#edf3fb;color:#1c3557;',title:'Curve Cockpit',sub:'The trader\'s primary interface — three panels showing the live curve surface, the What-If simulator, and spread alerts',sections:[
+    {t:'Three Panels',rows:[{k:'Multi-Curve Surface',v:'A live SVG rendering of the SOFR curve (teal, solid) and Corporate curve (purple, dashed) across the full maturity spectrum from 3 months to 30 years. The shaded band shows the 95% confidence interval from the Gaussian Process layer. The spread annotation shows the current SOFR-Corporate spread at the 5-year point.'},{k:'What-If Simulator',v:'Macro sliders allow the trader to set inflation shocks, Fed rate path assumptions, and credit spread scenarios. The curve preview shows how the Neural Surface predicts the yield curve would respond — the "bear steepening" preview in the current configuration shows +25bps inflation causing the long end to rise faster than the short end.'},{k:'Spread Alerts',v:'Real-time monitoring of key rate spreads against AI-determined fair value. The 5Y–2Y inversion at −42bps has been active for 14 days and is generating a historical precedent alert: inversions of this depth and duration have historically preceded credit spread widening by 3–6 weeks.'}]}
+  ]},
+  harvest:{tag:'Stage 1 · Data Harvesting',ts:'background:#e6f7f7;color:#0d7377;',title:'Data Harvesting',sub:'Collecting and synchronising the raw rate data that feeds the Neural Surface — millisecond precision across all four curves',sections:[
+    {t:'Data Sources',rows:[{k:'OIS Swaps',v:'Overnight Index Swap rates are the primary input — they represent the market\'s expectation of the overnight rate at each future date, and are the cleanest available market signal for risk-free rate expectations.'},{k:'Futures',v:'Fed Funds Futures, SOFR Futures, Euribor Futures — exchange-traded contracts on future overnight rates. More liquid than OIS at short maturities and provide real-time market pricing.'},{k:'"On-the-run" Treasuries',v:'The most recently issued government bonds at each benchmark maturity (3M, 6M, 1Y, 2Y, 5Y, 10Y, 30Y) — the most liquid points on the curve, serving as anchors for the interpolated surface.'}]},
+    {t:'Synchronisation Challenge',rows:[{k:'The problem',v:'SOFR data and €STR data are published at different times, by different authorities, in different time zones, with different day count conventions and holiday calendars. Training a multi-curve model on unsynchronised data produces noise that looks like signal.'},{k:'Solution',v:'A data fusion layer normalises all four curves to UTC timestamps, converts to consistent day count conventions, and interpolates missing observations using the Svensson model as a temporary bridge before the neural network takes over.'}]}
+  ]},
+  sentiment:{tag:'Stage 2 · Sentiment Injection',ts:'background:#e6f7f7;color:#0d7377;',title:'Central Bank Sentiment Injection',sub:'Quantifying "Fed-speak" into a numerical vector that the Neural Surface can use as an input feature',sections:[
+    {t:'How It Works',rows:[{k:'Sources',v:'Federal Reserve FOMC minutes and press conference transcripts, ECB Governing Council statements, Reserve Bank of India Monetary Policy Committee minutes, Bank of England MPC minutes'},{k:'NLP model',v:'A Transformer-based NLP model fine-tuned on central bank communications — FinBERT or a custom model trained on 20+ years of central bank language. Scores each paragraph on a Hawkish (−1) to Dovish (+1) scale with a magnitude score.'},{k:'Output',v:'A numerical sentiment vector: a scalar (−1 to +1) representing the overall tone shift from the previous communication, plus decomposed scores by policy dimension (inflation concern, growth concern, financial stability concern)'}]},
+    {t:'Why This Matters for Curves',rows:[{k:'Mechanism',v:'Central bank tone shifts precede rate decisions by weeks or months. A Fed statement that shifts from "patient" to "vigilant" signals a rate hike cycle beginning — and the yield curve should immediately steepen to price this in, before any actual rate move.'},{k:'Speed advantage',v:'The NLP model produces a sentiment score within seconds of a central bank communication being published. Human analysts take hours to read, interpret, and publish their views. The Neural Surface has already incorporated the information before most market participants have begun reading.'}]}
+  ]},
+  surface:{tag:'Stage 3 · Surface Modelling',ts:'background:#f3f0fb;color:#5b3faa;',title:'Surface Modelling — Neural Networks + Gaussian Processes',sub:'The core engine: fitting the full multi-dimensional curve surface with calibrated uncertainty at every point',sections:[
+    {t:'The Three Latent Factors — PCA',rows:[{k:'Level',v:'The overall height of the yield curve — essentially the average of all rates. Rising level = rates rising across the board. Accounts for approximately 80% of historical curve variance.'},{k:'Slope',v:'The difference between long-term and short-term rates — the steepness of the curve. Negative slope = inverted curve. Accounts for approximately 15% of historical variance.'},{k:'Curvature',v:'The "hump" in the curve — rates at medium maturities above or below the linear interpolation between short and long ends. Accounts for approximately 4% of variance. The residual 1% is where Black Swan events live — conditions that PCA cannot capture in three factors.'}]},
+    {t:'Multi-Curve Consistency',rows:[{k:'The core challenge',v:'The model must predict SOFR, €STR, SONIA, and MIBOR simultaneously while maintaining economically plausible spreads between them. A SOFR prediction that implies SOFR trades below €STR would represent a risk-free arbitrage — the model must detect and prevent this.'},{k:'Joint training',v:'All four curves are trained together in a single model with shared lower layers (capturing common global factors) and curve-specific upper layers (capturing idiosyncratic domestic factors). The spread constraints are enforced as a penalty term in the loss function.'}]}
+  ]},
+  uncertainty:{tag:'Stage 4 · Uncertainty Calibration',ts:'background:#edf3fb;color:#1c3557;',title:'Uncertainty Calibration — Bayesian Inference',sub:'The Black Swan defence: the model tells you when it doesn\'t know',sections:[
+    {t:'How Bayesian Uncertainty Works',rows:[{k:'The output',v:'Instead of producing a single predicted 5-year SOFR rate, the model produces a probability distribution: "The 5-year SOFR rate will be between 4.2% and 5.8% with 95% confidence. Most likely: 4.9%." The width of that interval is the uncertainty.'},{k:'When uncertainty widens',v:'The Bayesian layer detects when current conditions are dissimilar to the training distribution — when the macro regime, the curve shape, or the central bank sentiment combination has no close historical precedent. It widens the confidence interval in proportion to this unfamiliarity.'},{k:'The Black Swan signal',v:'An extremely wide confidence interval at a specific maturity is itself the signal: the model is telling the trader "I cannot reliably predict the 10-year rate in current conditions." This is valuable information — it prevents false precision from driving poor trades.'}]},
+    {t:'Connecting to the Inversion Problem',rows:[{k:'Why 2022 failed',v:'Most Level 3 ML models produced narrow confidence intervals during the 2022 inversion — because they were confident in their prediction. They were confidently wrong, because they did not detect they were outside their training distribution.'},{k:'How Stage 4 would have helped',v:'A Bayesian-calibrated model exposed to the 2022 macro regime (inflation at 9%, rate hikes at 75bps per meeting) would have detected extreme dissimilarity from its 2010–2021 training data and widened its confidence intervals dramatically — signalling to traders that the model should not be trusted for position-sizing decisions in that regime.'}]}
+  ]},
+  prediction:{tag:'Stage 5 · Prediction',ts:'background:#edf7f1;color:#1a6b35;',title:'Prediction — 3–6 Month Forward Curve',sub:'LSTM generates the expected term structure for each of the four curves, with scenario probabilities',sections:[
+    {t:'The Output',rows:[{k:'What the model produces',v:'A probability-weighted distribution of possible curve shapes for the next 3, 6, and 12 months — for each of the four rate curves. The "base case" curve is the probability-weighted mean; the bear steepening scenario, the bull flattening scenario, etc. are explicit alternatives with assigned probabilities.'},{k:'LSTM\'s role',v:'Long Short-Term Memory networks are specifically designed for time-series with long-range dependencies. The yield curve today depends on Fed communications from six months ago, on economic data revisions, on market positioning — LSTM can capture these temporal dependencies that feed-forward networks cannot.'},{k:'Feeds the Cockpit',v:'The LSTM output is the source of the "expected curve" shown in the Curve Cockpit surface. The GP confidence intervals bound it. The What-If Simulator shifts the expected curve based on user-specified macro scenario deviations from the LSTM baseline.'}]}
+  ]},
+  bondpulse:{tag:'→ Powers Consumer Product',ts:'background:#e6f7f7;color:#0d7377;',title:'BondPulse — Institutional Duration Management for Retail',sub:'The same neural engine that predicts rate hikes for Tier-1 banks becomes BondPulse\'s Rate Protection Score for retail investors',sections:[
+    {t:'The Analogy',rows:[{k:'This use case',v:'The engine — the Multi-Curve Neural Surface that predicts rate movements and quantifies duration risk. Institutional-facing, technically complex, regulatory-grade.'},{k:'BondPulse',v:'The car — the consumer platform that takes the Neural Surface prediction and answers the retail investor\'s actual question: "If interest rates go up by 0.5%, what happens to my ₹10 lakh bond investment? How much principal do I lose?"'}]},
+    {t:'The Rate Protection Score',rows:[{k:'What it shows',v:'BondPulse converts the Neural Surface\'s forward curve prediction into a plain-language Duration Risk Score for the retail investor\'s specific portfolio. "Your portfolio has a Duration of 4.2 years. If rates rise by +50bps, you would experience approximately −2.1% loss in portfolio value — approximately ₹21,000 on a ₹10 lakh holding."'},{k:'Why this is differentiated',v:'No retail bond platform in India currently provides forward-looking rate risk quantification in plain language. Retail investors choose bonds based on headline yield without understanding duration risk. BondPulse makes the invisible visible.'},{k:'The pitch',v:'"While most retail platforms use simple, lagging interest rate data, BondPulse is powered by a Multi-Curve Neural Engine — predicting rate hikes before they hit the headlines. Institutional-Grade Duration Management, for everyone."'}]}
+  ]}
+};
+
+function openModal(key){
+  const d=NODES[key];if(!d)return;
+  document.querySelectorAll('.ladder-step,.pnode,.cockpit,.bp-bridge').forEach(n=>n.classList.remove('active'));
+  if(event&&event.currentTarget)event.currentTarget.classList.add('active');
+  document.getElementById('mTag').textContent=d.tag;
+  document.getElementById('mTag').style.cssText=d.ts+'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block;';
+  document.getElementById('mTitle').textContent=d.title;
+  document.getElementById('mSub').textContent=d.sub;
+  const body=document.getElementById('mBody');body.innerHTML='';
+  d.sections.forEach(sec=>{
+    const sd=document.createElement('div');sd.className='info-sec';
+    const st=document.createElement('div');st.className='info-sec-title';st.textContent=sec.t;sd.appendChild(st);
+    if(sec.rows)sec.rows.forEach(r=>{const row=document.createElement('div');row.className='info-row';row.innerHTML=`<span class="info-key">${r.k}</span><span class="info-val">${r.v}</span>`;sd.appendChild(row);});
+    body.appendChild(sd);
+  });
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  document.querySelectorAll('.ladder-step,.pnode,.cockpit,.bp-bridge').forEach(n=>n.classList.remove('active'));
+}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target===document.getElementById('overlay'))closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+</script>
+</body>
+</html>

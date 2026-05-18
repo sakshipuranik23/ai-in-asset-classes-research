@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Real-Time Creditworthiness Assessment — Process Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+  --teal:#0d7377;--teal-pale:#e6f7f7;--teal-border:#8ecece;
+  --navy:#1c3557;--navy-pale:#edf3fb;--navy-border:#a8c4e0;
+  --exec:#1a6b35;--exec-pale:#edf7f1;--exec-border:#a8d9bc;
+  --amber:#b86a00;--amber-pale:#fff8ed;--amber-border:#f5c882;
+  --purple:#5b3faa;--purple-pale:#f3f0fb;--purple-border:#c4b0f0;
+  --red:#c04040;--red-pale:#fdf0f0;--red-border:#f0b8b8;
+  --opp-overlay:rgba(13,115,119,0.07);--opp-overlay-border:rgba(13,115,119,0.28);
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,0.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;min-height:100vh}
+
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.nav-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--text-secondary);padding:5px 14px 5px 0;border-right:1px solid var(--border);margin-right:16px;background:none;border-top:none;border-bottom:none;border-left:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .15s}
+.nav-back:hover{color:var(--teal)}
+.nav-crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+.nav-crumb .active{color:var(--teal);font-weight:600}
+.nav-crumb .sep{color:var(--border)}
+.nav-badge{margin-left:auto;background:var(--teal-pale);color:var(--teal);border:1px solid var(--teal-border);border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;text-transform:uppercase;letter-spacing:.06em}
+
+.page{max-width:1100px;margin:0 auto;padding:28px 24px 48px}
+.uc-num{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--teal);letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+.header-sub{font-size:14px;color:var(--text-secondary);max-width:700px;line-height:1.6;margin-bottom:12px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+.chip{font-size:11.5px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary)}
+.chip.teal{background:var(--teal-pale);border-color:var(--teal-border);color:var(--teal)}
+.chip.navy{background:var(--navy-pale);border-color:var(--navy-border);color:var(--navy)}
+.chip.amber{background:var(--amber-pale);border-color:var(--amber-border);color:var(--amber)}
+.chip.purple{background:var(--purple-pale);border-color:var(--purple-border);color:var(--purple)}
+.chip.green{background:var(--exec-pale);border-color:var(--exec-border);color:var(--exec)}
+.chip.red{background:var(--red-pale);border-color:var(--red-border);color:var(--red)}
+
+.summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:3px solid transparent;box-shadow:var(--shadow-sm)}
+.sc-gap{border-left-color:#d06060}.sc-sol{border-left-color:var(--teal)}.sc-val{border-left-color:#4a7fd4}
+.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.sc-gap .sc-lbl{color:#c04040}.sc-sol .sc-lbl{color:var(--teal)}.sc-val .sc-lbl{color:#2a4faa}
+.sc-txt{font-size:13px;line-height:1.5}.sc-val .sc-txt{font-weight:600;color:var(--teal)}
+
+.strategy-banner{background:var(--teal);border-radius:10px;padding:16px 22px;margin-bottom:24px;box-shadow:var(--shadow-md);border-left:5px solid #f5c882}
+.sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#f5c882;margin-bottom:6px}
+.sb-text{font-size:13.5px;color:rgba(255,255,255,.88);line-height:1.65}
+.sb-text strong{color:#fff}
+
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.section-title h2{font-family:'DM Serif Display',serif;font-size:18px;color:var(--teal);letter-spacing:-.01em;white-space:nowrap}
+.section-title .s-line{flex:1;height:1px;background:var(--border)}
+
+/* MATURITY LADDER */
+.ladder-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px 18px;box-shadow:var(--shadow-sm);margin-bottom:28px}
+.ladder-intro{font-size:12.5px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5}
+.ladder-intro strong{color:var(--text-primary)}
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;position:relative}
+.ladder::before{content:'';position:absolute;top:22px;left:10%;right:10%;height:3px;background:linear-gradient(to right,#d0ccc6,#c8c4bc,var(--amber-border),var(--teal-border),var(--amber-border));border-radius:2px;z-index:0}
+.ladder-step{position:relative;z-index:1;border-radius:10px;padding:12px 10px 10px;cursor:pointer;transition:box-shadow .18s,transform .18s;border:1.5px solid transparent;text-align:center}
+.ladder-step:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.ladder-step.active{box-shadow:0 0 0 3px rgba(13,115,119,.15),var(--shadow-md)}
+.ls-1,.ls-2{background:#f5f4f1;border-color:#d0ccc6}
+.ls-3{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-4{background:var(--teal-pale);border-color:var(--teal-border)}
+.ls-5{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-num{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.ls-1 .ls-num,.ls-2 .ls-num{color:var(--text-muted)}
+.ls-3 .ls-num{color:var(--amber)}.ls-4 .ls-num{color:var(--teal)}.ls-5 .ls-num{color:var(--amber)}
+.ls-icon{font-size:22px;margin-bottom:5px;line-height:1}
+.ls-name{font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:3px}
+.ls-focus{font-size:11px;color:var(--text-secondary);line-height:1.3;margin-bottom:7px}
+.ls-btn{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.ls-1 .ls-btn,.ls-2 .ls-btn{background:#ece9e3;color:var(--text-secondary)}
+.ls-3 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.ls-4 .ls-btn{background:var(--teal-pale);color:var(--teal);border:1px solid var(--teal-border)}
+.ls-5 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.std-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.emerging-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.ladder-legend{display:flex;align-items:center;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border-light)}
+.ll-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-secondary)}
+.ll-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* MAIN DIAGRAM */
+.diagram-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:visible;box-shadow:var(--shadow-md);margin-bottom:28px}
+.diag-titlebar{background:var(--teal);padding:11px 20px;display:flex;align-items:center;gap:10px;border-radius:13px 13px 0 0}
+.diag-titlebar span{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em}
+.diag-titlebar small{font-size:11.5px;color:rgba(255,255,255,.45)}
+.diagram-inner{padding:20px 20px 0;display:flex;flex-direction:column;gap:0}
+
+/* ── CREDIT DASHBOARD ──────────────────────────────────────────────────── */
+.credit-dash{
+  background:var(--navy-pale);border:1.5px solid var(--navy-border);
+  border-radius:12px;padding:16px 18px 14px;
+  margin-bottom:18px;cursor:pointer;transition:box-shadow .15s;
+}
+.credit-dash:hover{box-shadow:var(--shadow-md)}
+.credit-dash.active{box-shadow:0 0 0 3px rgba(13,115,119,.12)}
+.cd-toprow{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.cd-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--navy)}
+.cd-btn{margin-left:auto;font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid var(--navy-border);background:var(--surface);color:var(--navy);cursor:pointer;font-family:'DM Sans',sans-serif}
+.dash-grid{display:grid;grid-template-columns:180px 1fr 1fr;gap:14px;align-items:start}
+.dash-panel{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:12px 14px;box-shadow:var(--shadow-sm)}
+.dp-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:10px}
+
+/* Credit Score Gauge */
+.score-gauge-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+.score-num{font-family:'DM Serif Display',serif;font-size:46px;line-height:1;color:var(--exec);margin-top:4px}
+.score-grade{font-size:13px;font-weight:700;color:var(--exec);margin-bottom:2px}
+.score-sub{font-size:11px;color:var(--text-muted)}
+.score-bar-wrap{width:100%;margin-top:8px}
+.score-bar-track{height:8px;background:linear-gradient(to right,#c04040,#f5c882,#1a6b35);border-radius:4px;position:relative;margin-bottom:4px}
+.score-needle{position:absolute;top:-4px;width:3px;height:16px;background:var(--navy);border-radius:2px;transform:translateX(-50%)}
+.score-bar-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--text-muted)}
+
+/* EBM Feature Chart */
+.ebm-chart-wrap{display:flex;flex-direction:column;gap:5px}
+.ebm-row{display:flex;align-items:center;gap:7px;font-size:11px}
+.ebm-label{width:110px;flex-shrink:0;color:var(--text-secondary);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ebm-bar-track{flex:1;height:7px;background:var(--border);border-radius:3px;overflow:hidden;position:relative}
+.ebm-bar-pos{height:100%;border-radius:3px;background:var(--red);position:absolute;right:50%;top:0}
+.ebm-bar-neg{height:100%;border-radius:3px;background:var(--exec);position:absolute;left:50%;top:0}
+.ebm-val{font-family:'DM Mono',monospace;font-size:10.5px;font-weight:700;width:40px;text-align:right;flex-shrink:0}
+.ebm-mid{position:absolute;left:50%;top:0;width:1px;height:100%;background:var(--border);z-index:1}
+
+/* AI vs Agency table */
+.agency-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.agency-table th{background:var(--navy);color:#fff;padding:6px 8px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.agency-table td{padding:7px 8px;border-bottom:1px solid var(--border-light);vertical-align:middle}
+.agency-table tr:last-child td{border-bottom:none}
+.agency-table tr:nth-child(even) td{background:rgba(13,115,119,.03)}
+.lag-badge{font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:4px}
+.lag-ok{background:var(--exec-pale);color:var(--exec)}
+.lag-warn{background:var(--amber-pale);color:var(--amber)}
+.lag-alert{background:var(--red-pale);color:var(--red)}
+.rating-chip{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:4px;font-family:'DM Mono',monospace}
+.r-inv{background:#d4edda;color:#1a6b35}
+.r-bbb{background:var(--navy-pale);color:var(--navy)}
+.r-bb{background:var(--amber-pale);color:var(--amber)}
+.r-b{background:var(--red-pale);color:var(--red)}
+
+/* ── MONOTONICITY INFO BOX ──────────────────────────────────────────────── */
+.mono-box{
+  background:var(--teal-pale);border:1.5px solid var(--teal-border);border-left:5px solid var(--teal);
+  border-radius:10px;padding:16px 20px;margin-bottom:18px;
+  box-shadow:var(--shadow-sm);
+}
+.mono-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--teal);margin-bottom:6px}
+.mono-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--navy);margin-bottom:7px;letter-spacing:-.01em}
+.mono-body{font-size:13px;color:var(--text-secondary);line-height:1.65}
+.mono-body strong{color:var(--text-primary)}
+
+/* ── PIPELINE ──────────────────────────────────────────────────────────── */
+.pipeline-section{
+  border:2px dashed var(--opp-overlay-border);background:var(--opp-overlay);
+  border-radius:12px;padding:18px 16px 16px;position:relative;
+}
+.prop-label{position:absolute;top:-14px;right:16px;display:flex;align-items:center;gap:5px}
+.prop-label span{font-size:10px;font-weight:700;color:var(--teal);background:var(--surface);padding:2px 9px;border-radius:20px;border:1.5px solid var(--teal-border);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
+.pipeline-row{display:flex;align-items:flex-start;gap:0}
+.pnode{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;flex:1;min-width:0;cursor:pointer;transition:box-shadow .18s,transform .18s;box-shadow:var(--shadow-sm);position:relative;z-index:2}
+.pnode:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.pnode.active{border-color:var(--teal)!important;box-shadow:0 0 0 3px rgba(13,115,119,.12)}
+.pnode.n-teal{border-top:3px solid var(--teal)}
+.pnode.n-navy{border-top:3px solid var(--navy)}
+.pnode.n-purple{border-top:3px solid var(--purple)}
+.pnode.n-exec{border-top:3px solid var(--exec)}
+.pnode.n-amber{border-top:3px solid var(--amber)}
+.pn-stage{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:2px}
+.pn-icon{font-size:17px;margin-bottom:3px;line-height:1}
+.pn-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:3px;line-height:1.3}
+.pn-desc{font-size:10.5px;color:var(--text-secondary);line-height:1.35;margin-bottom:6px}
+.pn-btn{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.n-teal .pn-btn{background:var(--teal-pale);color:var(--teal)}
+.n-navy .pn-btn{background:var(--navy-pale);color:var(--navy)}
+.n-purple .pn-btn{background:var(--purple-pale);color:var(--purple)}
+.n-exec .pn-btn{background:var(--exec-pale);color:var(--exec)}
+.n-amber .pn-btn{background:var(--amber-pale);color:var(--amber)}
+.parr{display:flex;align-items:center;flex-shrink:0;width:18px;padding-top:38px}
+.parr-line{height:2px;background:#c8c4bc;flex:1}
+.parr-head{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:7px solid #c8c4bc;flex-shrink:0}
+
+/* BondPulse bridge */
+.bp-bridge{
+  display:flex;align-items:center;gap:12px;
+  background:linear-gradient(135deg,var(--teal-pale),#e8f5f5);
+  border:1.5px solid var(--teal-border);border-radius:10px;padding:12px 18px;
+  margin-top:14px;cursor:pointer;transition:box-shadow .15s;
+}
+.bp-bridge:hover{box-shadow:var(--shadow-md)}
+.bp-bridge.active{box-shadow:0 0 0 3px rgba(13,115,119,.12)}
+.bp-icon{font-size:22px;flex-shrink:0}
+.bp-body{flex:1}
+.bp-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);margin-bottom:3px}
+.bp-title{font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:2px;font-family:'DM Serif Display',serif;letter-spacing:-.01em}
+.bp-desc{font-size:12px;color:var(--text-secondary);line-height:1.45}
+.bp-btn{font-size:11px;font-weight:600;padding:5px 13px;border-radius:7px;border:1.5px solid var(--teal);background:var(--teal);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0}
+
+/* Compliance Vault */
+.vault-strip{
+  display:flex;align-items:center;gap:14px;
+  background:var(--navy);border-radius:0 0 13px 13px;padding:14px 20px;
+  cursor:pointer;transition:opacity .15s;
+}
+.vault-strip:hover{opacity:.93}
+.vault-strip.active{outline:2px solid rgba(255,255,255,.3)}
+.vs-icon{font-size:22px}
+.vs-body{flex:1}
+.vs-title{font-family:'DM Serif Display',serif;font-size:14px;color:#fff;margin-bottom:3px}
+.vs-desc{font-size:11.5px;color:rgba(255,255,255,.55);line-height:1.4}
+.vs-pills{display:flex;gap:7px;margin-top:6px;flex-wrap:wrap}
+.vs-pill{font-size:10px;font-weight:600;padding:2px 9px;border-radius:20px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.2)}
+.vs-btn{font-size:10.5px;font-weight:600;padding:4px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0}
+
+/* RESEARCH */
+.research{padding-top:24px;border-top:1px solid var(--border)}
+.research h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--teal);margin-bottom:16px;letter-spacing:-.01em}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.r-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.r-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:7px}
+.r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.r-rows{display:flex;flex-direction:column;gap:7px}
+.r-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.r-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:155px}
+.r-key::after{content:':'}
+.r-val{color:var(--text-secondary)}
+.threat-callout{background:var(--red-pale);border:1.5px solid var(--red-border);border-left:5px solid var(--red);border-radius:10px;padding:18px 20px;box-shadow:var(--shadow-sm)}
+.tc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--red);margin-bottom:6px}
+.tc-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--teal);margin-bottom:7px;letter-spacing:-.01em}
+.tc-body{font-size:13px;color:var(--text-secondary);line-height:1.65}
+.tc-body strong{color:var(--text-primary)}
+.ref-list{display:flex;flex-direction:column;gap:6px}
+.ref-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.ref-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--teal-pale);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.ref-txt{color:var(--text-secondary)}.ref-txt strong{color:var(--text-primary)}
+.page-footer{text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:28px;padding-top:16px;border-top:1px solid var(--border)}
+
+.overlay{position:fixed;inset:0;background:rgba(20,18,14,.45);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(3px)}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:14px;width:540px;max-width:calc(100vw - 32px);max-height:calc(100vh - 60px);overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(12px) scale(.98);transition:transform .22s cubic-bezier(.34,1.56,.64,1)}
+.overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-hdr{padding:20px 22px 15px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2;border-radius:14px 14px 0 0}
+.m-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block}
+.m-title{font-family:'DM Serif Display',serif;font-size:19px;color:var(--teal);line-height:1.25;margin-bottom:4px;padding-right:30px}
+.m-sub{font-size:12.5px;color:var(--text-secondary);font-style:italic}
+.m-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:15px;font-family:'DM Sans',sans-serif;transition:background .12s}
+.m-close:hover{background:var(--border)}
+.m-body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:14px}
+.info-sec{display:flex;flex-direction:column;gap:7px}
+.info-sec-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);padding-bottom:5px;border-bottom:1px solid var(--border-light)}
+.info-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.info-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:165px}
+.info-key::after{content:':'}
+.info-val{color:var(--text-secondary)}
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="nav-back" onclick="window.history.back()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11L5 7l4-4"/></svg>
+    Back to Matrix
+  </button>
+  <div class="nav-crumb">
+    <span>Fixed Income</span><span class="sep">/</span>
+    <span>Credit &amp; Counterparty Risk</span><span class="sep">/</span>
+    <span class="active">Creditworthiness Assessment</span>
+  </div>
+  <div class="nav-badge">📊 Credit &amp; Counterparty Risk</div>
+</nav>
+
+<div class="page">
+
+  <div class="uc-num">Use Case #7 &nbsp;·&nbsp; Credit Risk &nbsp;·&nbsp; Strategic Impact 9/10</div>
+  <h1>Real-Time Creditworthiness Assessment</h1>
+  <p class="header-sub">Waiting for a formal rating update is like reading last month's newspaper to predict tomorrow's weather. Rating agencies are structurally slow by design. AI eliminates the lag — delivering a real-time, explainable, regulator-ready credit score that a Credit Committee can defend in an audit, not just a black-box number.</p>
+  <div class="chips">
+    <span class="chip teal">Explainable Boosting Machines (EBMs)</span>
+    <span class="chip navy">XBRL Data Fusion</span>
+    <span class="chip purple">NLP Table Parsing</span>
+    <span class="chip teal">Bayesian Audit Agent</span>
+    <span class="chip red">High-Risk AI Application</span>
+    <span class="chip green">Implementation Readiness: 9/10</span>
+  </div>
+
+  <div class="summary-row">
+    <div class="sc sc-gap"><div class="sc-lbl">The Gap</div><div class="sc-txt">Rating agencies use periodic committee reviews that lag market reality by weeks or months. By the time S&P publishes a downgrade, the bond market has already moved — and the portfolio manager has already lost money they didn't have to lose.</div></div>
+    <div class="sc sc-sol"><div class="sc-lbl">AI Solution</div><div class="sc-txt">A Glass-Box Credit Pipeline: EBMs score issuer creditworthiness in real time from live financial data, alternative data nowcasts, and NLP-parsed filings — with explicit reason codes that satisfy regulatory explainability requirements by design.</div></div>
+    <div class="sc sc-val"><div class="sc-lbl">Value Created</div><div class="sc-txt">Earlier warning of credit deterioration — days or weeks ahead of formal rating action — enabling portfolio managers to reduce exposure before the forced selling that follows a public downgrade.</div></div>
+  </div>
+
+  <!-- STRATEGY BANNER -->
+  <div class="strategy-banner">
+    <div class="sb-label">Strategic Framing — The Trust Engine</div>
+    <div class="sb-text">"Retail investors fear bonds because they cannot understand the risk. BondPulse uses the same <strong>Explainable Credit AI</strong> used by Tier-1 banks — but instead of hiding the score in a black box, we show you a simple chart explaining <em>why</em> the bond is rated the way it is. We give you the confidence to chase higher yields without the black-box fear."</div>
+  </div>
+
+  <!-- MATURITY LADDER -->
+  <div class="section-title">
+    <h2>AI Maturity Ladder — Creditworthiness Assessment</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="ladder-wrap">
+    <p class="ladder-intro">Most mid-size institutions operate at <strong>Level 1–2</strong>. Level 3 (EBM + SHAP) is the <strong>2026 production standard</strong> at Tier-1 banks. Level 4 is the proposed architecture frontier. Level 5 carries the same Adverse Selection doom loop risk as autonomous liquidity rebalancing — marked amber. Click any level for detail.</p>
+    <div class="ladder">
+      <div class="ladder-step ls-1" onclick="openModal('l1')">
+        <div class="ls-num">Level 1</div><div class="ls-icon">📰</div>
+        <div class="ls-name">Rating Agencies</div><div class="ls-focus">S&P / Moody's / Fitch</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-2" onclick="openModal('l2')">
+        <div class="ls-num">Level 2</div><div class="ls-icon">📊</div>
+        <div class="ls-name">Altman-Z Internal</div><div class="ls-focus">Static ratio spreadsheet</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-3" onclick="openModal('l3')">
+        <div class="ls-num">Level 3</div>
+        <div class="ls-icon">🔍</div>
+        <div class="std-badge">🏭 2026 Standard</div>
+        <div class="ls-name">Explainable ML</div><div class="ls-focus">EBM + SHAP real-time</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-4" onclick="openModal('l4')">
+        <div class="ls-num">Level 4</div><div class="ls-icon">🎙️</div>
+        <div class="ls-name">Multimodal Context</div><div class="ls-focus">Earnings call tone scoring</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-5" onclick="openModal('l5')">
+        <div class="ls-num">Level 5</div><div class="ls-icon">🤖</div>
+        <div class="emerging-badge">⚠ Doom Loop Risk</div>
+        <div class="ls-name">Autonomous Credit</div><div class="ls-focus">Auto-adjust position limits</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+    </div>
+    <div class="ladder-legend">
+      <div class="ll-item"><div class="ll-dot" style="background:#c8c4bc;"></div>Legacy — most mid-size institutions</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--amber);"></div>2026 standard / doom loop flag</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--teal);"></div>Proposed architecture frontier</div>
+    </div>
+  </div>
+
+  <!-- MAIN DIAGRAM -->
+  <div class="section-title">
+    <h2>The Glass-Box Credit Architecture</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="diag-titlebar">
+      <span>Credit Dashboard above · Glass-Box Pipeline below · Compliance Vault anchors the bottom</span>
+      <small>&nbsp;·&nbsp; High-Risk AI — every decision is logged, explained, and auditable</small>
+    </div>
+
+    <div class="diagram-inner">
+
+      <!-- CREDIT DASHBOARD -->
+      <div class="credit-dash" onclick="openModal('dashboard')">
+        <div class="cd-toprow">
+          <span style="font-size:16px;">🏦</span>
+          <span class="cd-label">Credit Committee Dashboard — Score · EBM Feature Contributions · AI vs Agency Comparison</span>
+          <button class="cd-btn">Details →</button>
+        </div>
+        <div class="dash-grid">
+
+          <!-- Panel 1: Score Gauge -->
+          <div class="dash-panel">
+            <div class="dp-title">Real-Time Credit Score</div>
+            <div class="score-gauge-wrap">
+              <div style="font-size:11px;font-weight:600;color:var(--text-muted);">HDFC Bank Ltd — NCD 2027</div>
+              <div class="score-num">724</div>
+              <div class="score-grade">AA− Equivalent</div>
+              <div class="score-sub">Updated: 2 min ago · 94% confidence</div>
+              <div class="score-bar-wrap">
+                <div class="score-bar-track">
+                  <!-- needle at 724/1000 = 72.4% -->
+                  <div class="score-needle" style="left:72.4%;"></div>
+                </div>
+                <div class="score-bar-labels">
+                  <span>0</span><span>D</span><span>BB</span><span>A</span><span>AAA</span><span>1000</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 2: EBM Feature Contribution Chart -->
+          <div class="dash-panel">
+            <div class="dp-title">EBM Feature Contributions — Why This Score?</div>
+            <div style="font-size:9.5px;color:var(--text-muted);margin-bottom:7px;font-style:italic;">Red = increases risk · Green = reduces risk · Centred at zero</div>
+            <div class="ebm-chart-wrap">
+              <!-- Interest Coverage: strong positive (reduces risk) -->
+              <div class="ebm-row">
+                <span class="ebm-label">Interest Coverage</span>
+                <div class="ebm-bar-track">
+                  <div class="ebm-mid"></div>
+                  <div class="ebm-bar-neg" style="width:40%;"></div>
+                </div>
+                <span class="ebm-val" style="color:var(--exec);">+82</span>
+              </div>
+              <!-- Debt/Equity: mild risk -->
+              <div class="ebm-row">
+                <span class="ebm-label">Debt / Equity</span>
+                <div class="ebm-bar-track">
+                  <div class="ebm-mid"></div>
+                  <div class="ebm-bar-pos" style="width:18%;"></div>
+                </div>
+                <span class="ebm-val" style="color:var(--red);">−36</span>
+              </div>
+              <!-- Free Cash Flow: positive -->
+              <div class="ebm-row">
+                <span class="ebm-label">Free Cash Flow</span>
+                <div class="ebm-bar-track">
+                  <div class="ebm-mid"></div>
+                  <div class="ebm-bar-neg" style="width:30%;"></div>
+                </div>
+                <span class="ebm-val" style="color:var(--exec);">+61</span>
+              </div>
+              <!-- CDS Spread: mild risk -->
+              <div class="ebm-row">
+                <span class="ebm-label">CDS Spread</span>
+                <div class="ebm-bar-track">
+                  <div class="ebm-mid"></div>
+                  <div class="ebm-bar-pos" style="width:12%;"></div>
+                </div>
+                <span class="ebm-val" style="color:var(--red);">−24</span>
+              </div>
+              <!-- Alt Data: positive -->
+              <div class="ebm-row">
+                <span class="ebm-label">Alt Data Score</span>
+                <div class="ebm-bar-track">
+                  <div class="ebm-mid"></div>
+                  <div class="ebm-bar-neg" style="width:20%;"></div>
+                </div>
+                <span class="ebm-val" style="color:var(--exec);">+41</span>
+              </div>
+              <!-- Debt×CashFlow interaction -->
+              <div class="ebm-row" style="border-top:1px dashed var(--border);padding-top:5px;margin-top:2px;">
+                <span class="ebm-label" style="color:var(--purple);font-weight:600;">Debt×CF Interaction</span>
+                <div class="ebm-bar-track">
+                  <div class="ebm-mid"></div>
+                  <div class="ebm-bar-neg" style="width:8%;background:var(--purple);"></div>
+                </div>
+                <span class="ebm-val" style="color:var(--purple);">+16</span>
+              </div>
+              <div style="font-size:9px;color:var(--text-muted);margin-top:4px;font-style:italic;">Interaction: Debt is moderate but Cash Flow is strong → lower combined risk than either signal alone</div>
+            </div>
+          </div>
+
+          <!-- Panel 3: AI vs Agency Comparison -->
+          <div class="dash-panel">
+            <div class="dp-title">AI Score vs Agency Rating — Lag View</div>
+            <table class="agency-table">
+              <thead><tr><th>Issuer</th><th>AI</th><th>Agency</th><th>Lag</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td style="font-weight:600;font-size:11px;">HDFC Bank</td>
+                  <td><span class="rating-chip r-inv">AA−</span></td>
+                  <td><span class="rating-chip r-inv">AA−</span></td>
+                  <td><span class="lag-badge lag-ok">Aligned</span></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600;font-size:11px;">Tata Motors</td>
+                  <td><span class="rating-chip r-bb">BB+</span></td>
+                  <td><span class="rating-chip r-bbb">BBB−</span></td>
+                  <td><span class="lag-badge lag-warn">AI −1 notch</span></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600;font-size:11px;">Adani Ports</td>
+                  <td><span class="rating-chip r-b">B+</span></td>
+                  <td><span class="rating-chip r-bb">BB</span></td>
+                  <td><span class="lag-badge lag-alert">⚠ AI −2 notch</span></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600;font-size:11px;">Reliance Ind.</td>
+                  <td><span class="rating-chip r-inv">AAA</span></td>
+                  <td><span class="rating-chip r-inv">AAA</span></td>
+                  <td><span class="lag-badge lag-ok">Aligned</span></td>
+                </tr>
+              </tbody>
+            </table>
+            <div style="font-size:9.5px;color:var(--text-muted);font-style:italic;margin-top:8px;">Adani Ports: AI is 2 notches below the agency rating. Historical precedent suggests formal downgrade within 4–8 weeks if current trajectory persists.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MONOTONICITY INFO BOX -->
+      <div class="mono-box">
+        <div class="mono-label">⚖ Regulatory Design Principle — Why EBMs Are Legally Compliant by Construction</div>
+        <div class="mono-title">The Monotonicity Constraint: What Black-Box Models Cannot Guarantee</div>
+        <div class="mono-body">Regulators require that credit models be <strong>monotonic</strong> — if a company's debt increases, its risk score must go up, not down. If cash flow falls, risk must rise. This is not a preference; it is a legal requirement for regulated credit scoring in most jurisdictions. <strong>Complex neural networks frequently violate monotonicity</strong> — they find non-intuitive patterns in training data that can produce the wrong direction of effect for specific feature combinations. EBMs solve this by construction: each feature's contribution is modelled as an independent additive function that can be explicitly constrained to be non-decreasing. The monotonicity constraint is enforced during training, not checked after. A regulator auditing an EBM-based credit score can verify monotonicity mathematically — something that is not possible with a neural network without exhaustive testing across all possible inputs.</div>
+      </div>
+
+      <!-- PIPELINE -->
+      <div class="pipeline-section">
+        <div class="prop-label">
+          <svg width="28" height="22" viewBox="0 0 28 22" fill="none" style="position:relative;top:2px;">
+            <path d="M24 2 C24 12, 8 8, 4 18" stroke="#0d7377" stroke-width="1.8" stroke-dasharray="3,2" fill="none" stroke-linecap="round"/>
+            <polygon points="4,18 2,12 8,14" fill="#0d7377"/>
+          </svg>
+          <span>Proposed Architecture — Levels 3 &amp; 4 · Glass-Box Pipeline</span>
+        </div>
+
+        <div class="pipeline-row">
+          <!-- Stage 1: Ingestion -->
+          <div class="pnode n-teal" onclick="openModal('ingestion')">
+            <div class="pn-stage">Stage 1</div><div class="pn-icon">📡</div>
+            <div class="pn-title">Ingestion</div>
+            <div class="pn-desc">Live XBRL filings, market spreads, CDS, alternative data feeds fused in real time</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <!-- Stage 2: Feature Extraction -->
+          <div class="pnode n-navy" onclick="openModal('features')">
+            <div class="pn-stage">Stage 2</div><div class="pn-icon">🔬</div>
+            <div class="pn-title">Feature Extraction</div>
+            <div class="pn-desc">NLP table parser pulls liquidity ratios, leverage, interest coverage from messy PDFs</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <!-- Stage 3: Inference (EBM) -->
+          <div class="pnode n-purple" onclick="openModal('inference')">
+            <div class="pn-stage">Stage 3</div><div class="pn-icon">⚙️</div>
+            <div class="pn-title">EBM Inference</div>
+            <div class="pn-desc">Additive functions generate 0–1000 score with interaction detection — monotonic by design</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <!-- Stage 4: Explainability -->
+          <div class="pnode n-exec" onclick="openModal('explainability')">
+            <div class="pn-stage">Stage 4</div><div class="pn-icon">💡</div>
+            <div class="pn-title">Explainability</div>
+            <div class="pn-desc">Global &amp; local reason codes — each feature's contribution visualised and stored</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <!-- Stage 5: Governance -->
+          <div class="pnode n-amber" onclick="openModal('governance')">
+            <div class="pn-stage">Stage 5</div><div class="pn-icon">🛡️</div>
+            <div class="pn-title">Governance</div>
+            <div class="pn-desc">Audit Agent checks for forbidden biased data; decision logged immutably to Compliance Vault</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+        </div>
+
+        <!-- BondPulse bridge -->
+        <div class="bp-bridge" onclick="openModal('bondpulse')">
+          <div class="bp-icon">🔐</div>
+          <div class="bp-body">
+            <div class="bp-label">→ Powers Consumer Product — The Trust Engine</div>
+            <div class="bp-title">BondPulse Credit Health Check</div>
+            <div class="bp-desc">The same EBM score that a Tier-1 Credit Committee uses becomes BondPulse's plain-language "Credit Health Check" — showing retail investors not just the score but the simple bar chart of <em>why</em>, giving them the confidence to chase higher yields without the black-box fear.</div>
+          </div>
+          <div class="bp-btn" onclick="event.stopPropagation();openModal('bondpulse')">Details →</div>
+        </div>
+
+      </div>
+
+      <!-- COMPLIANCE VAULT STRIP -->
+      <div class="vault-strip" onclick="openModal('vault')">
+        <div class="vs-icon">🔒</div>
+        <div class="vs-body">
+          <div class="vs-title">Compliance Vault — Immutable Credit Decision Archive</div>
+          <div class="vs-desc">Every score, every reason code, every feature contribution logged permanently — the regulatory proof that every credit decision is explainable and auditable</div>
+          <div class="vs-pills">
+            <span class="vs-pill">📍 Score + Reason Codes</span>
+            <span class="vs-pill">📑 Feature Contributions</span>
+            <span class="vs-pill">✅ Monotonicity Verified</span>
+            <span class="vs-pill">🔗 Source Data Linked</span>
+            <span class="vs-pill">👤 Analyst Override Log</span>
+          </div>
+        </div>
+        <button class="vs-btn">Details →</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RESEARCH -->
+  <div class="research">
+    <h2>Research Notes</h2>
+    <div class="r-grid">
+
+      <!-- Adverse Selection Loop -->
+      <div class="threat-callout">
+        <div class="tc-label">⚠ Critical Risk — The Adverse Selection Doom Loop</div>
+        <div class="tc-title">When the Downgrade Causes the Default It Predicted</div>
+        <div class="tc-body">The Adverse Selection Loop has a precise doom loop mechanism: the AI downgrades an issuer's credit score. Institutional clients on the platform simultaneously reduce exposure. The bond yield rises as demand falls. The issuer's <strong>refinancing cost increases</strong> because their existing bonds now trade at a higher yield — making their next debt issuance more expensive. Higher debt service costs stress cash flow. Cash flow stress triggers further AI downgrade. The model has <strong>created the deterioration it predicted</strong>. This is not hypothetical — rating agencies were accused of exactly this mechanism during the 2008 financial crisis, where mass mortgage downgrades triggered forced selling that collapsed the very securities being downgraded. The mitigations are: <strong>staggered score publication</strong> (not all clients receive the updated score simultaneously), <strong>minimum score validity windows</strong> (a score cannot change by more than one notch within a 48-hour period without human review), and <strong>position-size caps</strong> on automatic actions triggered by score changes — requiring human approval for large portfolio adjustments that could move the market.</div>
+      </div>
+
+      <!-- Lagging Ledger -->
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--teal);"></div>The Lagging Ledger — Alternative Data Nowcasting</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">The problem</span><span class="r-val">Quarterly financial filings are already 45–90 days old when published. A company that stopped paying suppliers in January will not report the cash flow deterioration until the Q1 filing in April or May — long after the signal was already visible in alternative data.</span></div>
+          <div class="r-row"><span class="r-key">Job posting signal</span><span class="r-val">Companies under financial stress freeze hiring before they miss a coupon payment — typically 2–3 months earlier. A sudden collapse in job posting volume for a specific company is a leading indicator of financial deterioration that precedes formal reporting by quarters.</span></div>
+          <div class="r-row"><span class="r-key">Shipping traffic</span><span class="r-val">Satellite imagery of logistics activity — container volumes at company warehouses, truck traffic at manufacturing sites — reveals real-time operational activity that predicts revenue before it is reported.</span></div>
+          <div class="r-row"><span class="r-key">Legal filings</span><span class="r-val">Court records showing supplier litigation, regulatory filings showing environmental violations, and patent application rates are all publicly available real-time signals that precede financial deterioration by months.</span></div>
+          <div class="r-row"><span class="r-key">Integration</span><span class="r-val">These alternative signals are normalised into a composite "Alt Data Score" that enters the EBM as an additional feature — visible as a separate bar in the feature contribution chart, with its own explicit contribution to the final score.</span></div>
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--purple);"></div>Why EBMs — Technical Edge</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">Accuracy parity</span><span class="r-val">EBMs often match the performance of Random Forests and Gradient Boosted Trees on tabular financial data — they are Generalised Additive Models (GAMs) that sacrifice almost no predictive accuracy relative to black-box alternatives.</span></div>
+          <div class="r-row"><span class="r-key">Feature independence</span><span class="r-val">Each feature's contribution is modelled independently and can be visualised as a simple shape function graph — interest coverage on the x-axis, risk contribution on the y-axis. A regulator can audit each feature separately.</span></div>
+          <div class="r-row"><span class="r-key">Interaction detection</span><span class="r-val">Unlike simple linear models, EBMs find "couplings" — debt is only a risk if cash flow is also low. High debt combined with high cash flow is a very different situation from high debt combined with thin cash flow. The interaction term is explicit and interpretable.</span></div>
+          <div class="r-row"><span class="r-key">Monotonicity by design</span><span class="r-val">Monotonicity constraints are enforced during EBM training — not checked after. This is the critical regulatory advantage over neural networks, which can only be tested for monotonicity empirically after training, not guaranteed before.</span></div>
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--navy);"></div>Competitor Landscape — Interpretable Alpha</div>
+        <div class="ref-list">
+          <div class="ref-item"><div class="ref-num">1</div><div class="ref-txt"><strong>Moody's Analytics (Research Assistant)</strong> — GenAI layer over internal credit models; moving toward hybrid models combining agency expertise with AI speed and real-time data ingestion.</div></div>
+          <div class="ref-item"><div class="ref-num">2</div><div class="ref-txt"><strong>S&P Global (ProSpread AI)</strong> — automates extraction of financial data from private company documents, significantly expanding the "scorable" bond universe beyond publicly rated issuers.</div></div>
+          <div class="ref-item"><div class="ref-num">3</div><div class="ref-txt"><strong>FICO</strong> — the pioneer in credit explainability; uses interpretable neural networks to ensure every credit decision comes with a legally defensible reason code. The conceptual originator of what EBMs formalise.</div></div>
+          <div class="ref-item"><div class="ref-num">4</div><div class="ref-txt"><strong>Equifax (NeuroDecision)</strong> — patented technology that forces neural networks to be monotonic and explainable, satisfying strict regulatory audits. The closest direct competitor to the EBM approach architecturally.</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-footer">
+    Hexaware Financial Services &nbsp;·&nbsp; AI in Fixed Income Markets &nbsp;·&nbsp; Credit &amp; Counterparty Risk &nbsp;·&nbsp; Preliminary Research 2026
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="m-tag" id="mTag"></div>
+      <div class="m-title" id="mTitle"></div>
+      <div class="m-sub" id="mSub"></div>
+      <button class="m-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="m-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+const NODES={
+  l1:{tag:'Level 1 · Rating Agencies',ts:'background:#ece9e3;color:#6b6760;',title:'Rating Agencies',sub:'Entirely relying on S&P, Moody\'s, and Fitch updates — periodic, committee-based, structurally slow',sections:[
+    {t:'How It Works',rows:[{k:'Process',v:'The portfolio manager reads the latest agency rating and uses it as the primary credit signal. Rating changes are announced publicly; the market typically moves before the formal announcement as traders anticipate the change.'},{k:'The structural lag',v:'Rating agencies use committee-based review processes designed to be conservative and avoid false alarms. A company must show sustained deterioration over multiple quarters before a downgrade is issued. This is appropriate for systemic stability but catastrophic for individual portfolio managers who need early warning.'},{k:'The 2008 lesson',v:'Rating agencies maintained AAA ratings on subprime mortgage securities until days before they collapsed. The lesson was not that the agencies were corrupt — it was that committee-based periodic review structurally cannot keep pace with rapidly deteriorating credit conditions.'}]}
+  ]},
+  l2:{tag:'Level 2 · Altman-Z',ts:'background:#ece9e3;color:#6b6760;',title:'Internal Altman-Z',sub:'Static financial ratios in a spreadsheet — an improvement over agencies for timing, but no real-time capability',sections:[
+    {t:'How It Works',rows:[{k:'The Altman-Z score',v:'A linear combination of five financial ratios (Working Capital/Total Assets, Retained Earnings/Total Assets, EBIT/Total Assets, Market Value Equity/Book Value Debt, Sales/Total Assets) that was shown in 1968 to predict corporate bankruptcy 2 years in advance with ~72% accuracy.'},{k:'Still used',v:'The Altman-Z remains widely used because it is simple, transparent, and works reasonably well for manufacturing companies. Many mid-size credit teams run it manually from quarterly filings.'},{k:'Limitations',v:'The ratios are only as current as the latest quarterly filing — 45–90 day lag. The model was calibrated in 1968 and performs worse on modern service companies, financial institutions, and technology firms whose balance sheets look nothing like 1960s manufacturers.'}]}
+  ]},
+  l3:{tag:'Level 3 · 2026 Production Standard',ts:'background:#fff8ed;color:#b86a00;',title:'Explainable ML — EBM + SHAP',sub:'Real-time internal ratings with explicit reason codes — what Tier-1 banks are deploying at scale in 2026',sections:[
+    {t:'What Level 3 Does',rows:[{k:'Technology',v:'Explainable Boosting Machines (EBMs) or XGBoost with SHAP post-hoc explanations — both provide real-time credit scores with feature-level attribution for every prediction.'},{k:'Real-time cadence',v:'Scores update continuously as new market data arrives (CDS spreads, bond prices, news sentiment) and periodically as financial filings are published. The score visible on the dashboard may be 2 minutes old for market-driven inputs, or 2 days old for filing-driven inputs.'},{k:'Regulatory acceptance',v:'EBMs are increasingly accepted by banking regulators as compliant credit models because they satisfy the explainability requirements of BCBS 239, GDPR Article 22 (right to explanation), and SEBI\'s model risk management guidelines.'}]}
+  ]},
+  l4:{tag:'Level 4 · Proposed Architecture',ts:'background:#e6f7f7;color:#0d7377;',title:'Multimodal Context — Earnings Call Tone',sub:'Adding management tone from earnings calls as a direct input to the credit score — the signal between the lines',sections:[
+    {t:'What It Adds',rows:[{k:'The insight',v:'Management teams often signal deteriorating conditions through language before they appear in financial statements. Phrases like "we are being cautious with capital allocation" or "we are monitoring headwinds carefully" are significantly more negative than the same quarterly numbers would suggest alone.'},{k:'Technology',v:'NLP sentiment analysis applied to earnings call transcripts — the same technology used in the Macro Rotation use case for central bank communications, adapted for corporate management language. Scores each call on a Confident-to-Cautious scale relative to historical baseline for that specific management team.'},{k:'Why management-specific baseline matters',v:'A CEO who normally speaks with extreme confidence scoring "moderately confident" is a more negative signal than a habitually cautious CEO scoring "moderately confident." The model calibrates to each management team\'s historical language pattern, not an absolute scale.'}]},
+    {t:'The Interaction with Financial Data',rows:[{k:'Signal fusion',v:'A company with strong financial ratios but a management tone that has shifted significantly negative in the last two earnings calls gets a composite score that weights both signals — financial strength as a lagging indicator, management tone as a leading indicator.'}]}
+  ]},
+  l5:{tag:'Level 5 · ⚠ Doom Loop Risk',ts:'background:#fff8ed;color:#b86a00;',title:'Autonomous Credit — Auto-Adjust Position Limits',sub:'AI agents automatically tighten position limits when credit scores deteriorate — marked amber for Adverse Selection doom loop risk',sections:[
+    {t:'What It Means',rows:[{k:'The capability',v:'An autonomous agent monitors credit scores continuously. When an issuer\'s score falls below a defined threshold, the agent automatically reduces the maximum allowable position size for that issuer across all portfolios — without human sign-off.'},{k:'The doom loop',v:'If every firm\'s AI simultaneously reduces position limits on the same issuer, the collective selling pressure drives the bond yield higher. Higher yield = higher borrowing cost for the issuer. Higher borrowing cost = cash flow stress. Cash flow stress = lower credit score. Lower credit score = further automated position limit reduction. The model has created a self-reinforcing negative spiral.'},{k:'Regulatory concern',v:'This mechanism is structurally identical to what rating agencies were accused of in 2008 — automated credit actions that amplify rather than absorb credit stress. Most regulators now require human approval for automated position limit changes above defined thresholds.'}]},
+    {t:'Viable Deployment',rows:[{k:'Small position limits',v:'Autonomous adjustment is viable for small positions below materiality thresholds — the systemic risk is proportional to the notional size affected'},{k:'Alert and recommend',v:'The agent generates a recommended position limit adjustment with full credit rationale for a human credit officer to approve within a defined escalation window'}]}
+  ]},
+  dashboard:{tag:'Credit Dashboard · Committee View',ts:'background:#edf3fb;color:#1c3557;',title:'Credit Committee Dashboard',sub:'Three panels: real-time score, EBM feature contributions, and AI vs Agency comparison',sections:[
+    {t:'Why Three Panels',rows:[{k:'Score gauge',v:'The single number the committee needs — but a number without explanation is a black box. The gauge shows where the issuer sits on the full credit spectrum from 0 to 1000, with letter-grade equivalents.'},{k:'Feature contributions',v:'The EBM chart is the key regulatory tool — it shows exactly which financial factors drove the score, in which direction, by how much. Interest Coverage is the largest positive contributor; Debt/Equity is the largest negative. The Debt×CashFlow interaction term is shown separately to make explicit that EBMs capture non-linear relationships.'},{k:'AI vs Agency',v:'The most actionable panel — it shows where the AI score currently disagrees with formal agency ratings. Adani Ports at AI B+ vs Agency BB represents a 2-notch divergence that the committee should actively investigate before the formal downgrade arrives.'}]}
+  ]},
+  ingestion:{tag:'Stage 1 · Ingestion',ts:'background:#e6f7f7;color:#0d7377;',title:'Ingestion',sub:'Real-time multi-source data fusion — the quality of the credit score depends entirely on the quality and timeliness of the inputs',sections:[
+    {t:'Data Sources',rows:[{k:'XBRL filings',v:'The SEC, MCA, and SEBI now require companies to file financial statements in XBRL (eXtensible Business Reporting Language) — a structured format that allows automated extraction of specific financial line items without NLP. Quarterly earnings, annual reports, and interim disclosures all arrive in machine-readable form.'},{k:'Market spreads',v:'Bond yield spreads, CDS spreads, and equity implied volatility are ingested in real time from Bloomberg and Reuters. These market-implied signals update continuously and often lead the fundamental financial data by weeks.'},{k:'Alternative data',v:'Job posting volumes (from LinkedIn/Indeed APIs), shipping and logistics satellite data, legal filing databases (court records, regulatory filings), and web traffic analytics — all ingested and normalised into the Alt Data Score feature.'}]},
+    {t:'Data Quality Gate',rows:[{k:'Sentry dependency',v:'All incoming data is first verified by the AI Data Sentry (Use Case #1) before entering the credit pipeline. Only Golden Record-confirmed data influences credit scores — preventing a bad data input from generating a materially incorrect credit decision.'}]}
+  ]},
+  features:{tag:'Stage 2 · Feature Extraction',ts:'background:#edf3fb;color:#1c3557;',title:'Feature Extraction',sub:'NLP table parsing converts messy PDF filings into structured financial ratios — the hardest technical step',sections:[
+    {t:'What Gets Extracted',rows:[{k:'Liquidity ratios',v:'Current Ratio (Current Assets ÷ Current Liabilities), Quick Ratio, Cash Ratio — measures of the company\'s ability to meet short-term obligations. Low liquidity is the most common precursor of near-term default.'},{k:'Leverage',v:'Debt/Equity, Debt/EBITDA, Net Debt/EBITDA — measures of how much debt the company carries relative to its earnings power. High leverage + deteriorating EBITDA is the canonical credit deterioration signal.'},{k:'Interest Coverage',v:'EBIT ÷ Interest Expense — the single most predictive ratio for credit quality. A ratio falling below 2× indicates the company is struggling to service its debt from operating earnings.'}]},
+    {t:'The NLP Table Parsing Challenge',rows:[{k:'The problem',v:'Financial statements are published as PDF documents where tables often span multiple pages, merge cells, use footnotes for key figures, and embed critical data in narrative text adjacent to tables. Standard OCR fails to maintain the row-column-header relationship that makes a number meaningful.'},{k:'The solution',v:'Domain-specific NLP models trained on financial statements identify the semantic structure of tables — which row is "Operating Profit," which column is "FY2024," and which footnote modifies which cell. The same challenge addressed in the IPO Intelligence use case but applied to quarterly filings at scale.'}]}
+  ]},
+  inference:{tag:'Stage 3 · EBM Inference',ts:'background:#f3f0fb;color:#5b3faa;',title:'EBM Inference — The Glass-Box Engine',sub:'Explainable Boosting Machines generate the credit score using additive functions — accurate, interpretable, and monotonic by construction',sections:[
+    {t:'How EBMs Work',rows:[{k:'Architecture',v:'An EBM is a Generalised Additive Model (GAM) with interaction terms. For each feature, it learns a shape function — a non-linear curve describing how that feature\'s contribution changes as its value changes. The final score is the sum of all feature contributions.'},{k:'Accuracy',v:'On tabular financial data, EBMs routinely match the performance of Random Forests and Gradient Boosted Trees — they do not sacrifice predictive accuracy to achieve interpretability.'},{k:'Interaction detection',v:'The EBM automatically detects and models the most important pairwise interactions between features — the debt×cash-flow interaction visible in the dashboard. These interactions are explicit additive terms, not hidden inside a neural network\'s weight matrices.'}]},
+    {t:'Why Not XGBoost?',rows:[{k:'SHAP is post-hoc',v:'XGBoost with SHAP explanations is widely used but has a critical limitation: SHAP is a post-hoc explanation of a black-box model. The explanation is approximate — it describes what the model did, but cannot guarantee that the model will always behave that way.'},{k:'EBM is inherent',v:'EBM explanations are inherent to the model structure — the shape function IS the model. There is no approximation. A regulator auditing an EBM gets the exact contribution function, not an approximation of it. This is the decisive regulatory advantage.'}]}
+  ]},
+  explainability:{tag:'Stage 4 · Explainability',ts:'background:#edf7f1;color:#1a6b35;',title:'Explainability — Reason Codes',sub:'Global and local interpretability — showing what drives every individual credit decision',sections:[
+    {t:'Two Levels of Explainability',rows:[{k:'Global interpretability',v:'The EBM\'s shape functions are visualised as charts — for every feature, a graph showing how the credit score contribution changes as the feature value changes. A credit officer can see: "when Debt/EBITDA exceeds 4×, the model applies a steeply increasing risk penalty." This is global — it describes how the model behaves in general.'},{k:'Local interpretability',v:'For each specific issuer and score, the feature contribution chart (visible in the dashboard) shows exactly which factors drove that particular score. This is local — it explains one specific decision, not the model\'s general behaviour.'},{k:'Reason codes',v:'The system generates 3–5 plain-English reason codes for every score: "Score driven primarily by strong interest coverage (+82 points). Moderate debt/equity ratio reduces score (−36 points). Alt data score shows stable operational activity (+41 points)." These reason codes are stored in the Compliance Vault and can be delivered to the issuer or regulator on request.'}]}
+  ]},
+  governance:{tag:'Stage 5 · Governance',ts:'background:#fff8ed;color:#b86a00;',title:'Governance — Audit Agent',sub:'The final safety check — ensuring the model hasn\'t used forbidden data and every decision is immutably logged',sections:[
+    {t:'The Audit Agent',rows:[{k:'Forbidden data check',v:'Before the score is finalised, the Audit Agent verifies that no prohibited data sources were used in the calculation. For corporate credit scoring, prohibited inputs include: geographic proxies for protected characteristics, insider information that has not been publicly disclosed, and data from sources not authorised by the firm\'s data governance policy.'},{k:'Model drift detection',v:'The Audit Agent continuously monitors whether the EBM\'s predictions are drifting from its expected performance envelope — a signal that the model may need retraining due to regime change or data distribution shift.'},{k:'Override logging',v:'When a human credit officer overrides the EBM score — raising or lowering it based on qualitative judgment — the override is logged with the officer\'s ID, their stated reason, and the time stamp. Over time, this creates a dataset of when and why humans disagree with the model, which is used to improve future versions.'}]},
+    {t:'Bias in Corporate Credit',rows:[{k:'The concern',v:'Unlike consumer credit (where protected characteristics are explicitly regulated), corporate credit has a subtler bias risk: models trained on historical credit data will encode the credit access patterns of that history — sectors, geographies, and company sizes that historically received less credit will be systematically scored more conservatively, not because of their fundamental creditworthiness but because of historical lending patterns.'},{k:'Mitigation',v:'The Audit Agent monitors score distributions by sector, geography, and company size — flagging if any group is being systematically downgraded relative to its fundamental financials, and triggering a model review.'}]}
+  ]},
+  vault:{tag:'Compliance Vault · Audit Archive',ts:'background:#edf3fb;color:#1c3557;',title:'Compliance Vault',sub:'Every credit decision permanently archived — the regulatory proof that every score is explainable, auditable, and contestable',sections:[
+    {t:'What Is Stored',rows:[{k:'Score + reason codes',v:'The final credit score, the letter-grade equivalent, the three-to-five reason codes in plain English, and the model version that produced them'},{k:'Feature contributions',v:'The full EBM feature contribution vector — every feature\'s contribution to the score, including interaction terms. This is the mathematical proof of the score, not just the plain-English summary.'},{k:'Monotonicity certificate',v:'A logged confirmation that the EBM passed its monotonicity check at the time of training and has not been modified since — the regulatory evidence that the model satisfies the monotonicity requirement.'},{k:'Source data links',v:'Every input data point linked back to its source — the specific XBRL filing, the Bloomberg timestamp, the alternative data provider. A regulator can trace any number in the score back to its originating document.'}]},
+    {t:'Regulatory Applications',rows:[{k:'SEBI',v:'SEBI\'s credit rating agency regulations require documentation of rating rationale. The Vault provides an equivalent standard of documentation for internal AI-generated ratings.'},{k:'BCBS 239',v:'The Basel Committee\'s data lineage requirements (Principle 239) require financial institutions to trace model inputs to source data. The Vault satisfies this requirement comprehensively for every credit decision.'}]}
+  ]},
+  bondpulse:{tag:'→ Powers Consumer Product',ts:'background:#e6f7f7;color:#0d7377;',title:'BondPulse — Credit Health Check',sub:'The Trust Engine: the same Glass-Box score that defends itself in a credit committee becomes the retail investor\'s plain-language risk explanation',sections:[
+    {t:'Why Transparency Is the Product',rows:[{k:'The retail fear',v:'Retail investors avoid corporate bonds — especially high-yield — not just because of the risk, but because they cannot understand or verify the risk assessment they are given. A credit rating of BB means nothing to someone without a finance background.'},{k:'The EBM advantage for retail',v:'Because EBMs produce explicit feature contributions, BondPulse can show retail investors a simple bar chart: "This bond scores 620. The main positive: the company has strong cash flows relative to its debt payments. The main risk: total debt is relatively high. The AI judges the positives outweigh the risks."'},{k:'Chasing yield safely',v:'A retail investor who understands exactly why a BB-rated bond is rated BB — and can see the specific financial factors involved — is in a fundamentally better position to decide whether to chase the higher yield than one who relies on an opaque agency rating alone.'}]},
+    {t:'The Pitch',rows:[{k:'BondPulse framing',v:'"We don\'t just give you a score; we show you a simple chart explaining why the bond is rated the way it is. The same Explainable Credit AI used by Tier-1 banks — now explaining itself in plain language for everyone."'}]}
+  ]}
+};
+
+function openModal(key){
+  const d=NODES[key];if(!d)return;
+  document.querySelectorAll('.ladder-step,.pnode,.credit-dash,.vault-strip,.bp-bridge').forEach(n=>n.classList.remove('active'));
+  if(event&&event.currentTarget)event.currentTarget.classList.add('active');
+  document.getElementById('mTag').textContent=d.tag;
+  document.getElementById('mTag').style.cssText=d.ts+'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block;';
+  document.getElementById('mTitle').textContent=d.title;
+  document.getElementById('mSub').textContent=d.sub;
+  const body=document.getElementById('mBody');body.innerHTML='';
+  d.sections.forEach(sec=>{
+    const sd=document.createElement('div');sd.className='info-sec';
+    const st=document.createElement('div');st.className='info-sec-title';st.textContent=sec.t;sd.appendChild(st);
+    if(sec.rows)sec.rows.forEach(r=>{const row=document.createElement('div');row.className='info-row';row.innerHTML=`<span class="info-key">${r.k}</span><span class="info-val">${r.v}</span>`;sd.appendChild(row);});
+    body.appendChild(sd);
+  });
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  document.querySelectorAll('.ladder-step,.pnode,.credit-dash,.vault-strip,.bp-bridge').forEach(n=>n.classList.remove('active'));
+}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target===document.getElementById('overlay'))closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+</script>
+</body>
+</html>

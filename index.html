@@ -548,13 +548,14 @@
 
 <!-- NAV -->
 <nav>
-  <div class="nav-brand">AI in Financial Markets <span>/ Hexaware FS</span></div>
+  <div class="nav-brand">AI in Financial Markets <span>/ FS Research</span></div>
   <div class="nav-tabs">
-    <button class="nav-tab active">Equity</button>
-    <button class="nav-tab soon" title="Coming soon">Fixed Income</button>
-    <button class="nav-tab soon" title="Coming soon">Forex</button>
-    <button class="nav-tab soon" title="Coming soon">Commodities</button>
-    <button class="nav-tab soon" title="Coming soon">Cross-Asset</button>
+    <button class="nav-tab active" onclick="window.location.href='index.html';">Equity</button>
+    <button class="nav-tab" title="Fixed Income" onclick="window.location.href='fixed_income_matrix.html';" >Fixed Income</button>
+    <button class="nav-tab" title="Forex" onclick="window.location.href='forex_matrix.html';">Forex</button>
+    <button class="nav-tab" title="Commodities" onclick="window.location.href='commodities_matrix.html';">Commodities</button>
+    <button class="nav-tab" title="Research Paper" style="color: #f15014;
+    font-weight: 800;" onclick="downloadWhitePaper()" >Download Research Paper</button>
   </div>
 </nav>
 
@@ -640,7 +641,7 @@
   </div>
 
   <div class="footer-note">
-    Hexaware Financial Services · AI in Equity Markets · Preliminary Research 2026 · Scores based on Business Value, Novelty, Technical Feasibility & Data Readiness
+    Financial Services · AI in Equity Markets · Preliminary Research 2026 · Scores based on Business Value, Novelty, Technical Feasibility & Data Readiness
   </div>
 </div>
 
@@ -667,7 +668,7 @@
         <div class="block-text" id="modalValue"></div>
       </div>
       <div id="modalViewMore" style="display:none; margin-bottom:4px;">
-        <a id="viewMoreLink" href="#" target="_blank" style="display:flex; align-items:center; justify-content:center; gap:8px; background:var(--navy); color:#fff; border-radius:8px; padding:10px 16px; font-size:13px; font-weight:600; text-decoration:none; font-family:'DM Sans',sans-serif; transition:opacity 0.15s;" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
+        <a id="viewMoreLink" href="#" target="_self" style="display:flex; align-items:center; justify-content:center; gap:8px; background:var(--navy); color:#fff; border-radius:8px; padding:10px 16px; font-size:13px; font-weight:600; text-decoration:none; font-family:'DM Sans',sans-serif; transition:opacity 0.15s;" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
           View Process Flow &amp; Research &nbsp;→
         </a>
       </div>
@@ -698,6 +699,7 @@
 //       stakes=Table Stakes(lowY,highX), monitor=Monitor(lowY,lowX)
 // x, y: 1-10 scores. size: 1-5 participant reach
 // gap, solution, value: one sentence each
+
 
 const USE_CASES = [
   // PRE-TRADE
@@ -1151,6 +1153,7 @@ const PROCESS_FLOWS = {
 18: "corporate_actions.html",
 20: "proxy_voting.html",
 11: "macro_rotation.html",
+3: "auction_iep_prediction.html",
 };
 
 function openModal(uc) {
@@ -1205,6 +1208,13 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     requestAnimationFrame(() => requestAnimationFrame(() => renderDots(activeFilter)));
   });
 });
+
+function downloadWhitePaper() {
+  const link = document.createElement('a');
+  link.href = 'hexaware_ai_financial_markets_whitepaper.pdf';
+  link.download = 'hexaware_ai_financial_markets_whitepaper.pdf';
+  link.click();
+}
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 // Use double rAF to ensure layout is complete before measuring container sizes

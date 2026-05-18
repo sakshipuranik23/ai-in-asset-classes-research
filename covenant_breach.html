@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Covenant Breach Early Warning — Fixed Income</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+  --teal:#0d7377;--teal-pale:#e6f7f7;--teal-border:#8ecece;
+  --navy:#1c3557;--navy-pale:#edf3fb;--navy-border:#a8c4e0;
+  --exec:#1a6b35;--exec-pale:#edf7f1;--exec-border:#a8d9bc;
+  --amber:#b86a00;--amber-pale:#fff8ed;--amber-border:#f5c882;
+  --purple:#5b3faa;--purple-pale:#f3f0fb;--purple-border:#c4b0f0;
+  --red:#c04040;--red-pale:#fdf0f0;--red-border:#f0b8b8;
+  --gold:#c9a227;--gold-pale:#fef9ec;--gold-border:#e8d47a;
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,0.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.nav-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--text-secondary);padding:5px 14px 5px 0;border-right:1px solid var(--border);margin-right:16px;background:none;border-top:none;border-bottom:none;border-left:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .15s}
+.nav-back:hover{color:var(--teal)}
+.nav-crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+.nav-crumb .active{color:var(--teal);font-weight:600}
+.nav-crumb .sep{color:var(--border)}
+.nav-badge{margin-left:auto;background:var(--teal-pale);color:var(--teal);border:1px solid var(--teal-border);border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;text-transform:uppercase;letter-spacing:.06em}
+
+/* PAGE */
+.page{max-width:1060px;margin:0 auto;padding:28px 24px 48px}
+.uc-num{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--teal);letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+.header-sub{font-size:14px;color:var(--text-secondary);max-width:700px;line-height:1.6;margin-bottom:12px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+.chip{font-size:11.5px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary)}
+.chip.teal{background:var(--teal-pale);border-color:var(--teal-border);color:var(--teal)}
+.chip.navy{background:var(--navy-pale);border-color:var(--navy-border);color:var(--navy)}
+.chip.amber{background:var(--amber-pale);border-color:var(--amber-border);color:var(--amber)}
+.chip.purple{background:var(--purple-pale);border-color:var(--purple-border);color:var(--purple)}
+.chip.gold{background:var(--gold-pale);border-color:var(--gold-border);color:var(--gold)}
+
+/* SUMMARY */
+.summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:3px solid transparent;box-shadow:var(--shadow-sm)}
+.sc-gap{border-left-color:#d06060}.sc-sol{border-left-color:var(--teal)}.sc-val{border-left-color:#4a7fd4}
+.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.sc-gap .sc-lbl{color:#c04040}.sc-sol .sc-lbl{color:var(--teal)}.sc-val .sc-lbl{color:#2a4faa}
+.sc-txt{font-size:13px;line-height:1.5}.sc-val .sc-txt{font-weight:600;color:var(--teal)}
+
+/* STRATEGY BANNER */
+.strategy-banner{background:var(--teal);border-radius:10px;padding:16px 22px;margin-bottom:24px;box-shadow:var(--shadow-md);border-left:5px solid #f5c882}
+.sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#f5c882;margin-bottom:6px}
+.sb-text{font-size:13.5px;color:rgba(255,255,255,.88);line-height:1.65}
+.sb-text strong{color:#fff}
+
+/* SECTION TITLES */
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.section-title h2{font-family:'DM Serif Display',serif;font-size:18px;color:var(--teal);letter-spacing:-.01em;white-space:nowrap}
+.section-title .s-line{flex:1;height:1px;background:var(--border)}
+
+/* ═══ MAIN DIAGRAM ═══ */
+.diagram-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:visible;box-shadow:var(--shadow-md);margin-bottom:24px}
+.diag-titlebar{background:var(--teal);padding:11px 20px;display:flex;align-items:center;gap:10px;border-radius:13px 13px 0 0}
+.diag-titlebar span{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em}
+.diag-titlebar small{font-size:11.5px;color:rgba(255,255,255,.45)}
+
+/* Three-zone diagram body */
+.diag-body{padding:20px 20px 0;display:flex;flex-direction:column;gap:18px}
+
+/* ── PROXIMITY DASHBOARD (top) ───────────────────────────────────────── */
+.prox-dash{
+  background:var(--navy-pale);border:1.5px solid var(--navy-border);
+  border-radius:12px;padding:16px 18px 14px;
+}
+.pd-toprow{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.pd-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--navy)}
+.pd-badge{margin-left:auto;background:var(--surface);border:1px solid var(--navy-border);color:var(--navy);border-radius:20px;font-size:10px;font-weight:600;padding:2px 9px}
+.prox-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.prox-card{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:12px 14px;box-shadow:var(--shadow-sm)}
+.pc-issuer{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:2px}
+.pc-covenant{font-size:10.5px;color:var(--text-muted);margin-bottom:8px}
+
+/* Proximity gauge */
+.prox-gauge-wrap{margin-bottom:8px}
+.prox-track{height:10px;background:linear-gradient(to right,var(--exec),var(--amber),var(--red));border-radius:5px;position:relative;margin-bottom:4px}
+.prox-needle{position:absolute;top:-3px;width:4px;height:16px;background:var(--navy);border-radius:2px;transform:translateX(-50%);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.prox-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--text-muted)}
+.prox-status{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.prox-ratio{font-family:'DM Mono',monospace;font-size:12px;font-weight:700}
+.prox-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px}
+.ps-safe{background:var(--exec-pale);color:var(--exec)}
+.ps-watch{background:var(--amber-pale);color:var(--amber)}
+.ps-alert{background:var(--red-pale);color:var(--red);animation:pulse-bg 1.6s infinite}
+@keyframes pulse-bg{0%,100%{opacity:1}50%{opacity:.6}}
+.prox-threshold{font-size:10px;color:var(--text-muted);margin-top:3px}
+.prox-ttb{font-size:10px;font-style:italic;color:var(--text-secondary);margin-top:2px}
+
+/* ── THREE ZONES ─────────────────────────────────────────────────────── */
+.zones-row{
+  display:grid;grid-template-columns:1fr 28px 1fr 28px 1fr;
+  gap:0;align-items:start;
+  padding:0 0 20px;
+}
+/* connector arrow */
+.zone-arr{display:flex;align-items:center;justify-content:center;padding-top:36px}
+.zone-arr svg{display:block}
+
+.zone{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:16px 16px 14px;position:relative}
+.zone-num{position:absolute;top:-10px;left:14px;background:var(--teal);color:#fff;font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px;text-transform:uppercase;letter-spacing:.06em}
+.zone-icon{font-size:22px;margin-bottom:6px;margin-top:4px}
+.zone-title{font-family:'DM Serif Display',serif;font-size:15px;color:var(--navy);margin-bottom:4px;letter-spacing:-.01em}
+.zone-desc{font-size:12.5px;color:var(--text-secondary);line-height:1.55;margin-bottom:10px}
+
+/* Zone 1: Covenant Registry */
+.zone-1{border-top:3px solid var(--teal)}
+.cov-registry{display:flex;flex-direction:column;gap:5px}
+.cr-row{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 9px;font-size:11px}
+.cr-type{font-weight:700;color:var(--navy);margin-bottom:1px}
+.cr-detail{color:var(--text-secondary);font-size:10.5px;font-family:'DM Mono',monospace}
+
+/* Zone 2: Monitoring */
+.zone-2{border-top:3px solid var(--amber)}
+.monitor-items{display:flex;flex-direction:column;gap:7px}
+.mi-row{display:flex;align-items:flex-start;gap:7px;font-size:12px}
+.mi-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.mi-text{color:var(--text-secondary);line-height:1.4}
+.mi-text strong{color:var(--text-primary)}
+
+/* Zone 3: Alert Output */
+.zone-3{border-top:3px solid var(--red)}
+.alert-mock{background:var(--red-pale);border:1.5px solid var(--red-border);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.am-header{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.am-dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse 1.4s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.am-title{font-size:11.5px;font-weight:700;color:var(--red)}
+.am-rows{display:flex;flex-direction:column;gap:3px}
+.am-row{display:flex;justify-content:space-between;font-size:11px}
+.am-key{color:var(--text-muted)}
+.am-val{font-family:'DM Mono',monospace;font-weight:700;color:var(--text-primary)}
+.alert-actions{display:flex;gap:7px;flex-wrap:wrap}
+.aa-btn{font-size:10.5px;font-weight:600;padding:4px 11px;border-radius:6px;border:1.5px solid;cursor:pointer;font-family:'DM Sans',sans-serif}
+.aa-primary{background:var(--teal);color:#fff;border-color:var(--teal)}
+.aa-secondary{background:var(--surface);color:var(--text-secondary);border-color:var(--border)}
+
+/* ── NLP CHALLENGE CALLOUT ───────────────────────────────────────────── */
+.nlp-callout{
+  background:var(--purple-pale);border:1.5px solid var(--purple-border);border-left:5px solid var(--purple);
+  border-radius:10px;padding:16px 20px;margin-bottom:24px;box-shadow:var(--shadow-sm);
+}
+.nlp-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--purple);margin-bottom:6px}
+.nlp-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--navy);margin-bottom:8px;letter-spacing:-.01em}
+.nlp-body{font-size:13px;color:var(--text-secondary);line-height:1.65;margin-bottom:10px}
+.nlp-body strong{color:var(--text-primary)}
+.nlp-examples{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.nlp-ex{background:var(--surface);border:1px solid var(--purple-border);border-radius:7px;padding:9px 11px}
+.nlp-ex-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--purple);margin-bottom:4px}
+.nlp-ex-text{font-size:11.5px;color:var(--text-primary);font-family:'DM Mono',monospace;line-height:1.5}
+.nlp-ex-note{font-size:10.5px;color:var(--text-muted);margin-top:3px;font-style:italic;font-family:'DM Sans',sans-serif}
+
+/* RESEARCH */
+.research{padding-top:20px;border-top:1px solid var(--border);margin-bottom:20px}
+.research h2{font-family:'DM Serif Display',serif;font-size:18px;color:var(--teal);margin-bottom:12px;letter-spacing:-.01em}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.r-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:15px 17px;box-shadow:var(--shadow-sm)}
+.r-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:9px;padding-bottom:6px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:7px}
+.r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.r-rows{display:flex;flex-direction:column;gap:7px}
+.r-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.r-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:148px}
+.r-key::after{content:':'}
+.r-val{color:var(--text-secondary)}
+
+/* DEPENDENCY STRIP */
+.dep-strip{
+  display:flex;align-items:center;gap:0;
+  background:var(--navy);border-radius:10px;
+  overflow:hidden;margin-bottom:20px;box-shadow:var(--shadow-sm);
+}
+.dep-item{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 18px;flex:1;
+}
+.dep-sep{width:1px;background:rgba(255,255,255,.15);align-self:stretch}
+.dep-icon{font-size:18px;flex-shrink:0}
+.dep-body{flex:1}
+.dep-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:2px}
+.dep-title{font-size:12px;font-weight:600;color:#fff}
+.dep-desc{font-size:10.5px;color:rgba(255,255,255,.55);line-height:1.3}
+
+/* BONDPULSE BRIDGE (simple) */
+.bp-simple{
+  display:flex;align-items:center;gap:12px;
+  background:var(--gold-pale);border:1.5px solid var(--gold-border);border-left:4px solid var(--gold);
+  border-radius:10px;padding:12px 16px;margin-bottom:20px;
+}
+.bps-icon{font-size:20px;flex-shrink:0}
+.bps-body{flex:1}
+.bps-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);margin-bottom:2px}
+.bps-text{font-size:13px;color:var(--text-primary);line-height:1.5}
+.bps-text strong{color:var(--navy)}
+.bps-link{font-size:11.5px;font-weight:600;color:var(--teal);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0;text-decoration:underline;text-underline-offset:2px;flex-shrink:0}
+
+.page-footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:14px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="nav-back" onclick="window.history.back()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11L5 7l4-4"/></svg>
+    Back to Matrix
+  </button>
+  <div class="nav-crumb">
+    <span>Fixed Income</span><span class="sep">/</span>
+    <span>Credit &amp; Counterparty Risk</span><span class="sep">/</span>
+    <span class="active">Covenant Breach Early Warning</span>
+  </div>
+  <div class="nav-badge">★ Proposed Solution</div>
+</nav>
+
+<div class="page">
+
+  <div class="uc-num">Use Case #8 &nbsp;·&nbsp; Credit Risk &nbsp;·&nbsp; Strategic Impact 9/10 &nbsp;·&nbsp; ★ Proposed</div>
+  <h1>Covenant Breach Early Warning System</h1>
+  <p class="header-sub">Bond indentures contain dozens of financial covenants — legal commitments that the issuer must maintain. Breaches are discovered after the fact because monitoring is periodic and manual. This system converts covenant monitoring from a quarterly retrospective into a continuous, real-time early warning signal.</p>
+  <div class="chips">
+    <span class="chip teal">NLP Covenant Extraction</span>
+    <span class="chip navy">Financial Data Monitoring</span>
+    <span class="chip amber">Threshold Proximity Scoring</span>
+    <span class="chip purple">Legal NLP — Domain-Specific</span>
+    <span class="chip gold">★ Hexaware Proposed</span>
+  </div>
+
+  <div class="summary-row">
+    <div class="sc sc-gap"><div class="sc-lbl">The Gap</div><div class="sc-txt">Covenant compliance monitoring is periodic and manual — a credit analyst checks ratios against indenture terms quarterly. By the time a breach is discovered, the legal and financial remedies available to bondholders are severely limited.</div></div>
+    <div class="sc sc-sol"><div class="sc-lbl">AI Solution</div><div class="sc-txt">NLP extracts all covenant terms from bond indentures at onboarding. A financial monitoring engine then tracks each issuer's live ratios against their specific covenant thresholds — alerting the portfolio manager when approaching a breach zone, not after crossing it.</div></div>
+    <div class="sc sc-val"><div class="sc-lbl">Value Created</div><div class="sc-txt">Converts covenant monitoring from reactive to proactive — providing a 4–12 week warning window to negotiate waivers, hedge, or reduce exposure before breach, rather than discovering it after the fact.</div></div>
+  </div>
+
+  <!-- STRATEGY BANNER -->
+  <div class="strategy-banner">
+    <div class="sb-label">Strategic Framing — Proactive vs Reactive Governance</div>
+    <div class="sb-text">"A covenant breach is not a surprise — it is the <strong>last station on a journey that took months</strong>. Every ratio that deteriorated, every earnings call that used cautious language, every CDS spread that widened was a signal the current system missed. The Early Warning System intercepts that journey at the earliest measurable point — when the option value of acting is still high and the cost of acting is still low."</div>
+  </div>
+
+  <!-- MAIN DIAGRAM -->
+  <div class="section-title">
+    <h2>The Covenant Monitoring Architecture</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="diag-titlebar">
+      <span>Covenant Proximity Dashboard above · Three-Zone Architecture below</span>
+      <small>&nbsp;·&nbsp; Onboarding extraction → continuous monitoring → early warning output</small>
+    </div>
+
+    <div class="diag-body">
+
+      <!-- PROXIMITY DASHBOARD -->
+      <div class="prox-dash">
+        <div class="pd-toprow">
+          <span style="font-size:16px;">🎛️</span>
+          <span class="pd-label">Covenant Proximity Dashboard — Portfolio View</span>
+          <div class="pd-badge">3 issuers monitored · 1 alert active</div>
+        </div>
+        <div class="prox-grid">
+
+          <!-- HDFC — safe -->
+          <div class="prox-card">
+            <div class="pc-issuer">HDFC Bank NCD 2027</div>
+            <div class="pc-covenant">Covenant: Min. Interest Coverage ≥ 2.5×</div>
+            <div class="prox-gauge-wrap">
+              <div class="prox-track">
+                <!-- At 5.8x on a scale, well into green zone — needle at ~15% from breach -->
+                <div class="prox-needle" style="left:20%;"></div>
+              </div>
+              <div class="prox-labels"><span>Breach</span><span>Buffer</span><span>Safe</span></div>
+            </div>
+            <div class="prox-status">
+              <span class="prox-ratio" style="color:var(--exec);">5.8×</span>
+              <span class="prox-badge ps-safe">✓ Safe</span>
+            </div>
+            <div class="prox-threshold">Threshold: 2.5× &nbsp;·&nbsp; Current headroom: 3.3×</div>
+            <div class="prox-ttb">At current trajectory: no breach risk in 12M</div>
+          </div>
+
+          <!-- Tata — watch -->
+          <div class="prox-card">
+            <div class="pc-issuer">Tata Motors NCD 2025</div>
+            <div class="pc-covenant">Covenant: Max. Debt/EBITDA ≤ 4.0×</div>
+            <div class="prox-gauge-wrap">
+              <div class="prox-track">
+                <div class="prox-needle" style="left:58%;"></div>
+              </div>
+              <div class="prox-labels"><span>Breach</span><span>Buffer</span><span>Safe</span></div>
+            </div>
+            <div class="prox-status">
+              <span class="prox-ratio" style="color:var(--amber);">3.4×</span>
+              <span class="prox-badge ps-watch">⚡ Watch</span>
+            </div>
+            <div class="prox-threshold">Threshold: 4.0× &nbsp;·&nbsp; Current headroom: 0.6×</div>
+            <div class="prox-ttb">At current trajectory: breach possible in ~9 weeks</div>
+          </div>
+
+          <!-- Adani — alert -->
+          <div class="prox-card" style="border:1.5px solid var(--red-border);background:#fffafa;">
+            <div class="pc-issuer" style="color:var(--red);">⚠ Adani Ports 2029</div>
+            <div class="pc-covenant">Covenant: Min. Interest Coverage ≥ 3.0×</div>
+            <div class="prox-gauge-wrap">
+              <div class="prox-track">
+                <div class="prox-needle" style="left:78%;"></div>
+              </div>
+              <div class="prox-labels"><span>Breach</span><span>Buffer</span><span>Safe</span></div>
+            </div>
+            <div class="prox-status">
+              <span class="prox-ratio" style="color:var(--red);">3.2×</span>
+              <span class="prox-badge ps-alert">⚠ Alert</span>
+            </div>
+            <div class="prox-threshold">Threshold: 3.0× &nbsp;·&nbsp; Current headroom: 0.2×</div>
+            <div class="prox-ttb" style="color:var(--red);font-weight:600;">At current trajectory: breach within ~3 weeks</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- THREE ZONES -->
+      <div class="zones-row">
+
+        <!-- Zone 1: Covenant Extraction -->
+        <div class="zone zone-1">
+          <div class="zone-num">Zone 1 · Onboarding</div>
+          <div class="zone-icon">📄</div>
+          <div class="zone-title">Covenant Registry</div>
+          <div class="zone-desc">NLP reads the full bond indenture at onboarding — extracting every financial covenant, its precise threshold, its measurement frequency, and the cure period if breached. All terms structured into the Covenant Registry.</div>
+          <div class="cov-registry">
+            <div class="cr-row">
+              <div class="cr-type">Interest Coverage Covenant</div>
+              <div class="cr-detail">EBITDA / Interest ≥ 3.0× &nbsp;·&nbsp; Quarterly &nbsp;·&nbsp; 30d cure</div>
+            </div>
+            <div class="cr-row">
+              <div class="cr-type">Leverage Covenant</div>
+              <div class="cr-detail">Net Debt / EBITDA ≤ 4.0× &nbsp;·&nbsp; Semi-annual</div>
+            </div>
+            <div class="cr-row">
+              <div class="cr-type">Liquidity Covenant</div>
+              <div class="cr-detail">Cash + RCF ≥ ₹500 Cr &nbsp;·&nbsp; Monthly</div>
+            </div>
+            <div class="cr-row">
+              <div class="cr-type">Change of Control Trigger</div>
+              <div class="cr-detail">Majority ownership change → mandatory repurchase at 101%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Arrow 1→2 -->
+        <div class="zone-arr">
+          <svg width="22" height="22" viewBox="0 0 22 22">
+            <line x1="2" y1="11" x2="16" y2="11" stroke="#c8c4bc" stroke-width="2"/>
+            <polygon points="22,11 14,7 14,15" fill="#c8c4bc"/>
+          </svg>
+        </div>
+
+        <!-- Zone 2: Continuous Monitoring -->
+        <div class="zone zone-2">
+          <div class="zone-num">Zone 2 · Continuous</div>
+          <div class="zone-icon">📡</div>
+          <div class="zone-title">Live Ratio Monitoring</div>
+          <div class="zone-desc">A financial data pipeline tracks each issuer's live ratios against their specific registry thresholds — updating with every new financial filing, earnings release, and alternative data signal.</div>
+          <div class="monitor-items">
+            <div class="mi-row">
+              <div class="mi-dot" style="background:var(--teal);"></div>
+              <div class="mi-text"><strong>Filing-driven updates</strong> — XBRL data from quarterly earnings refreshes ratios within hours of publication</div>
+            </div>
+            <div class="mi-row">
+              <div class="mi-dot" style="background:var(--navy);"></div>
+              <div class="mi-text"><strong>Alternative data bridge</strong> — job posting decline and shipping data provide between-filing leading signals</div>
+            </div>
+            <div class="mi-row">
+              <div class="mi-dot" style="background:var(--amber);"></div>
+              <div class="mi-text"><strong>Trajectory projection</strong> — at current rate of change, when will this issuer cross the threshold? Time-to-breach in weeks</div>
+            </div>
+            <div class="mi-row">
+              <div class="mi-dot" style="background:var(--purple);"></div>
+              <div class="mi-text"><strong>Buffer zone alerts</strong> — alert fires when issuer enters the 15% headroom zone, not at breach itself</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Arrow 2→3 -->
+        <div class="zone-arr">
+          <svg width="22" height="22" viewBox="0 0 22 22">
+            <line x1="2" y1="11" x2="16" y2="11" stroke="#c8c4bc" stroke-width="2"/>
+            <polygon points="22,11 14,7 14,15" fill="#c8c4bc"/>
+          </svg>
+        </div>
+
+        <!-- Zone 3: Early Warning Output -->
+        <div class="zone zone-3">
+          <div class="zone-num">Zone 3 · Alert Output</div>
+          <div class="zone-icon">🔔</div>
+          <div class="zone-title">Early Warning Alert</div>
+          <div class="zone-desc">When an issuer enters the breach buffer zone, the portfolio manager receives a structured alert with specific covenant at risk, current ratio, threshold, trajectory, and recommended actions.</div>
+          <div class="alert-mock">
+            <div class="am-header">
+              <div class="am-dot"></div>
+              <div class="am-title">Covenant Alert — Adani Ports 2029</div>
+            </div>
+            <div class="am-rows">
+              <div class="am-row"><span class="am-key">Covenant at risk</span><span class="am-val">Interest Coverage</span></div>
+              <div class="am-row"><span class="am-key">Current ratio</span><span class="am-val" style="color:var(--red);">3.2× (threshold: 3.0×)</span></div>
+              <div class="am-row"><span class="am-key">Headroom</span><span class="am-val" style="color:var(--red);">0.2× · 6.3% buffer</span></div>
+              <div class="am-row"><span class="am-key">Est. time-to-breach</span><span class="am-val" style="color:var(--red);">~3 weeks</span></div>
+            </div>
+          </div>
+          <div class="alert-actions">
+            <button class="aa-btn aa-primary">Request Waiver</button>
+            <button class="aa-btn aa-secondary">Review Position</button>
+            <button class="aa-btn aa-secondary">Hedge Exposure</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- NLP CHALLENGE CALLOUT -->
+  <div class="nlp-callout">
+    <div class="nlp-label">🔬 Technical Challenge — The Legal Language Disambiguation Problem</div>
+    <div class="nlp-title">The Same Covenant Written Six Different Ways Across Six Different Indentures</div>
+    <div class="nlp-body">The core NLP challenge in this use case is not reading a covenant — it is recognising that <strong>the same economic concept appears in legally distinct language across every indenture</strong>. An "Interest Coverage Covenant" in one bond may be defined as EBITDA divided by Interest Expense. In another, it is EBIT divided by Cash Interest Payments. In a third, it uses Adjusted EBITDA with specific exclusions for restructuring charges. All three are measuring the same concept, but the numerical values they produce can differ by 20–40% for the same issuer. A model that treats these as identical will generate materially wrong proximity scores. The NLP layer must not only extract the covenant term but <strong>resolve it to a canonical financial definition</strong> — understanding that "Cash Interest Payments" and "Interest Expense" require different extraction logic from the financial statements, and that "Adjusted EBITDA" requires reading the specific adjustment definitions in the same indenture's glossary section before the ratio can be computed.</div>
+    <div class="nlp-examples">
+      <div class="nlp-ex">
+        <div class="nlp-ex-label">Indenture A — Formulation 1</div>
+        <div class="nlp-ex-text">"Consolidated EBITDA shall not be less than 3.0 times Consolidated Interest Charges for any period of four consecutive fiscal quarters"</div>
+        <div class="nlp-ex-note">→ Maps to: EBITDA / Total Interest (trailing 12M)</div>
+      </div>
+      <div class="nlp-ex">
+        <div class="nlp-ex-label">Indenture B — Formulation 2</div>
+        <div class="nlp-ex-text">"The ratio of Adjusted Operating Profit to Net Finance Costs, excluding non-recurring items as defined in Schedule 4, shall at no time fall below 2.75 to 1"</div>
+        <div class="nlp-ex-note">→ Maps to: (EBIT − non-recurring) / Net interest — requires reading Schedule 4</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESEARCH NOTES -->
+  <div class="research">
+    <h2>Research Notes</h2>
+    <div class="r-grid">
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--teal);"></div>Why This Doesn't Exist at Scale Yet</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">The data problem</span><span class="r-val">Bond indentures are long-form legal documents (often 200–400 pages) with non-standardised language. No two indentures use the same covenant formulations, making automated extraction genuinely hard at scale.</span></div>
+          <div class="r-row"><span class="r-key">The market structure</span><span class="r-val">Most covenant monitoring is done by dedicated loan/bond covenant teams at large asset managers — a labour-intensive manual process that smaller HNI-facing platforms cannot afford to replicate at the same depth.</span></div>
+          <div class="r-row"><span class="r-key">The LLM inflection</span><span class="r-val">2024–2026 LLM capability improvements — specifically long-context window models able to read a full 300-page indenture and extract specific clause structures — are what make this technically feasible now in a way it was not in 2022.</span></div>
+          <div class="r-row"><span class="r-key">Nearest analogue</span><span class="r-val">Bloomberg's loan covenant tracking (for leveraged loans, not bonds) and Covenant Review (a specialist data provider) are the closest existing products — neither offers the real-time monitoring + early warning combination proposed here.</span></div>
+        </div>
+      </div>
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--navy);"></div>Covenant Types and Complexity</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">Financial covenants</span><span class="r-val">The primary monitoring target — specific numerical thresholds on ratios like interest coverage, leverage, and liquidity. Measurable from financial statements and therefore monitorable with AI.</span></div>
+          <div class="r-row"><span class="r-key">Incurrence covenants</span><span class="r-val">Conditions triggered only when the company takes an action — "issuer shall not incur additional debt if pro-forma leverage exceeds X×." Harder to monitor continuously; requires tracking corporate actions.</span></div>
+          <div class="r-row"><span class="r-key">Change of control</span><span class="r-val">A majority ownership change triggers mandatory bond repurchase at par or above. The monitoring signal here is M&A news, regulatory filings, and shareholder structure changes rather than financial ratios.</span></div>
+          <div class="r-row"><span class="r-key">Cure periods</span><span class="r-val">Most financial covenants have a 30–60 day cure period — the issuer can fix the breach before consequences trigger. The Early Warning System specifically targets the period before breach to maximise the value of the cure window.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BONDPULSE BRIDGE (simple) -->
+  <div class="bp-simple">
+    <div class="bps-icon">🔗</div>
+    <div class="bps-body">
+      <div class="bps-label">BondPulse Connection</div>
+      <div class="bps-text">Covenant proximity scores feed directly into <strong>BondPulse</strong> — HNI investors holding a bond see a live "Covenant Health" indicator alongside their liquidity and credit scores, with a plain-language alert when any issuer in their portfolio enters a breach buffer zone.</div>
+    </div>
+    <button class="bps-link" onclick="window.location.href='bondpulse.html'">View BondPulse →</button>
+  </div>
+
+  <!-- DEPENDENCY STRIP -->
+  <div class="dep-strip">
+    <div class="dep-item">
+      <div class="dep-icon">🛡️</div>
+      <div class="dep-body">
+        <div class="dep-label">Depends on</div>
+        <div class="dep-title">AI Data Sentry — Use Case #1</div>
+        <div class="dep-desc">All financial ratio data feeding the monitoring engine is verified by the Sentry before influencing covenant proximity scores</div>
+      </div>
+    </div>
+    <div class="dep-sep"></div>
+    <div class="dep-item">
+      <div class="dep-icon">📊</div>
+      <div class="dep-body">
+        <div class="dep-label">Complements</div>
+        <div class="dep-title">Creditworthiness Assessment — Use Case #7</div>
+        <div class="dep-desc">Shares issuer financial monitoring infrastructure — covenant proximity is a leading indicator that feeds into the EBM credit score as an additional feature</div>
+      </div>
+    </div>
+    <div class="dep-sep"></div>
+    <div class="dep-item">
+      <div class="dep-icon">📄</div>
+      <div class="dep-body">
+        <div class="dep-label">Enables</div>
+        <div class="dep-title">Prospectus &amp; Covenant Chatbot — Use Case #4</div>
+        <div class="dep-desc">The structured Covenant Registry built here is the same data source the chatbot queries when analysts ask "what triggers a breach?"</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    Hexaware Financial Services &nbsp;·&nbsp; AI in Fixed Income Markets &nbsp;·&nbsp; Credit &amp; Counterparty Risk &nbsp;·&nbsp; Preliminary Research 2026
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI in Financial Markets — Fixed Income Use Case Matrix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --border: #e4e1da;
+    --text-primary: #1a1814;
+    --text-secondary: #6b6760;
+    --text-muted: #9e9b96;
+
+    /* Teal as primary accent — differentiates from equity navy */
+    --teal: #0d7377;
+    --teal-light: #148f94;
+    --teal-pale: #e6f7f7;
+    --teal-border: #8ecece;
+
+    /* Quadrant colours — same as equity but using teal tones */
+    --stars-fill: #fff8e6;
+    --stars-border: #e8b84b;
+    --stars-dot: #d4930a;
+
+    --priority-fill: #e8f5f5;
+    --priority-border: #5bbdbd;
+    --priority-dot: #0d7377;
+
+    --stakes-fill: #eef7f0;
+    --stakes-border: #6dba80;
+    --stakes-dot: #3a8c52;
+
+    --monitor-fill: #faf5f5;
+    --monitor-border: #d49090;
+    --monitor-dot: #a04040;
+
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── NAV ─────────────────────────────────────────────────────────────── */
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    height: 52px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
+  }
+  .nav-brand {
+    font-family: 'DM Serif Display', serif;
+    font-size: 15px;
+    color: var(--teal);
+    margin-right: 36px;
+    white-space: nowrap;
+    letter-spacing: -0.01em;
+  }
+  .nav-brand span { color: var(--text-muted); font-style: italic; }
+  .nav-tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-tab {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .nav-tab:hover { background: var(--bg); color: var(--text-primary); }
+  .nav-tab.active { background: var(--teal); color: #fff; }
+  .nav-tab.equity { }
+  .nav-tab.soon { color: var(--text-muted); cursor: default; }
+
+  /* ── PAGE ────────────────────────────────────────────────────────────── */
+  .page { max-width: 1240px; margin: 0 auto; padding: 24px 24px 32px; }
+
+  /* Asset class banner — teal strip to signal FI */
+  .asset-banner {
+    background: var(--teal);
+    border-radius: 10px 10px 0 0;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 0;
+  }
+  .asset-banner .ab-icon { font-size: 18px; }
+  .asset-banner .ab-label {
+    font-family: 'DM Serif Display', serif;
+    font-size: 13px;
+    color: #fff;
+    letter-spacing: -0.01em;
+  }
+  .asset-banner .ab-sub { font-size: 11.5px; color: rgba(255,255,255,.55); }
+  .asset-banner .ab-constraint {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,.8);
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 20px;
+    padding: 3px 10px;
+  }
+
+  /* ── HEADER ──────────────────────────────────────────────────────────── */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow-sm);
+  }
+  .header-left h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 24px;
+    color: var(--teal);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .header-left p { color: var(--text-secondary); font-size: 13px; }
+  .header-stats { display: flex; gap: 12px; flex-shrink: 0; }
+  .stat-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-chip .num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--teal);
+    line-height: 1;
+  }
+  .stat-chip .lbl {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+  }
+
+  /* ── LEGEND ──────────────────────────────────────────────────────────── */
+  .legend {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .legend-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+  .legend-items { display: flex; gap: 16px; flex-wrap: wrap; }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  .legend-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+  .legend-size {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-left: 8px;
+    padding-left: 20px;
+    border-left: 1px solid var(--border);
+  }
+  .legend-proposed {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-left: 8px;
+    padding-left: 20px;
+    border-left: 1px solid var(--border);
+  }
+  .proposed-star {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--teal);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .size-demo { display: flex; align-items: center; gap: 5px; }
+  .size-demo span { border-radius: 50%; background: #999; display: block; opacity: 0.5; }
+
+  /* ── MATRIX WRAPPER ──────────────────────────────────────────────────── */
+  .matrix-wrapper { display: flex; gap: 16px; align-items: flex-start; }
+  .y-axis-label {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    padding: 8px 0;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .matrix-col { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+  .x-axis-label {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 8px 0 0;
+  }
+
+  /* ── MATRIX GRID ─────────────────────────────────────────────────────── */
+  .matrix-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 6px;
+    background: var(--border);
+    border-radius: 12px;
+    overflow: visible;
+    box-shadow: var(--shadow-md);
+  }
+  .quadrant {
+    position: relative;
+    min-height: 320px;
+    padding: 14px;
+    overflow: visible;
+    cursor: default;
+  }
+  .quadrant.stars    { background: var(--stars-fill); }
+  .quadrant.priority { background: var(--priority-fill); }
+  .quadrant.stakes   { background: var(--stakes-fill); }
+  .quadrant.monitor  { background: var(--monitor-fill); }
+
+  .q-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.7;
+    margin-bottom: 2px;
+  }
+  .q-desc { font-size: 11px; opacity: 0.55; font-weight: 400; margin-bottom: 10px; line-height: 1.3; }
+  .stars .q-label    { color: #8a5e00; }
+  .priority .q-label { color: #0d5a5e; }
+  .stakes .q-label   { color: #1f5c35; }
+  .monitor .q-label  { color: #7a2020; }
+
+  /* ── DOTS ────────────────────────────────────────────────────────────── */
+  .dots-area {
+    position: absolute;
+    inset: 46px 10px 10px 10px;
+    min-height: 240px;
+    overflow: visible;
+  }
+  .dot-wrapper {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    z-index: 10;
+  }
+  .dot {
+    border-radius: 50%;
+    border: 2.5px solid rgba(255,255,255,0.9);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.95);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    position: relative;
+  }
+  .dot-wrapper:hover .dot { transform: scale(1.18); box-shadow: 0 4px 16px rgba(0,0,0,0.28); z-index: 20; }
+  .dot-wrapper:hover .dot-tip { opacity: 1; pointer-events: none; transform: translateX(-50%) translateY(0); }
+
+  .dot-tip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    background: var(--teal);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 5px 9px;
+    border-radius: 6px;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.3;
+    opacity: 0;
+    transition: opacity 0.15s, transform 0.15s;
+    pointer-events: none;
+    z-index: 9999;
+    max-width: 200px;
+    box-shadow: var(--shadow-md);
+  }
+  .dot-tip::after {
+    content: '';
+    position: absolute;
+    top: 100%; left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--teal);
+  }
+  /* Tooltip below variant for dots near top edge */
+  .dot-tip.tip-below {
+    bottom: auto;
+    top: calc(100% + 8px);
+    transform: translateX(-50%) translateY(-4px);
+  }
+  .dot-wrapper:hover .dot-tip.tip-below { transform: translateX(-50%) translateY(0); }
+  .dot-tip.tip-below::after {
+    top: auto;
+    bottom: 100%;
+    border-top-color: transparent;
+    border-bottom-color: var(--teal);
+  }
+
+  .stars .dot    { background: var(--stars-dot); }
+  .priority .dot { background: var(--priority-dot); }
+  .stakes .dot   { background: var(--stakes-dot); }
+  .monitor .dot  { background: var(--monitor-dot); }
+
+  /* Proposed star badge on dot */
+  .proposed-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1.5px solid var(--teal);
+    color: var(--teal);
+    font-size: 8px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    line-height: 1;
+  }
+
+  /* ── FILTER ──────────────────────────────────────────────────────────── */
+  .filter-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .filter-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+  .filter-btn {
+    padding: 4px 11px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.12s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .filter-btn:hover { border-color: var(--teal); color: var(--teal); }
+  .filter-btn.active { background: var(--teal); color: #fff; border-color: var(--teal); }
+
+  /* ── MODAL ───────────────────────────────────────────────────────────── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20,18,14,0.45);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    backdrop-filter: blur(3px);
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface);
+    border-radius: 14px;
+    width: 480px;
+    max-width: calc(100vw - 32px);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(12px) scale(0.98);
+    transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+    overflow: hidden;
+  }
+  .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+
+  .modal-header {
+    padding: 20px 22px 16px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .modal-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 3px 9px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+  }
+  .proposed-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--teal-pale);
+    color: var(--teal);
+    border: 1px solid var(--teal-border);
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .modal-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--teal);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+    padding-right: 28px;
+  }
+  .modal-meta { display: flex; gap: 10px; flex-wrap: wrap; }
+  .meta-tag {
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-weight: 500;
+  }
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 16px;
+    line-height: 1;
+    transition: background 0.12s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .modal-close:hover { background: var(--border); }
+  .modal-body { padding: 18px 22px 22px; display: flex; flex-direction: column; gap: 12px; }
+
+  .info-block { border-radius: 8px; padding: 12px 14px; border-left: 3px solid transparent; }
+  .info-block .block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .info-block .block-text { font-size: 13.5px; line-height: 1.55; color: var(--text-primary); }
+  .block-gap { background: #fff5f5; border-left-color: #d06060; }
+  .block-gap .block-label { color: #c04040; }
+  .block-solution { background: #f0fafa; border-left-color: #5bbdbd; }
+  .block-solution .block-label { color: #0d7377; }
+  .block-value { background: #f0f5ff; border-left-color: #4a7fd4; }
+  .block-value .block-label { color: #2a4faa; }
+  .block-value .block-text { font-weight: 600; font-size: 14px; color: var(--teal); }
+
+  .modal-scores {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-top: 2px;
+  }
+  .score-cell {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .score-cell .sc-val { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--teal); line-height: 1; }
+  .score-cell .sc-lbl { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+  .size-bar { display: flex; gap: 3px; margin-top: 4px; justify-content: center; }
+  .size-pip { width: 10px; height: 4px; border-radius: 2px; background: var(--border); }
+  .size-pip.filled { background: var(--teal); }
+
+  .badge-stars    { background: #fff3cc; color: #8a5e00; }
+  .badge-priority { background: #d4eded; color: #0d5a5e; }
+  .badge-stakes   { background: #ddf3e6; color: #1f5c35; }
+  .badge-monitor  { background: #fde8e8; color: #7a2020; }
+
+  .view-more-btn {
+    display: block;
+    width: 100%;
+    margin-top: 4px;
+    padding: 9px;
+    background: var(--teal-pale);
+    color: var(--teal);
+    border: 1px solid var(--teal-border);
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s;
+    text-align: center;
+  }
+  .view-more-btn:hover { background: #cceaea; }
+
+  .footer-note {
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">AI in Financial Markets <span>/ FS Research</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab" onclick="window.location.href='index.html';">Equity</button>
+    <button class="nav-tab active" title="Fixed Income" onclick="window.location.href='fixed_income_matrix.html';" >Fixed Income</button>
+    <button class="nav-tab" title="Forex" onclick="window.location.href='forex_matrix.html';">Forex</button>
+    <button class="nav-tab" title="Commodities" onclick="window.location.href='commodities_matrix.html';">Commodities</button>
+    <button class="nav-tab" title="Research Paper" style="color: #f15014;
+    font-weight: 800;" onclick="downloadWhitePaper()" >Download Research Paper</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- ASSET CLASS BANNER -->
+  <div class="asset-banner">
+    <div class="ab-icon">📊</div>
+    <div>
+      <div class="ab-label">Fixed Income Markets — AI Use Case Matrix</div>
+      <div class="ab-sub">Bonds &nbsp;·&nbsp; Credit &nbsp;·&nbsp; Rates &nbsp;·&nbsp; OTC</div>
+    </div>
+    <div class="ab-constraint">⚠ Constraint: Fragmented OTC data precedes agentic execution</div>
+  </div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>Fixed Income — AI Use Case Matrix</h1>
+      <p>Use cases organised by pain point addressed &nbsp;·&nbsp; Click any dot to explore &nbsp;·&nbsp; ★ = Proposed solutions</p>
+    </div>
+    <div class="header-stats">
+      <div class="stat-chip"><div class="num">13</div><div class="lbl">Use Cases</div></div>
+      <div class="stat-chip"><div class="num">5</div><div class="lbl">Deployed</div></div>
+      <div class="stat-chip"><div class="num">3</div><div class="lbl">★ Proposed</div></div>
+    </div>
+  </div>
+
+  <!-- FILTER -->
+  <div class="filter-row">
+    <span class="filter-label">Filter by pain point:</span>
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="Data Fragmentation">Data Fragmentation</button>
+    <button class="filter-btn" data-filter="Opacity & Information Asymmetry">Opacity &amp; Info Asymmetry</button>
+    <button class="filter-btn" data-filter="Credit & Counterparty Risk">Credit &amp; Counterparty Risk</button>
+    <button class="filter-btn" data-filter="Execution Friction">Execution Friction</button>
+    <button class="filter-btn" data-filter="Operational Burden">Operational Burden</button>
+    <button class="filter-btn" data-filter="Retail Access Gap">Retail Access Gap</button>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <span class="legend-label">Quadrant:</span>
+    <div class="legend-items">
+      <div class="legend-item"><span class="legend-dot" style="background:var(--stars-dot)"></span>Strategic Bets</div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--priority-dot)"></span>Immediate Priorities</div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--stakes-dot)"></span>Table Stakes</div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--monitor-dot)"></span>Monitor &amp; Deprioritise</div>
+    </div>
+    <div class="legend-size">
+      <span style="font-size:11px;color:var(--text-muted);font-weight:500;">Reach:</span>
+      <div class="size-demo">
+        <span style="width:10px;height:10px;"></span>
+        <span style="font-size:11px;color:var(--text-muted);">Narrow</span>
+        <span style="width:16px;height:16px;"></span>
+        <span style="font-size:11px;color:var(--text-muted);">Broad</span>
+        <span style="width:22px;height:22px;"></span>
+        <span style="font-size:11px;color:var(--text-muted);">Universal</span>
+      </div>
+    </div>
+    <div class="legend-proposed">
+      <span class="proposed-star">★</span>
+      <span style="font-size:11px;color:var(--text-secondary);"> Proposed Solution</span>
+    </div>
+  </div>
+
+  <!-- MATRIX -->
+  <div class="matrix-wrapper">
+    <div class="y-axis-label">
+      ↑ Strategic Impact (Business Value + Novelty)
+    </div>
+    <div class="matrix-col">
+      <div class="matrix-grid">
+
+        <!-- TOP-LEFT: Strategic Bets (High Y, Low X) -->
+        <div class="quadrant stars" id="q-stars">
+          <div class="q-label">Strategic Bets</div>
+          <div class="q-desc">High impact · harder to implement</div>
+          <div class="dots-area" id="dots-stars"></div>
+        </div>
+
+        <!-- TOP-RIGHT: Immediate Priorities (High Y, High X) -->
+        <div class="quadrant priority" id="q-priority">
+          <div class="q-label">Immediate Priorities</div>
+          <div class="q-desc">High impact · feasible now</div>
+          <div class="dots-area" id="dots-priority"></div>
+        </div>
+
+        <!-- BOTTOM-LEFT: Monitor & Deprioritise (Low Y, Low X) -->
+        <div class="quadrant monitor" id="q-monitor">
+          <div class="q-label">Monitor &amp; Deprioritise</div>
+          <div class="q-desc">Low impact · low feasibility</div>
+          <div class="dots-area" id="dots-monitor"></div>
+        </div>
+
+        <!-- BOTTOM-RIGHT: Table Stakes (Low Y, High X) -->
+        <div class="quadrant stakes" id="q-stakes">
+          <div class="q-label">Table Stakes</div>
+          <div class="q-desc">Lower impact · implement to stay competitive</div>
+          <div class="dots-area" id="dots-stakes"></div>
+        </div>
+      </div>
+      <div class="x-axis-label">Implementation Readiness (Feasibility + Data Readiness) →</div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Financial Services &nbsp;·&nbsp; AI in Fixed Income Markets &nbsp;·&nbsp; Strategic Roadmap 2026 &nbsp;·&nbsp; ★ denotes Hexaware-originated proposed solutions
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="overlay">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-badge" id="mBadge"></div>
+      <div class="modal-title" id="mTitle"></div>
+      <div class="modal-meta" id="mMeta"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+
+const VIEW_MORE_URLS = {
+  1:  'data_sentry.html',
+  9:  'liquidity_risk_scoring.html',
+  5:  'yield_curve_modelling.html',
+  7:  'creditworthiness_assessment.html',
+  13: 'bondpulse.html',
+   8: 'covenant_breach.html',
+   6: 'esg_green_bond.html',
+
+};
+
+// ── USE CASE DATA ─────────────────────────────────────────────────────────────
+const USE_CASES = [
+
+  // ── DATA FRAGMENTATION ────────────────────────────────────────────────────
+  {
+    id: 1,
+    name: 'Intelligent Ingestion Sentry',
+    section: 'Data Fragmentation',
+    x: 8, y: 8.5,
+    deployment: 'In Progress / Pilot',
+    ref: 'Internal Data Governance (Hypothetical)',
+    gap: 'Fixed income data arrives from dozens of fragmented sources — Bloomberg, Reuters, SWIFT, exchange feeds, PDFs — each in a different format, with different latency and quality. Downstream AI systems that ingest dirty data hallucinate or misfire.',
+    solution: 'An agentic LLM router continuously monitors all incoming data streams, normalises formats, detects anomalies and duplicates, and quarantines suspect data before it enters the analytics pipeline. Acts as the quality gate for all downstream use cases.',
+    value: 'Reduces data noise at the source — preventing the cascade of errors that occur when corrupted bond data reaches credit models, portfolio systems, or client-facing platforms.',
+  },
+  {
+    id: 2,
+    name: 'Graph Entity Resolution',
+    section: 'Data Fragmentation',
+    x: 7, y: 5.5,
+    reach: 3,
+    proposed: false,
+    tech: 'Graph AI / Neo4j',
+    deployment: 'Deployed',
+    ref: 'Neo4j Financial Knowledge Graphs',
+    gap: 'The same bond issuer may appear as "Reliance Industries Ltd," "Reliance Ind.," "RIL," and several transliterations across different data vendors. Manually linking these aliases across corporate hierarchies is impossibly slow at scale.',
+    solution: 'A graph AI system builds a unified entity network connecting all known aliases, parent-subsidiary relationships, and cross-jurisdiction identities. Resolves which "Reliance" appears in which prospectus, in real time.',
+    value: 'Enables precise risk aggregation across all bonds issued by a corporate group — critical for concentration risk management and covenant monitoring at the portfolio level.',
+  },
+  {
+    id: 3,
+    name: 'OTC Market Simulator',
+    section: 'Data Fragmentation',
+    x: 6, y: 6,
+    reach: 2,
+    proposed: false,
+    tech: 'GANs / Deep Learning',
+    deployment: 'Deployed',
+    ref: 'Synthetic Market Training Platforms',
+    gap: 'The OTC bond market has far less historical transaction data than equity markets — thin trading, infrequent price discovery, and rare stress events mean ML models trained on bond data are systematically underfit for crisis scenarios.',
+    solution: 'Generative Adversarial Networks (GANs) create synthetic bond market environments that replicate rare but critical scenarios — credit freezes, spread dislocations, liquidity evaporation — allowing models and analysts to train on events that real data cannot provide.',
+    value: 'Bridges the skill and data gap for junior analysts and ML models simultaneously — producing more robust credit models and a more capable analyst bench without waiting for the next crisis.',
+  },
+
+  // ── OPACITY & INFORMATION ASYMMETRY ───────────────────────────────────────
+  {
+    id: 4,
+    name: 'Prospectus & Covenant Chatbot',
+    section: 'Opacity & Information Asymmetry',
+    x: 9, y: 5,
+    reach: 3,
+    proposed: false,
+    tech: 'RAG / GenAI',
+    deployment: 'Deployed',
+    ref: 'Morgan Stanley Internal RAG',
+    gap: 'A bond prospectus can exceed 300 pages of legal language. Analysts spend days extracting key terms — covenants, change-of-control clauses, cross-default provisions — before they can even begin credit analysis. This bottleneck limits coverage.',
+    solution: 'A RAG-based chatbot trained on the bond prospectus answers analyst queries in plain language with direct citations. "What triggers a covenant breach?" returns the specific clause, page number, and financial threshold — in seconds.',
+    value: 'Saves hundreds of analyst hours per prospectus review cycle. Expands the number of bonds a team can cover without proportionally increasing headcount — directly improving portfolio diversification capacity.',
+  },
+  {
+    id: 5,
+    name: 'AI Yield Curve Modelling',
+    section: 'Opacity & Information Asymmetry',
+    x: 7.5, y: 9,
+    reach: 4,
+    proposed: false,
+    tech: 'Neural Networks / Gaussian Processes',
+    deployment: 'In Progress',
+    ref: 'Bloomberg AI Curve Tools / Bank of England Research',
+    gap: 'Multi-curve environments (SOFR, ESTR, SONIA, MIBOR running simultaneously) create enormous complexity for rate modelling. Traditional Nelson-Siegel approaches cannot capture the non-linear dynamics of modern cross-currency rate regimes.',
+    solution: 'Neural networks and Gaussian processes model the full term structure across multiple rate curves simultaneously — incorporating macro nowcasting signals and central bank sentiment to produce forward rate predictions with calibrated uncertainty bounds.',
+    value: 'Enables more precise interest rate risk hedging, more accurate bond pricing, and better duration management — translating directly into reduced mark-to-market volatility in fixed income portfolios.',
+  },
+  {
+    id: 6,
+    name: 'ESG / Green Bond Verification',
+    section: 'Opacity & Information Asymmetry',
+    x: 6, y: 8,
+    reach: 4,
+    proposed: true,
+    tech: 'NLP / Taxonomy Matching',
+    deployment: 'Conceptual',
+    ref: 'Clarity AI / MSCI ESG Screening',
+    gap: 'The green bond market suffers from severe greenwashing — issuers label bonds as "green" without meaningful underlying project alignment. Regulators are tightening but manual verification of hundreds of use-of-proceeds documents is impossible at scale.',
+    solution: 'An NLP system reads use-of-proceeds documentation and cross-references declared projects against the EU Green Bond Standard, ICMA Green Bond Principles, and SEBI\'s green bond framework — producing a verified alignment score with flagged discrepancies.',
+    value: 'Gives institutional investors a defensible, independently verified ESG score for every green bond in their universe — enabling genuine sustainable investing rather than label-dependent allocation.',
+  },
+
+  // ── CREDIT & COUNTERPARTY RISK ────────────────────────────────────────────
+  {
+    id: 7,
+    name: 'Creditworthiness Assessment',
+    section: 'Credit & Counterparty Risk',
+    x: 8.5, y: 9.5,
+    reach: 4,
+    proposed: false,
+    tech: 'Glass-Box ML / EBMs',
+    deployment: 'Deployed',
+    ref: "Moody's Analytics AI",
+    gap: 'Traditional credit scoring uses static, periodic rating agency updates that lag the market. By the time a rating is downgraded, the bond price has already moved. Internal credit teams use opaque models that cannot satisfy regulatory explainability requirements.',
+    solution: 'Explainable Boosting Machines (EBMs) produce real-time credit scores that are both highly accurate and fully interpretable — each score comes with a breakdown of which factors drove it, satisfying MiFID II and RBI explainability requirements.',
+    value: 'Standardises and accelerates credit risk scoring across the full bond universe — enabling credit committees to make faster, better-documented decisions with full regulatory defensibility.',
+  },
+  {
+    id: 8,
+    name: 'Covenant Breach Early Warning',
+    section: 'Credit & Counterparty Risk',
+    x: 6, y: 9,
+    reach: 3,
+    proposed: true,
+    tech: 'NLP + Financial Data Monitoring',
+    deployment: 'Conceptual',
+    ref: 'Academic / Proposed Solution',
+    gap: 'Bond indentures contain dozens of financial covenants — minimum interest coverage, maximum leverage, change-of-control triggers. Monitoring covenant proximity across a large portfolio is periodic and manual; breaches are often discovered after the fact.',
+    solution: 'An NLP system extracts all covenant terms from indentures at onboarding. A financial monitoring engine then continuously tracks issuer financials against those thresholds, alerting the portfolio manager when an issuer approaches within a predefined buffer zone.',
+    value: 'Converts covenant monitoring from reactive to proactive — enabling negotiation of waivers, hedging, or position reduction before breach, rather than scrambling after the fact when legal and financial remedies are far more limited.',
+  },
+  {
+    id: 9,
+    name: 'Liquidity Risk Scoring',
+    section: 'Credit & Counterparty Risk',
+    x: 8, y: 7.5,
+    reach: 4,
+    proposed: false,
+    tech: 'ML / TRACE Data Analytics',
+    deployment: 'In Progress',
+    ref: 'BlackRock Aladdin / DTCC Analytics',
+    gap: 'Bonds that appear liquid in normal markets can become completely illiquid in stress — the March 2020 credit freeze saw investment-grade bonds with no bids for hours. Static liquidity classifications fail precisely when accurate scoring is most needed.',
+    solution: 'An ML model scores each bond\'s liquidity risk dynamically using trade frequency from TRACE/SEBI reporting, bid-ask spread history, issuer credit trajectory, and cross-asset correlation signals — updating scores in real time rather than quarterly.',
+    value: 'Enables portfolio managers to see liquidity concentration risk before a stress event — reducing the probability of being forced into fire sales at the worst possible moment.',
+  },
+
+  // ── EXECUTION FRICTION ────────────────────────────────────────────────────
+  {
+    id: 10,
+    name: 'Agentic RFQ Orchestration',
+    section: 'Execution Friction',
+    x: 4, y: 9,
+    reach: 3,
+    proposed: false,
+    tech: 'Multi-Agent Systems',
+    deployment: 'In Progress',
+    ref: 'Pragma Securities Agents',
+    gap: 'Bond execution in OTC markets is manual and fragmented — a trader sends Request-for-Quotes to multiple dealers by phone or Bloomberg chat, waits for responses, compares quotes, and executes. This process takes minutes and introduces significant slippage on large orders.',
+    solution: 'A multi-agent system orchestrates the full RFQ lifecycle — simultaneously pinging multiple venues and dealers, evaluating responses using real-time price discovery models, and executing at the optimal venue with minimal signalling of order size.',
+    value: 'Minimises slippage on bond execution — particularly valuable for large institutional trades where manual RFQ processes can move the market against the buyer before execution is complete.',
+  },
+  {
+    id: 11,
+    name: 'Collateral Optimisation (FI)',
+    section: 'Execution Friction',
+    x: 8, y: 5,
+    reach: 3,
+    proposed: false,
+    tech: 'Optimisation Algorithms / AI',
+    deployment: 'In Progress',
+    ref: 'Cassini Systems / Finastra Kondor',
+    gap: 'Fixed income desks run large repo books — short-term borrowing secured against bonds. Choosing which bonds to post as collateral (cheapest-to-deliver optimisation) across dozens of counterparties simultaneously is a combinatorial problem far beyond human capacity.',
+    solution: 'An AI optimisation engine continuously evaluates the full collateral pool against all open repo and derivative positions, identifying the cheapest-to-deliver basket for each counterparty while respecting concentration and eligibility constraints.',
+    value: 'Reduces financing costs on the repo book and frees higher-quality collateral for other uses — a direct improvement to the firm\'s net interest margin and capital efficiency.',
+  },
+
+  // ── OPERATIONAL BURDEN ─────────────────────────────────────────────────────
+  {
+    id: 12,
+    name: 'Zero-Touch Reconciliation',
+    section: 'Operational Burden',
+    x: 9, y: 6,
+    reach: 3,
+    proposed: false,
+    tech: 'Agentic RPA + LLM',
+    deployment: 'In Progress',
+    ref: 'Broadridge Sentry AI',
+    gap: 'Bond post-trade reconciliation is manual and error-prone — settlement failures in bonds carry higher penalties than equities, and the variety of corporate actions (coupon adjustments, convertible triggers, covenant events) adds complexity far beyond equity post-trade.',
+    solution: 'An agentic system combining RPA and LLM intelligence automatically matches trade confirmations across counterparties, identifies and investigates breaks, drafts resolution messages, and posts confirmed matches to the ledger — escalating only genuine exceptions.',
+    value: 'Eliminates manual reconciliation errors and reduces settlement failures — directly cutting the regulatory penalties and reputational risk associated with failed bond settlements.',
+  },
+
+  // ── RETAIL ACCESS GAP ──────────────────────────────────────────────────────
+  {
+    id: 13,
+    name: 'BondPulse — Consumer Platform',
+    section: 'Retail Access Gap',
+    x: 5, y: 10,
+    reach: 5,
+    proposed: true,
+    tech: 'GenAI / RAG / Verified Consensus',
+    deployment: 'Conceptual',
+    ref: 'Proposed Solution — No direct equivalent',
+    gap: 'The Indian retail bond market is structurally inaccessible — minimum denominations of ₹10 lakh, opaque pricing, no plain-language prospectus tools, and no yield comparison infrastructure. Retail investors default to FDs and equities while institutional managers access bond alpha.',
+    solution: 'A consumer platform that aggregates bond data from NSE, BSE, and custodians — presenting yield comparisons, plain-language risk summaries, and AI-generated "should I care?" explanations for retail investors. RAG-based chatbot answers "is this better than my FD?" with cited, verified data.',
+    value: 'Democratises access to fixed income returns for India\'s mass-affluent investors — a market expansion opportunity of extraordinary scale, addressing both the retail investor\'s return gap and the broader economy\'s corporate bond market depth problem.',
+  },
+];
+
+// ── QUADRANT PLACEMENT LOGIC ──────────────────────────────────────────────────
+function getQuadrant(x, y) {
+  if (y >= 7 && x >= 7) return 'priority';
+  if (y >= 7 && x < 7)  return 'stars';
+  if (y < 7  && x >= 7) return 'stakes';
+  return 'monitor';
+}
+
+// ── COLLISION RESOLUTION ───────────────────────────────────────────────────────
+function resolveCollisions(cases) {
+  const positioned = cases.map(uc => ({
+    ...uc,
+    px: uc.x,
+    py: uc.y,
+  }));
+  const MIN_DIST = 18;
+  for (let iter = 0; iter < 120; iter++) {
+    for (let i = 0; i < positioned.length; i++) {
+      for (let j = i + 1; j < positioned.length; j++) {
+        const a = positioned[i], b = positioned[j];
+        if (getQuadrant(a.x, a.y) !== getQuadrant(b.x, b.y)) continue;
+        const dx = a.px - b.px, dy = a.py - b.py;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < MIN_DIST && dist > 0) {
+          const push = (MIN_DIST - dist) / 2;
+          const nx = dx / dist, ny = dy / dist;
+          a.px += nx * push * 0.8;
+          a.py += ny * push * 0.8;
+          b.px -= nx * push * 0.8;
+          b.py -= ny * push * 0.8;
+        }
+      }
+    }
+  }
+  return positioned;
+}
+
+// ── RENDER DOTS ───────────────────────────────────────────────────────────────
+function renderDots(filter = 'all') {
+  ['stars','priority','stakes','monitor'].forEach(q => {
+    document.getElementById('dots-' + q).innerHTML = '';
+  });
+
+  const filtered = filter === 'all'
+    ? USE_CASES
+    : USE_CASES.filter(uc => uc.section === filter);
+
+  const positioned = resolveCollisions(filtered);
+
+  positioned.forEach(uc => {
+    const q = getQuadrant(uc.x, uc.y);
+    const container = document.getElementById('dots-' + q);
+    if (!container) return;
+
+    const area = container.getBoundingClientRect();
+    const areaW = area.width || 350;
+    const areaH = area.height || 240;
+
+    // Map scores to quadrant-local coordinates
+    let lx, ly;
+    if (q === 'priority') {
+      lx = ((uc.px - 7) / 3) * 0.85 + 0.08;
+      ly = 1 - ((uc.py - 7) / 3) * 0.85 - 0.08;
+    } else if (q === 'stars') {
+      lx = ((uc.px - 1) / 6) * 0.85 + 0.05;
+      ly = 1 - ((uc.py - 7) / 3) * 0.85 - 0.08;
+    } else if (q === 'stakes') {
+      lx = ((uc.px - 7) / 3) * 0.85 + 0.08;
+      ly = 1 - ((uc.py - 1) / 6) * 0.85 - 0.05;
+    } else {
+      lx = ((uc.px - 1) / 6) * 0.85 + 0.05;
+      ly = 1 - ((uc.py - 1) / 6) * 0.85 - 0.05;
+    }
+
+    lx = Math.max(0.06, Math.min(0.94, lx));
+    ly = Math.max(0.06, Math.min(0.94, ly));
+
+    const dotSize = 14 + (uc.reach - 1) * 5;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'dot-wrapper';
+    wrapper.style.left = (lx * 100) + '%';
+    wrapper.style.top  = (ly * 100) + '%';
+    wrapper.onclick = () => openModal(uc.id);
+
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    dot.style.width  = dotSize + 'px';
+    dot.style.height = dotSize + 'px';
+    dot.textContent = uc.id;
+
+    if (uc.proposed) {
+      const star = document.createElement('div');
+      star.className = 'proposed-badge';
+      star.textContent = '★';
+      dot.appendChild(star);
+    }
+
+    const tip = document.createElement('div');
+    tip.className = 'dot-tip' + (ly < 0.35 ? ' tip-below' : '');
+    tip.textContent = uc.name;
+
+    wrapper.appendChild(dot);
+    wrapper.appendChild(tip);
+    container.appendChild(wrapper);
+  });
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+function openModal(id) {
+  const uc = USE_CASES.find(u => u.id === id);
+  if (!uc) return;
+  const q = getQuadrant(uc.x, uc.y);
+  const qNames = { priority: 'Immediate Priority', stars: 'Strategic Bet', stakes: 'Table Stakes', monitor: 'Monitor' };
+
+  document.getElementById('mBadge').innerHTML =
+    `<span class="modal-badge badge-${q}">${qNames[q]}</span>` +
+    (uc.proposed ? `<span class="proposed-tag">★ Proposed Solution</span>` : '');
+  document.getElementById('mBadge').style.cssText = '';
+
+  document.getElementById('mTitle').textContent = uc.name;
+  document.getElementById('mMeta').innerHTML = `
+    <span class="meta-tag">📌 ${uc.section}</span>
+    <span class="meta-tag">⚙ ${uc.tech}</span>
+    <span class="meta-tag">${uc.deployment}</span>
+  `;
+
+  const pips = Array.from({length:5}, (_,i) =>
+    `<div class="size-pip ${i < uc.reach ? 'filled' : ''}"></div>`).join('');
+
+  document.getElementById('mBody').innerHTML = `
+    <div class="info-block block-gap">
+      <div class="block-label">The Pain Point</div>
+      <div class="block-text">${uc.gap}</div>
+    </div>
+    <div class="info-block block-solution">
+      <div class="block-label">AI Solution</div>
+      <div class="block-text">${uc.solution}</div>
+    </div>
+    <div class="info-block block-value">
+      <div class="block-label">Value Created</div>
+      <div class="block-text">${uc.value}</div>
+    </div>
+    <div class="modal-scores">
+      <div class="score-cell">
+        <div class="sc-val">${uc.x}</div>
+        <div class="sc-lbl">Readiness</div>
+      </div>
+      <div class="score-cell">
+        <div class="sc-val">${uc.y}</div>
+        <div class="sc-lbl">Impact</div>
+      </div>
+      <div class="score-cell">
+        <div class="sc-val" style="font-size:12px;padding-top:4px;">
+          <div class="size-bar">${pips}</div>
+        </div>
+        <div class="sc-lbl">Market Reach</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);padding:4px 2px;">Real-world reference: ${uc.ref}</div>
+  `;
+
+  // View More button
+const ucId = uc.id;
+if (VIEW_MORE_URLS[ucId]) {
+  const vmbtn = document.createElement('button');
+  vmbtn.style.cssText = 'display:block;width:100%;margin-top:8px;padding:9px;background:var(--teal-pale);color:var(--teal);border:1px solid var(--teal-border);border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:"DM Sans",sans-serif;transition:background .15s;text-align:center;';
+  vmbtn.textContent = 'View Full Process Flow →';
+  vmbtn.onmouseover = () => vmbtn.style.background = '#cceaea';
+  vmbtn.onmouseout  = () => vmbtn.style.background = 'var(--teal-pale)';
+  vmbtn.onclick = () => window.location.href = VIEW_MORE_URLS[ucId];
+  document.getElementById('mBody').appendChild(vmbtn);
+}
+
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('overlay').classList.remove('open');
+}
+
+// ── FILTERS ───────────────────────────────────────────────────────────────────
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderDots(btn.dataset.filter);
+  });
+});
+
+document.getElementById('overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('overlay')) closeModal();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+window.addEventListener('load', () => renderDots('all'));
+window.addEventListener('resize', () => {
+  const active = document.querySelector('.filter-btn.active');
+  renderDots(active ? active.dataset.filter : 'all');
+});
+
+function downloadWhitePaper() {
+  const link = document.createElement('a');
+  link.href = 'hexaware_ai_financial_markets_whitepaper.pdf';
+  link.download = 'hexaware_ai_financial_markets_whitepaper.pdf';
+  link.click();
+}
+
+</script>
+</body>
+</html>

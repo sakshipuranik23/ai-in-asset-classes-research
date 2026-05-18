@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Last Look Latency Arbitrage Sentry — Forex</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+  --fx:#8B6914;--fx-pale:#fdf6e3;--fx-border:#d4b96a;
+  --navy:#1c3557;--navy-pale:#edf3fb;--navy-border:#a8c4e0;
+  --exec:#1a6b35;--exec-pale:#edf7f1;--exec-border:#a8d9bc;
+  --amber:#b86a00;--amber-pale:#fff8ed;--amber-border:#f5c882;
+  --teal:#0d7377;--teal-pale:#e6f7f7;--teal-border:#8ecece;
+  --purple:#5b3faa;--purple-pale:#f3f0fb;--purple-border:#c4b0f0;
+  --red:#c04040;--red-pale:#fdf0f0;--red-border:#f0b8b8;
+  --opp-overlay:rgba(139,105,20,0.07);--opp-overlay-border:rgba(139,105,20,0.28);
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,0.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.nav-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--text-secondary);padding:5px 14px 5px 0;border-right:1px solid var(--border);margin-right:16px;background:none;border-top:none;border-bottom:none;border-left:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .15s}
+.nav-back:hover{color:var(--fx)}
+.nav-crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+.nav-crumb .active{color:var(--fx);font-weight:600}
+.nav-crumb .sep{color:var(--border)}
+.nav-badge{margin-left:auto;background:var(--fx-pale);color:var(--fx);border:1px solid var(--fx-border);border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;text-transform:uppercase;letter-spacing:.06em}
+
+/* PAGE */
+.page{max-width:1100px;margin:0 auto;padding:28px 24px 48px}
+.uc-num{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--fx);letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+.header-sub{font-size:14px;color:var(--text-secondary);max-width:700px;line-height:1.6;margin-bottom:12px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+.chip{font-size:11.5px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary)}
+.chip.fx{background:var(--fx-pale);border-color:var(--fx-border);color:var(--fx)}
+.chip.navy{background:var(--navy-pale);border-color:var(--navy-border);color:var(--navy)}
+.chip.amber{background:var(--amber-pale);border-color:var(--amber-border);color:var(--amber)}
+.chip.teal{background:var(--teal-pale);border-color:var(--teal-border);color:var(--teal)}
+.chip.green{background:var(--exec-pale);border-color:var(--exec-border);color:var(--exec)}
+
+/* SUMMARY */
+.summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:3px solid transparent;box-shadow:var(--shadow-sm)}
+.sc-gap{border-left-color:#d06060}.sc-sol{border-left-color:var(--fx)}.sc-val{border-left-color:#4a7fd4}
+.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.sc-gap .sc-lbl{color:#c04040}.sc-sol .sc-lbl{color:var(--fx)}.sc-val .sc-lbl{color:#2a4faa}
+.sc-txt{font-size:13px;line-height:1.5}.sc-val .sc-txt{font-weight:600;color:var(--fx)}
+
+/* STRATEGY BANNER */
+.strategy-banner{background:var(--fx);border-radius:10px;padding:16px 22px;margin-bottom:24px;box-shadow:var(--shadow-md);border-left:5px solid rgba(255,255,255,.3)}
+.sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.6);margin-bottom:6px}
+.sb-text{font-size:13.5px;color:rgba(255,255,255,.92);line-height:1.65}
+.sb-text strong{color:#fff}
+
+/* SECTION TITLES */
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.section-title h2{font-family:'DM Serif Display',serif;font-size:18px;color:var(--fx);letter-spacing:-.01em;white-space:nowrap}
+.section-title .s-line{flex:1;height:1px;background:var(--border)}
+
+/* MATURITY LADDER */
+.ladder-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px 18px;box-shadow:var(--shadow-sm);margin-bottom:28px}
+.ladder-intro{font-size:12.5px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5}
+.ladder-intro strong{color:var(--text-primary)}
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;position:relative}
+.ladder::before{content:'';position:absolute;top:22px;left:10%;right:10%;height:3px;background:linear-gradient(to right,#d0ccc6,#c8c4bc,var(--amber-border),var(--fx-border),var(--amber-border));border-radius:2px;z-index:0}
+.ladder-step{position:relative;z-index:1;border-radius:10px;padding:12px 10px 10px;cursor:pointer;transition:box-shadow .18s,transform .18s;border:1.5px solid transparent;text-align:center}
+.ladder-step:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.ladder-step.active{box-shadow:0 0 0 3px rgba(139,105,20,.15),var(--shadow-md)}
+.ls-1,.ls-2{background:#f5f4f1;border-color:#d0ccc6}
+.ls-3{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-4{background:var(--fx-pale);border-color:var(--fx-border)}
+.ls-5{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-num{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.ls-1 .ls-num,.ls-2 .ls-num{color:var(--text-muted)}
+.ls-3 .ls-num{color:var(--amber)}.ls-4 .ls-num{color:var(--fx)}.ls-5 .ls-num{color:var(--amber)}
+.ls-icon{font-size:22px;margin-bottom:5px;line-height:1}
+.ls-name{font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:3px}
+.ls-focus{font-size:11px;color:var(--text-secondary);line-height:1.3;margin-bottom:7px}
+.ls-btn{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.ls-1 .ls-btn,.ls-2 .ls-btn{background:#ece9e3;color:var(--text-secondary)}
+.ls-3 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.ls-4 .ls-btn{background:var(--fx-pale);color:var(--fx);border:1px solid var(--fx-border)}
+.ls-5 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.std-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.emerging-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.ladder-legend{display:flex;align-items:center;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border-light)}
+.ll-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-secondary)}
+.ll-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ═══ DIAGRAM ═══ */
+.diagram-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:visible;box-shadow:var(--shadow-md);margin-bottom:28px}
+.diag-titlebar{background:var(--fx);padding:11px 20px;display:flex;align-items:center;gap:10px;border-radius:13px 13px 0 0}
+.diag-titlebar span{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em}
+.diag-titlebar small{font-size:11.5px;color:rgba(255,255,255,.45)}
+.diagram-inner{padding:20px 20px 0;display:flex;flex-direction:column;gap:0}
+
+/* ── EXECUTION DASHBOARD ───────────────────────────────────────── */
+.exec-dash{
+  background:var(--navy-pale);border:1.5px solid var(--navy-border);
+  border-radius:12px;padding:16px 18px 14px;
+  margin-bottom:18px;cursor:pointer;transition:box-shadow .15s;
+}
+.exec-dash:hover{box-shadow:var(--shadow-md)}
+.exec-dash.active{box-shadow:0 0 0 3px rgba(139,105,20,.12)}
+.ed-toprow{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.ed-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--navy)}
+.ed-live{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--exec);font-weight:600}
+.ed-pulse{width:7px;height:7px;border-radius:50%;background:var(--exec);animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.ed-btn{margin-left:auto;font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid var(--navy-border);background:var(--surface);color:var(--navy);cursor:pointer;font-family:'DM Sans',sans-serif}
+
+/* Bank table */
+.bank-table{width:100%;border-collapse:collapse;font-size:12px}
+.bank-table th{background:var(--navy);color:#fff;padding:7px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.bank-table td{padding:8px 10px;border-bottom:1px solid var(--border-light);vertical-align:middle}
+.bank-table tr:last-child td{border-bottom:none}
+.bank-table tr:nth-child(even) td{background:rgba(28,53,87,.03)}
+.bank-name{font-weight:700;color:var(--text-primary)}
+.spread-val{font-family:'DM Mono',monospace;font-weight:600}
+
+/* Fill Defensibility Index */
+.fdi-wrap{display:flex;align-items:center;gap:7px}
+.fdi-track{width:80px;height:7px;background:var(--border);border-radius:3px;overflow:hidden;flex-shrink:0}
+.fdi-fill{height:100%;border-radius:3px}
+.fdi-val{font-family:'DM Mono',monospace;font-size:11px;font-weight:700;width:32px;text-align:right;flex-shrink:0}
+
+/* Rejection prob */
+.rej-badge{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:4px}
+.rej-low{background:#d4edda;color:#1a6b35}
+.rej-med{background:#fff3cd;color:#856404}
+.rej-high{background:#fde8e8;color:#9a1f1f}
+.rej-crit{background:#c04040;color:#fff;animation:pulse-bg 1.4s infinite}
+@keyframes pulse-bg{0%,100%{opacity:1}50%{opacity:.7}}
+
+/* Status dot */
+.status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.sd-green{background:var(--exec)}
+.sd-amber{background:var(--amber)}
+.sd-red{background:var(--red);animation:pulse 1.4s infinite}
+
+/* Sparkline SVG cell */
+.spark-cell{width:90px}
+
+/* ── ADVERSARIAL OBSERVER INFO BOX ─────────────────────────────── */
+.adv-box{
+  background:var(--teal-pale);border:1.5px solid var(--teal-border);border-left:5px solid var(--teal);
+  border-radius:10px;padding:16px 20px;margin-bottom:18px;box-shadow:var(--shadow-sm);
+}
+.adv-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--teal);margin-bottom:6px}
+.adv-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--navy);margin-bottom:7px;letter-spacing:-.01em}
+.adv-body{font-size:13px;color:var(--text-secondary);line-height:1.65}
+.adv-body strong{color:var(--text-primary)}
+
+/* ── PIPELINE ──────────────────────────────────────────────────── */
+.pipeline-section{
+  border:2px dashed var(--opp-overlay-border);background:var(--opp-overlay);
+  border-radius:12px;padding:18px 16px 16px;position:relative;margin-bottom:0;
+}
+.prop-label{position:absolute;top:-14px;right:16px;display:flex;align-items:center;gap:5px}
+.prop-label span{font-size:10px;font-weight:700;color:var(--fx);background:var(--surface);padding:2px 9px;border-radius:20px;border:1.5px solid var(--fx-border);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
+.pipeline-row{display:flex;align-items:flex-start;gap:0}
+.pnode{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;flex:1;min-width:0;cursor:pointer;transition:box-shadow .18s,transform .18s;box-shadow:var(--shadow-sm);position:relative;z-index:2}
+.pnode:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.pnode.active{border-color:var(--fx)!important;box-shadow:0 0 0 3px rgba(139,105,20,.12)}
+.pnode.n-fx{border-top:3px solid var(--fx)}
+.pnode.n-navy{border-top:3px solid var(--navy)}
+.pnode.n-teal{border-top:3px solid var(--teal)}
+.pnode.n-amber{border-top:3px solid var(--amber)}
+.pnode.n-exec{border-top:3px solid var(--exec)}
+.pn-stage{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:2px}
+.pn-icon{font-size:17px;margin-bottom:3px;line-height:1}
+.pn-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:3px;line-height:1.3}
+.pn-desc{font-size:10.5px;color:var(--text-secondary);line-height:1.35;margin-bottom:6px}
+.pn-btn{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.n-fx .pn-btn{background:var(--fx-pale);color:var(--fx)}
+.n-navy .pn-btn{background:var(--navy-pale);color:var(--navy)}
+.n-teal .pn-btn{background:var(--teal-pale);color:var(--teal)}
+.n-amber .pn-btn{background:var(--amber-pale);color:var(--amber)}
+.n-exec .pn-btn{background:var(--exec-pale);color:var(--exec)}
+.parr{display:flex;align-items:center;flex-shrink:0;width:18px;padding-top:38px}
+.parr-line{height:2px;background:#c8c4bc;flex:1}
+.parr-head{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:7px solid #c8c4bc;flex-shrink:0}
+
+/* ── FPGA HARDWARE STRIP ───────────────────────────────────────── */
+.fpga-strip{
+  display:flex;align-items:center;gap:14px;
+  background:var(--navy);border-radius:0 0 13px 13px;
+  padding:13px 20px;
+}
+.fpga-icon{font-size:20px;flex-shrink:0}
+.fpga-body{flex:1}
+.fpga-title{font-size:12.5px;font-weight:700;color:#fff;margin-bottom:2px}
+.fpga-desc{font-size:11px;color:rgba(255,255,255,.55);line-height:1.4}
+.fpga-pills{display:flex;gap:8px;margin-top:5px;flex-wrap:wrap}
+.fpga-pill{font-size:10px;font-weight:600;padding:2px 9px;border-radius:20px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.2)}
+
+/* RESEARCH */
+.research{padding-top:24px;border-top:1px solid var(--border)}
+.research h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--fx);margin-bottom:16px;letter-spacing:-.01em}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.r-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.r-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:7px}
+.r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.r-rows{display:flex;flex-direction:column;gap:7px}
+.r-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.r-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:155px}
+.r-key::after{content:':'}
+.r-val{color:var(--text-secondary)}
+.threat-callout{background:var(--red-pale);border:1.5px solid var(--red-border);border-left:5px solid var(--red);border-radius:10px;padding:18px 20px;box-shadow:var(--shadow-sm)}
+.tc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--red);margin-bottom:6px}
+.tc-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--fx);margin-bottom:7px;letter-spacing:-.01em}
+.tc-body{font-size:13px;color:var(--text-secondary);line-height:1.65}
+.tc-body strong{color:var(--text-primary)}
+.ref-list{display:flex;flex-direction:column;gap:6px}
+.ref-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.ref-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--fx-pale);color:var(--fx);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.ref-txt{color:var(--text-secondary)}.ref-txt strong{color:var(--text-primary)}
+.page-footer{text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:28px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(20,18,14,.45);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(3px)}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:14px;width:540px;max-width:calc(100vw - 32px);max-height:calc(100vh - 60px);overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(12px) scale(.98);transition:transform .22s cubic-bezier(.34,1.56,.64,1)}
+.overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-hdr{padding:20px 22px 15px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2;border-radius:14px 14px 0 0}
+.m-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block}
+.m-title{font-family:'DM Serif Display',serif;font-size:19px;color:var(--fx);line-height:1.25;margin-bottom:4px;padding-right:30px}
+.m-sub{font-size:12.5px;color:var(--text-secondary);font-style:italic}
+.m-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:15px;font-family:'DM Sans',sans-serif;transition:background .12s}
+.m-close:hover{background:var(--border)}
+.m-body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:14px}
+.info-sec{display:flex;flex-direction:column;gap:7px}
+.info-sec-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);padding-bottom:5px;border-bottom:1px solid var(--border-light)}
+.info-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.info-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:165px}
+.info-key::after{content:':'}
+.info-val{color:var(--text-secondary)}
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="nav-back" onclick="window.history.back()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11L5 7l4-4"/></svg>
+    Back to Matrix
+  </button>
+  <div class="nav-crumb">
+    <span>Forex</span><span class="sep">/</span>
+    <span>Horizon 1 · Foundation</span><span class="sep">/</span>
+    <span class="active">Last Look Latency Arbitrage Sentry</span>
+  </div>
+  <div class="nav-badge">⚡ Horizon 1 · Foundation</div>
+</nav>
+
+<div class="page">
+
+  <div class="uc-num">Use Case #2 &nbsp;·&nbsp; Execution Intelligence &nbsp;·&nbsp; Strategic Impact 9/10</div>
+  <h1>Last Look Latency Arbitrage Sentry</h1>
+  <p class="header-sub">In OTC FX, market-making banks hold a legal window — "Last Look" — to reject trades after quoting a price. Originally designed to protect against technical latency disadvantages, it has evolved into a free option for liquidity providers to reject trades whenever the market moves against them. For institutional buyers, repeated rejections act as a flare gun — signalling trade intent, widening spreads, and causing severe slippage.</p>
+  <div class="chips">
+    <span class="chip fx">Gradient Boosting (LightGBM)</span>
+    <span class="chip navy">Dynamic Bayesian Modelling</span>
+    <span class="chip teal">Smart Order Router</span>
+    <span class="chip amber">FPGA Inference Layer</span>
+    <span class="chip green">Implementation Readiness: 8/10</span>
+  </div>
+
+  <div class="summary-row">
+    <div class="sc sc-gap"><div class="sc-lbl">The Gap</div><div class="sc-txt">Execution desks treat Last Look rejections as unpredictable — an unavoidable cost of OTC trading. There is no systematic model for which bank will reject under which market conditions, so routing decisions are made on price alone, not fill certainty.</div></div>
+    <div class="sc sc-sol"><div class="sc-lbl">AI Solution</div><div class="sc-txt">A Predictive Routing Pipeline that treats each bank as an adversarial black box — inferring rejection thresholds through passive probing, scoring fill certainty in real time via LightGBM, and routing each order to the venue with the optimal price-certainty trade-off.</div></div>
+    <div class="sc sc-val"><div class="sc-lbl">Value Created</div><div class="sc-txt">Transforms pure data governance into direct margin expansion — turning bank rejections from an unpredictable cost into a quantified, managed variable. Execution slippage reduction translates directly to P&amp;L.</div></div>
+  </div>
+
+  <!-- STRATEGY BANNER -->
+  <div class="strategy-banner">
+    <div class="sb-label">Strategic Framing — The Ultimate Equalizer</div>
+    <div class="sb-text">"In an OTC environment where the deck is stacked in favour of the market maker, the Last Look Sentry acts as the <strong>ultimate equalizer</strong>. By treating bank rejections as a predictable risk variable rather than an unavoidable cost of doing business, an institutional desk can systematically lower execution slippage — <strong>transforming pure data governance into direct margin expansion</strong>."</div>
+  </div>
+
+  <!-- MATURITY LADDER -->
+  <div class="section-title">
+    <h2>AI Maturity Ladder — Last Look Defence</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="ladder-wrap">
+    <p class="ladder-intro">Most institutional desks operate at <strong>Level 2</strong> today — monthly TCA reports, too slow to influence live routing. Level 3 is the <strong>current 2026 frontier</strong> at Tier-1 banks. Level 4 is the proposed architecture. Level 5 carries the same liquidity-void risk as autonomous rebalancing — marked amber. Click any level for detail.</p>
+    <div class="ladder">
+      <div class="ladder-step ls-1" onclick="openModal('l1')">
+        <div class="ls-num">Level 1</div><div class="ls-icon">📞</div>
+        <div class="ls-name">Static Whitelists</div><div class="ls-focus">Manual bank blacklisting</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-2" onclick="openModal('l2')">
+        <div class="ls-num">Level 2</div><div class="ls-icon">📊</div>
+        <div class="ls-name">Post-Trade TCA</div><div class="ls-focus">Monthly venue review</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-3" onclick="openModal('l3')">
+        <div class="ls-num">Level 3</div>
+        <div class="ls-icon">⚡</div>
+        <div class="std-badge">🏭 2026 Frontier</div>
+        <div class="ls-name">Real-Time Scoring</div><div class="ls-focus">Live rejection probability</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-4" onclick="openModal('l4')">
+        <div class="ls-num">Level 4</div><div class="ls-icon">🛡️</div>
+        <div class="ls-name">Adversarial Pre-Hedge</div><div class="ls-focus">Predict &amp; pre-route hedge</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-5" onclick="openModal('l5')">
+        <div class="ls-num">Level 5</div><div class="ls-icon">🤖</div>
+        <div class="emerging-badge">⚠ Liquidity Risk</div>
+        <div class="ls-name">Zero-Last-Look Pools</div><div class="ls-focus">Autonomous pool negotiation</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+    </div>
+    <div class="ladder-legend">
+      <div class="ll-item"><div class="ll-dot" style="background:#c8c4bc;"></div>Legacy — most desks today</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--amber);"></div>2026 frontier / liquidity risk flag</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--fx);"></div>Proposed architecture</div>
+    </div>
+  </div>
+
+  <!-- MAIN DIAGRAM -->
+  <div class="section-title">
+    <h2>The Predictive Routing Architecture</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="diag-titlebar">
+      <span>Execution Dashboard above · Adversarial Observer design principle · Pipeline below · FPGA strip anchors the bottom</span>
+      <small>&nbsp;·&nbsp; Click any element for detail</small>
+    </div>
+
+    <div class="diagram-inner">
+
+      <!-- EXECUTION DASHBOARD -->
+      <div class="exec-dash" onclick="openModal('dashboard')">
+        <div class="ed-toprow">
+          <span style="font-size:16px;">🖥️</span>
+          <span class="ed-label">Execution Dashboard — Fill Defensibility Index · Live Rejection Probability · 60-Second Sparkline</span>
+          <div class="ed-live"><div class="ed-pulse"></div>Live</div>
+          <button class="ed-btn">Details →</button>
+        </div>
+        <table class="bank-table">
+          <thead>
+            <tr>
+              <th>Bank</th>
+              <th>Spread (EUR/USD)</th>
+              <th>Fill Defensibility Index</th>
+              <th>Rejection Prob.</th>
+              <th>60-Sec Trend</th>
+              <th>Route Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- JPMorgan — green, routing -->
+            <tr>
+              <td class="bank-name">JPMorgan</td>
+              <td class="spread-val" style="color:var(--exec);">0.3 pip</td>
+              <td>
+                <div class="fdi-wrap">
+                  <div class="fdi-track"><div class="fdi-fill" style="width:87%;background:var(--exec);"></div></div>
+                  <span class="fdi-val" style="color:var(--exec);">87</span>
+                </div>
+              </td>
+              <td><span class="rej-badge rej-low">4%</span></td>
+              <td class="spark-cell">
+                <svg viewBox="0 0 90 28" style="width:90px;height:28px;display:block;">
+                  <polyline points="0,22 10,20 20,18 30,16 40,14 50,15 60,12 70,10 80,11 90,9" fill="none" stroke="#1a6b35" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="90" cy="9" r="2.5" fill="#1a6b35"/>
+                </svg>
+              </td>
+              <td><div style="display:flex;align-items:center;gap:5px;"><div class="status-dot sd-green"></div><span style="font-size:11px;font-weight:600;color:var(--exec);">✓ Routing</span></div></td>
+            </tr>
+            <!-- Citi — amber, watch -->
+            <tr>
+              <td class="bank-name">Citibank</td>
+              <td class="spread-val" style="color:var(--amber);">0.4 pip</td>
+              <td>
+                <div class="fdi-wrap">
+                  <div class="fdi-track"><div class="fdi-fill" style="width:61%;background:var(--amber);"></div></div>
+                  <span class="fdi-val" style="color:var(--amber);">61</span>
+                </div>
+              </td>
+              <td><span class="rej-badge rej-med">22%</span></td>
+              <td class="spark-cell">
+                <svg viewBox="0 0 90 28" style="width:90px;height:28px;display:block;">
+                  <polyline points="0,12 10,11 20,13 30,10 40,12 50,16 60,20 70,22 80,24 90,22" fill="none" stroke="#b86a00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="90" cy="22" r="2.5" fill="#b86a00"/>
+                </svg>
+              </td>
+              <td><div style="display:flex;align-items:center;gap:5px;"><div class="status-dot sd-amber"></div><span style="font-size:11px;font-weight:600;color:var(--amber);">⚡ Watch</span></div></td>
+            </tr>
+            <!-- Deutsche — RED — spread narrowed but rej prob spiked -->
+            <tr style="background:#fff8f8;">
+              <td class="bank-name" style="color:var(--red);">Deutsche Bank ⚠</td>
+              <td class="spread-val" style="color:var(--exec);">0.2 pip ↓</td>
+              <td>
+                <div class="fdi-wrap">
+                  <div class="fdi-track"><div class="fdi-fill" style="width:29%;background:var(--red);"></div></div>
+                  <span class="fdi-val" style="color:var(--red);">29</span>
+                </div>
+              </td>
+              <td><span class="rej-badge rej-crit">71%</span></td>
+              <td class="spark-cell">
+                <svg viewBox="0 0 90 28" style="width:90px;height:28px;display:block;">
+                  <polyline points="0,18 10,16 20,14 30,12 40,10 50,9 60,7 70,5 80,4 90,3" fill="none" stroke="#c04040" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="90" cy="3" r="2.5" fill="#c04040"/>
+                </svg>
+              </td>
+              <td><div style="display:flex;align-items:center;gap:5px;"><div class="status-dot sd-red"></div><span style="font-size:11px;font-weight:600;color:var(--red);">✗ Avoided</span></div></td>
+            </tr>
+            <!-- HSBC — green -->
+            <tr>
+              <td class="bank-name">HSBC</td>
+              <td class="spread-val" style="color:var(--exec);">0.3 pip</td>
+              <td>
+                <div class="fdi-wrap">
+                  <div class="fdi-track"><div class="fdi-fill" style="width:79%;background:var(--exec);"></div></div>
+                  <span class="fdi-val" style="color:var(--exec);">79</span>
+                </div>
+              </td>
+              <td><span class="rej-badge rej-low">8%</span></td>
+              <td class="spark-cell">
+                <svg viewBox="0 0 90 28" style="width:90px;height:28px;display:block;">
+                  <polyline points="0,16 10,15 20,16 30,14 40,13 50,14 60,12 70,13 80,11 90,12" fill="none" stroke="#1a6b35" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="90" cy="12" r="2.5" fill="#1a6b35"/>
+                </svg>
+              </td>
+              <td><div style="display:flex;align-items:center;gap:5px;"><div class="status-dot sd-green"></div><span style="font-size:11px;font-weight:600;color:var(--exec);">✓ Routing</span></div></td>
+            </tr>
+            <!-- BNP — amber -->
+            <tr>
+              <td class="bank-name">BNP Paribas</td>
+              <td class="spread-val" style="color:var(--text-secondary);">0.5 pip</td>
+              <td>
+                <div class="fdi-wrap">
+                  <div class="fdi-track"><div class="fdi-fill" style="width:54%;background:var(--amber);"></div></div>
+                  <span class="fdi-val" style="color:var(--amber);">54</span>
+                </div>
+              </td>
+              <td><span class="rej-badge rej-med">31%</span></td>
+              <td class="spark-cell">
+                <svg viewBox="0 0 90 28" style="width:90px;height:28px;display:block;">
+                  <polyline points="0,10 10,13 20,11 30,14 40,16 50,14 60,17 70,15 80,18 90,16" fill="none" stroke="#b86a00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="90" cy="16" r="2.5" fill="#b86a00"/>
+                </svg>
+              </td>
+              <td><div style="display:flex;align-items:center;gap:5px;"><div class="status-dot sd-amber"></div><span style="font-size:11px;font-weight:600;color:var(--amber);">⚡ Partial</span></div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="font-size:9.5px;color:var(--text-muted);font-style:italic;margin-top:8px;padding-top:6px;border-top:1px solid var(--border-light);">
+          ⚠ Deutsche Bank: spread narrowed to 0.2 pip (best price) but rejection probability spiked to 71% — FDI collapsed to 29. System routing away despite best quoted price. This is the core value of the Sentry.
+        </div>
+      </div>
+
+      <!-- ADVERSARIAL OBSERVER INFO BOX -->
+      <div class="adv-box">
+        <div class="adv-label">⚔ Design Principle — The Adversarial Observer</div>
+        <div class="adv-title">Inferring Bank Rejection Thresholds Without Being Told Them</div>
+        <div class="adv-body">Liquidity providers do not publish their internal rejection logic or holding window durations — they are commercially sensitive and actively concealed. The Sentry operates as an <strong>adversarial observer</strong>: it treats each bank as a black box and runs continuous passive probing loops — sending small, low-risk orders across a systematic range of market conditions (varying volatility levels, order sizes, time-of-day, and order book depth combinations) and recording which conditions trigger rejections. Over thousands of observations, a <strong>Bayesian rejection model</strong> builds for each bank: a live probability function that maps current market state → expected rejection probability for that specific counterparty. No bank cooperation required. No API access to their internal systems. Just a patient, systematic observer learning the rules of a game the bank is simultaneously trying to hide.</div>
+      </div>
+
+      <!-- PIPELINE -->
+      <div class="pipeline-section">
+        <div class="prop-label">
+          <svg width="28" height="22" viewBox="0 0 28 22" fill="none" style="position:relative;top:2px;">
+            <path d="M24 2 C24 12, 8 8, 4 18" stroke="#8B6914" stroke-width="1.8" stroke-dasharray="3,2" fill="none" stroke-linecap="round"/>
+            <polygon points="4,18 2,12 8,14" fill="#8B6914"/>
+          </svg>
+          <span>Proposed Architecture — Level 4 · Adversarial Pre-Hedge</span>
+        </div>
+
+        <div class="pipeline-row">
+          <div class="pnode n-fx" onclick="openModal('ingestion')">
+            <div class="pn-stage">Stage 1</div><div class="pn-icon">📡</div>
+            <div class="pn-title">Ingestion</div>
+            <div class="pn-desc">FIX/WebSocket feeds from ECNs and direct bank APIs — standardised in real time</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <div class="pnode n-navy" onclick="openModal('features')">
+            <div class="pn-stage">Stage 2</div><div class="pn-icon">🔬</div>
+            <div class="pn-title">Feature Extraction</div>
+            <div class="pn-desc">Millisecond-level quote changes, order book depth, volatility momentum vectors</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <div class="pnode n-teal" onclick="openModal('rejection')">
+            <div class="pn-stage">Stage 3</div><div class="pn-icon">⚔️</div>
+            <div class="pn-title">Rejection Modelling</div>
+            <div class="pn-desc">Dynamic Bayesian model tracks per-bank behaviour over trailing 60 seconds — the adversarial observer in operation</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <div class="pnode n-amber" onclick="openModal('scoring')">
+            <div class="pn-stage">Stage 4</div><div class="pn-icon">🎯</div>
+            <div class="pn-title">Scoring</div>
+            <div class="pn-desc">LightGBM computes real-time Rejection Probability Score (0–100%) per venue — sub-millisecond via FPGA</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <div class="pnode n-exec" onclick="openModal('routing')">
+            <div class="pn-stage">Stage 5</div><div class="pn-icon">🗺️</div>
+            <div class="pn-title">Smart Order Routing</div>
+            <div class="pn-desc">Game-theoretic SOR routes to optimal price-certainty venue — pre-hedges to alternative if rejection predicted</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FPGA HARDWARE STRIP -->
+      <div class="fpga-strip">
+        <div class="fpga-icon">⚙️</div>
+        <div class="fpga-body">
+          <div class="fpga-title">Hardware Inference Layer — FPGA Accelerators on the NIC</div>
+          <div class="fpga-desc">The LightGBM scoring model runs on FPGA hardware accelerators sitting directly on the Network Interface Card — not in software. Inference in nanoseconds, not milliseconds. The market state does not change between observation and decision.</div>
+          <div class="fpga-pills">
+            <span class="fpga-pill">Quantized Neural Net</span>
+            <span class="fpga-pill">Sub-microsecond inference</span>
+            <span class="fpga-pill">NIC-level deployment</span>
+            <span class="fpga-pill">No software stack latency</span>
+            <span class="fpga-pill">Compliance Vault logging</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RESEARCH -->
+  <div class="research">
+    <h2>Research Notes</h2>
+    <div class="r-grid">
+
+      <!-- Combined threat callout -->
+      <div class="threat-callout" style="grid-column:1/-1;">
+        <div class="tc-label">⚠ Two Critical Failure Modes</div>
+        <div class="tc-title">The Arms Race Problem &amp; The Phantom Liquidity Trap</div>
+        <div class="tc-body">
+          <strong>The Arms Race Problem:</strong> The Sentry's adversarial observer derives its value from the bank not knowing it exists. The moment a bank's own analytics detect that a specific client is running a rejection-prediction model — identifiable from their unusual small-order probing patterns across diverse market conditions — the bank can deliberately randomise its rejection behaviour. A bank that varies its holding window duration randomly between 10ms and 200ms, or injects artificial noise into its rejection logic, defeats the Bayesian model entirely. The Sentry is in an arms race with the banks it monitors. The only defence is model diversity — using multiple probing strategies simultaneously so no single detectable pattern emerges — and continuous retraining that can adapt to deliberate randomisation faster than the bank can sustain it.
+          <br><br>
+          <strong>The Phantom Liquidity Trap:</strong> Not all quotes that vanish before execution are Last Look rejections. A significant fraction are <em>phantom liquidity</em> — quotes that appear in the order book for 2–5 milliseconds, placed by algorithmic market-makers to signal pricing intent rather than genuine fill availability. Routing toward a bank with a low rejection score but high phantom liquidity rate produces the same slippage outcome as routing toward a high-rejection bank. The Sentry must distinguish between deliberate Last Look rejections (which the model can predict) and phantom quotes (which evaporate before the order even reaches the bank). The Feature Extraction stage specifically calculates a "Quote Persistence Score" — the average duration a bank's quotes survive before withdrawal — and filters phantom-heavy venues independently of the rejection model.
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--fx);"></div>Technical Architecture</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">FIX Protocol</span><span class="r-val">The industry standard messaging protocol for financial transactions — FIX/WebSocket feeds provide the raw millisecond-level quote and execution data that feeds the ingestion layer</span></div>
+          <div class="r-row"><span class="r-key">LightGBM</span><span class="r-val">Gradient Boosting Machine optimised for low-latency inference — faster than XGBoost on tabular data at small batch sizes, making it the right choice for per-trade scoring where microseconds matter</span></div>
+          <div class="r-row"><span class="r-key">Bayesian updating</span><span class="r-val">The rejection model for each bank is updated continuously as new rejection/fill observations arrive — it is not a static model trained once but a live probability distribution that moves with market conditions</span></div>
+          <div class="r-row"><span class="r-key">Compliance Vault</span><span class="r-val">Every rejection is logged alongside the full market state data — spread, volatility, order size, book depth, timestamp — providing empirical evidence for MiFID II best execution regulatory audits. The same architectural pattern as the Fixed Income Compliance Vault.</span></div>
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--navy);"></div>Competitor Landscape — Anti-Last-Look Intelligence</div>
+        <div class="ref-list">
+          <div class="ref-item"><div class="ref-num">1</div><div class="ref-txt"><strong>XTX Markets</strong> — the pioneer of zero-last-look liquidity. Built ML clusters capable of quoting without a holding window, forcing buy-side firms to develop predictive defence tools to compete. Their existence validates this use case commercially.</div></div>
+          <div class="ref-item"><div class="ref-num">2</div><div class="ref-txt"><strong>Pragma (TradeNeXus)</strong> — adaptive logging measures holding times across bank platforms and dynamically penalises venues with asymmetric rejection tendencies. The closest existing competitor to the proposed Sentry architecture.</div></div>
+          <div class="ref-item"><div class="ref-num">3</div><div class="ref-txt"><strong>FlexTrade (FlexFX)</strong> — real-time TCA models mapping "Market Impact Following Rejection" — showing traders exactly how much a bank's rejection cost them in subsequent slippage. Post-rejection attribution rather than pre-rejection prediction.</div></div>
+          <div class="ref-item"><div class="ref-num">4</div><div class="ref-txt"><strong>BestX (State Street)</strong> — industry standard for independent post-trade TCA. Statistical analytics break down exact Last Look costs, helping buy-side firms hold liquidity providers accountable. Level 2 in our maturity ladder — the baseline the Sentry significantly improves upon.</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-footer">
+    Hexaware Financial Services &nbsp;·&nbsp; AI in Foreign Exchange Markets &nbsp;·&nbsp; Horizon 1 · Foundation &nbsp;·&nbsp; Preliminary Research 2026
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="m-tag" id="mTag"></div>
+      <div class="m-title" id="mTitle"></div>
+      <div class="m-sub" id="mSub"></div>
+      <button class="m-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="m-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+const NODES={
+  l1:{tag:'Level 1 · Static Whitelists',ts:'background:#ece9e3;color:#6b6760;',title:'Static Whitelists',sub:'Manually blacklisting specific banks after an execution desk complains — reactive, delayed, and based on anecdote rather than data',sections:[
+    {t:'How It Works',rows:[{k:'Process',v:'An execution desk notices through informal feedback — a broker call, a repeated complaint — that a specific bank has been rejecting orders frequently. The bank is manually removed from the routing list or downweighted.'},{k:'The problem',v:'The decision is made weeks after the rejections occurred, based on subjective feedback rather than measured data, and applies universally rather than being sensitive to the specific market conditions that trigger rejections.'},{k:'Why still common',v:'Most mid-size asset managers and corporate treasuries have no better infrastructure. Building a real-time rejection monitoring system requires significant technology investment that has historically been unjustifiable for all but the largest institutions.'}]}
+  ]},
+  l2:{tag:'Level 2 · Post-Trade TCA',ts:'background:#ece9e3;color:#6b6760;',title:'Post-Trade Transaction Cost Analysis',sub:'Monthly review of TCA reports to adjust venue weightings — the current standard at most buy-side institutions',sections:[
+    {t:'How It Works',rows:[{k:'Technology',v:'Providers like BestX (State Street) and Bloomberg TCA generate monthly reports showing execution quality per venue — including Last Look rejection rates, average spread at rejection, and estimated slippage cost per rejected order.'},{k:'Improvement over Level 1',v:'Data-driven rather than anecdote-driven. The rejection rate for each bank is quantified over a meaningful sample, and venue weights in the Smart Order Router are adjusted accordingly.'},{k:'The fundamental limitation',v:'Monthly aggregates cannot capture intraday variation. A bank that is reliable 90% of the time but rejects aggressively during the first 30 minutes after a major macro event causes most of the damage in a narrow time window that a monthly average completely obscures.'}]}
+  ]},
+  l3:{tag:'Level 3 · 2026 Frontier',ts:'background:#fff8ed;color:#b86a00;',title:'Real-Time Rejection Scoring',sub:'Millisecond-level rejection probability tracking tied to a Smart Order Router — what the most advanced buy-side desks are deploying in 2026',sections:[
+    {t:'What Level 3 Does',rows:[{k:'Technology',v:'Real-time streaming of bank quote and rejection data feeds a live model that scores each venue\'s current rejection probability. The SOR uses this score alongside spread to make routing decisions on every order.'},{k:'The key improvement',v:'Time sensitivity — the system knows that Deutsche Bank\'s rejection probability is currently 71% because their quote is moving rapidly and their recent rejections correlate with high short-term momentum. A monthly average would show Deutsche at 12% and the order would be routed there.'},{k:'What it still lacks',v:'Level 3 systems are primarily reactive — they score current conditions from observed rejections. They do not proactively infer where rejection thresholds are or pre-hedge against predicted rejections before they occur.'}]}
+  ]},
+  l4:{tag:'Level 4 · Proposed Architecture',ts:'background:#fdf6e3;color:#8B6914;',title:'Adversarial Pre-Hedging',sub:'The Sentry predicts a rejection before it occurs and simultaneously pre-routes a partial hedge to an alternative venue',sections:[
+    {t:'What Level 4 Adds',rows:[{k:'Pre-hedge execution',v:'When the model predicts a rejection probability above a defined threshold (e.g. 60%), the SOR does not simply route away — it splits the order: a primary portion goes to the best-price venue, and a simultaneous partial hedge is pre-routed to the second-best venue. If the primary rejects, the hedge is already partially filled, limiting slippage.'},{k:'The adversarial observer',v:'The model does not wait for rejections to learn from. It actively probes with small systematic orders to continuously update its Bayesian model of each bank\'s rejection function — inferring thresholds that the bank has never disclosed.'},{k:'FPGA execution',v:'Pre-hedging requires that the decision to split and route simultaneously happens in nanoseconds — too fast for software inference. The FPGA layer running quantized models on the NIC is what makes this architecturally feasible.'}]}
+  ]},
+  l5:{tag:'Level 5 · ⚠ Liquidity Risk',ts:'background:#fff8ed;color:#b86a00;',title:'Autonomous Zero-Last-Look Pools',sub:'AI agents negotiate customised, zero-last-look liquidity pools directly with bank algorithms — marked amber for systemic liquidity risk',sections:[
+    {t:'What It Means',rows:[{k:'The concept',v:'Rather than routing around Last Look, the agent eliminates it — negotiating bilateral liquidity agreements with bank algorithms that commit to zero-last-look execution in exchange for order flow guarantees and predictable trading patterns.'},{k:'Systemic risk',v:'If every institutional participant simultaneously routes toward zero-last-look pools and away from traditional market-making banks during stressed conditions, the traditional market-making banks lose order flow precisely when they need it to manage risk — creating a liquidity void in the conventional market at the worst possible time.'},{k:'The XTX precedent',v:'XTX operates a zero-last-look model successfully as a market maker — their ML capability to price without the holding window is the foundation. The risk arises when the entire market migrates simultaneously, not when individual participants use it.'}]}
+  ]},
+  dashboard:{tag:'Execution Dashboard · Output Layer',ts:'background:#edf3fb;color:#1c3557;',title:'Execution Dashboard',sub:'The Fill Defensibility Index — a composite view of spread, rejection probability, and 60-second trend in a single actionable number',sections:[
+    {t:'What the FDI Shows',rows:[{k:'The key insight',v:'Deutsche Bank is showing the best spread on the screen — 0.2 pip versus JPMorgan\'s 0.3 pip. Any trader routing on price alone would choose Deutsche. But Deutsche\'s rejection probability has spiked to 71%, meaning 7 in 10 orders sent there will be rejected — at which point the order arrives late at the next venue, the market has moved, and the effective execution cost is far higher than the 0.1 pip saved on spread.'},{k:'Fill Defensibility Index',v:'The FDI combines spread, current rejection probability, and recent rejection trend into a single 0–100 score. A bank that narrows its spread while raising its rejection probability will show a falling FDI — the Sentry surfaces this conflict that raw price feeds conceal.'},{k:'60-second sparkline',v:'The trend line shows how each bank\'s rejection score has moved over the trailing minute — a rising line indicates deteriorating fill quality even if the current point looks acceptable. Deutsche\'s sparkline is climbing steeply: the risk has been building, not sudden.'}]},
+    {t:'Routing Decisions',rows:[{k:'✓ Routing',v:'JPMorgan and HSBC — strong FDI, low rejection probability, stable sparklines. Primary routing venues.'},{k:'⚡ Partial / Watch',v:'Citibank and BNP — moderate FDI, rising rejection trend. Receiving partial allocation with close monitoring.'},{k:'✗ Avoided',v:'Deutsche Bank — best quoted spread but FDI collapsed to 29. System has routed completely away despite the most competitive price. This is the core value proposition.'}]}
+  ]},
+  ingestion:{tag:'Stage 1 · Ingestion',ts:'background:#fdf6e3;color:#8B6914;',title:'Ingestion',sub:'Collecting and standardising streaming FIX/WebSocket feeds from all active ECNs and direct bank APIs in real time',sections:[
+    {t:'Data Sources',rows:[{k:'FIX Protocol',v:'Financial Information eXchange — the industry standard message format for pre-trade quotes and post-trade confirmations. Every bank API and ECN speaks FIX; the ingestion layer normalises across format versions and timing conventions.'},{k:'WebSocket feeds',v:'Lower-latency streaming than traditional FIX for market data — used for millisecond-level order book updates from ECNs like EBS, Reuters Matching, and FXall.'},{k:'Direct bank APIs',v:'Major banks offer proprietary single-dealer platforms with direct API access — these provide the deepest data on individual bank pricing behaviour and are the primary source for the rejection modelling layer.'},{k:'ECN consolidation',v:'The Sentry aggregates across all venues simultaneously — a quote from the same bank on EBS and on their single-dealer platform may differ by microseconds due to network latency. The ingestion layer reconciles these into a single bank-level data stream.'}]}
+  ]},
+  features:{tag:'Stage 2 · Feature Extraction',ts:'background:#edf3fb;color:#1c3557;',title:'Feature Extraction',sub:'Converting raw millisecond-level quote streams into the feature vector that the rejection model operates on',sections:[
+    {t:'Key Features',rows:[{k:'Quote momentum',v:'The rate of change of a bank\'s quoted spread over the trailing 100–500 milliseconds. A spread narrowing rapidly often precedes a rejection — the bank is showing a competitive price they have no intention of filling.'},{k:'Order book depth',v:'The total available liquidity at the best bid and offer across the full order book. Shallow depth combined with large order size is a strong rejection predictor — the bank\'s quote may not be genuine if they cannot absorb the order.'},{k:'Short-term volatility',v:'Realised volatility over the trailing 10 seconds. Banks are structurally more likely to reject during high-volatility events because the holding window gives them a free option on a larger price move.'},{k:'Quote persistence score',v:'The average duration a bank\'s quotes survive before withdrawal — distinguishing genuine fill availability from phantom liquidity. A bank with a 3ms average quote lifetime is providing phantom liquidity regardless of its Last Look rejection rate.'}]}
+  ]},
+  rejection:{tag:'Stage 3 · Rejection Modelling',ts:'background:#e6f7f7;color:#0d7377;',title:'Rejection Modelling — The Adversarial Observer',sub:'The Bayesian model that builds a live rejection probability function for each bank without any bank cooperation',sections:[
+    {t:'The Probing Mechanism',rows:[{k:'How probing works',v:'The system sends small, low-risk orders — below the threshold that triggers significant market impact — across a systematically varied range of market conditions. By observing which conditions produce rejections, it maps the bank\'s effective rejection function.'},{k:'Bayesian updating',v:'Each new observation — fill or rejection — updates the posterior probability distribution for that bank\'s rejection model. After thousands of observations, the model becomes a precise function: "Deutsche Bank rejects 68% of EUR/USD orders above $50M when 10-second volatility exceeds 0.3 pip/min."'},{k:'Trailing window',v:'The model operates on a rolling 60-second window — old observations are down-weighted as market conditions change. A bank that was rejecting aggressively 5 minutes ago may have stabilised as the volatility event passed.'}]},
+    {t:'The Arms Race Consideration',rows:[{k:'Detection risk',v:'The systematic probing pattern — small orders across diverse conditions — is potentially detectable by a sufficiently sophisticated bank analytics system. The defence is model diversity: varying the probing strategy across multiple dimensions so no single detectable fingerprint emerges.'},{k:'Why banks tolerate it',v:'The probing orders are real and represent genuine order flow. Banks cannot refuse small orders without violating their market-making obligations. The Sentry exploits the same structural asymmetry — the obligation to quote — that Last Look was originally designed to protect.'}]}
+  ]},
+  scoring:{tag:'Stage 4 · Scoring',ts:'background:#fff8ed;color:#b86a00;',title:'Scoring — LightGBM on FPGA',sub:'Generating the Rejection Probability Score and Fill Defensibility Index in sub-microsecond time',sections:[
+    {t:'The Scoring Model',rows:[{k:'Algorithm',v:'LightGBM — a gradient boosting framework optimised for low-latency inference on tabular data. Faster than XGBoost at small batch sizes, making it the right choice for per-trade scoring where the feature vector is updated on every new quote tick.'},{k:'Output',v:'Two scores per venue per order: Rejection Probability (0–100%) and the composite Fill Defensibility Index (0–100) that weights spread, rejection probability, and recent trend.'},{k:'Update frequency',v:'The score updates with every incoming quote tick — potentially thousands of times per second per venue. At this frequency, software inference introduces unacceptable latency. The FPGA layer is not optional at Level 4.'}]},
+    {t:'FPGA Implementation',rows:[{k:'Why FPGA',v:'Field Programmable Gate Array — hardware that can be configured to execute a specific computation directly in silicon, bypassing the software stack entirely. A quantized version of the LightGBM model is compiled onto the FPGA, running inference in nanoseconds.'},{k:'Quantization',v:'The full-precision model is quantized — weights compressed from 32-bit floats to 8-bit integers — to fit on the NIC hardware without sacrificing meaningful accuracy. The quantized model loses less than 0.5% accuracy relative to the full-precision version.'},{k:'NIC deployment',v:'The FPGA sits directly on the Network Interface Card — the hardware that handles all network traffic. Inference happens before the data even leaves the network layer, eliminating all software and OS overhead from the latency budget.'}]}
+  ]},
+  routing:{tag:'Stage 5 · Smart Order Routing',ts:'background:#edf7f1;color:#1a6b35;',title:'Smart Order Routing — Game-Theoretic Execution',sub:'Routing each order to the venue with the optimal price-certainty trade-off, with simultaneous pre-hedging when rejection is predicted',sections:[
+    {t:'Routing Logic',rows:[{k:'Objective function',v:'The SOR minimises expected execution cost — not just spread, but (spread × fill probability) + (expected slippage if rejected × rejection probability). This is the key difference from a price-only router: a 0.3 pip spread with 96% fill rate beats a 0.2 pip spread with 29% fill rate on the expected cost objective.'},{k:'Pre-hedge mechanism',v:'When rejection probability exceeds the configured threshold, the order is split: the primary portion goes to the target venue, and a simultaneous partial hedge is routed to the next-best venue. The hedge position limits the damage if the primary rejects by ensuring partial fill is already secured before the rejection arrives.'},{k:'Game-theoretic element',v:'The routing decision considers not just the current state but the likely response: if the fund routes all its flow to JPMorgan because Deutsche is being avoided, JPMorgan\'s fill quality may deteriorate as the fund\'s order pattern becomes predictable. The SOR distributes flow across multiple venues to avoid this second-order effect.'}]},
+    {t:'Compliance Vault Integration',rows:[{k:'What gets logged',v:'Every routing decision — venue selected, price at routing, rejection probability score, FDI at time of routing, fill outcome, and any subsequent slippage — is logged immutably to the Compliance Vault.'},{k:'Best execution evidence',v:'MiFID II requires firms to demonstrate best execution on every order. The Vault provides the complete audit trail: the firm did not route to Deutsche Bank despite their best quoted price because the real-time Rejection Probability Score of 71% made the expected cost of routing there higher than JPMorgan at 0.3 pip. This is best execution — documented.'}]}
+  ]}
+};
+
+function openModal(key){
+  const d=NODES[key];if(!d)return;
+  document.querySelectorAll('.ladder-step,.pnode,.exec-dash').forEach(n=>n.classList.remove('active'));
+  if(event&&event.currentTarget)event.currentTarget.classList.add('active');
+  document.getElementById('mTag').textContent=d.tag;
+  document.getElementById('mTag').style.cssText=d.ts+'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block;';
+  document.getElementById('mTitle').textContent=d.title;
+  document.getElementById('mSub').textContent=d.sub;
+  const body=document.getElementById('mBody');body.innerHTML='';
+  d.sections.forEach(sec=>{
+    const sd=document.createElement('div');sd.className='info-sec';
+    const st=document.createElement('div');st.className='info-sec-title';st.textContent=sec.t;sd.appendChild(st);
+    if(sec.rows)sec.rows.forEach(r=>{const row=document.createElement('div');row.className='info-row';row.innerHTML=`<span class="info-key">${r.k}</span><span class="info-val">${r.v}</span>`;sd.appendChild(row);});
+    body.appendChild(sd);
+  });
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  document.querySelectorAll('.ladder-step,.pnode,.exec-dash').forEach(n=>n.classList.remove('active'));
+}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target===document.getElementById('overlay'))closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+</script>
+</body>
+</html>

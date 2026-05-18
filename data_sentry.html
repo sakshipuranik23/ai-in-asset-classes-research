@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Data Sentry — Intelligent Ingestion & Governance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+  --teal:#0d7377;--teal-light:#148f94;--teal-pale:#e6f7f7;--teal-border:#8ecece;
+  --navy:#1c3557;--navy-pale:#edf3fb;--navy-border:#a8c4e0;
+  --exec:#1a6b35;--exec-pale:#edf7f1;--exec-border:#a8d9bc;
+  --amber:#b86a00;--amber-pale:#fff8ed;--amber-border:#f5c882;
+  --purple:#5b3faa;--purple-pale:#f3f0fb;--purple-border:#c4b0f0;
+  --red:#c04040;--red-pale:#fdf0f0;--red-border:#f0b8b8;
+  --opp:#0d7377;--opp-pale:#e6f7f7;--opp-border:#8ecece;
+  --opp-overlay:rgba(13,115,119,0.07);--opp-overlay-border:rgba(13,115,119,0.28);
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,0.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.nav-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--text-secondary);padding:5px 14px 5px 0;border-right:1px solid var(--border);margin-right:16px;background:none;border-top:none;border-bottom:none;border-left:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .15s}
+.nav-back:hover{color:var(--teal)}
+.nav-crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+.nav-crumb .active{color:var(--teal);font-weight:600}
+.nav-crumb .sep{color:var(--border)}
+.nav-badge{margin-left:auto;background:var(--teal-pale);color:var(--teal);border:1px solid var(--teal-border);border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;text-transform:uppercase;letter-spacing:.06em}
+
+/* PAGE */
+.page{max-width:1100px;margin:0 auto;padding:28px 24px 48px}
+.uc-num{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--teal);letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+.header-sub{font-size:14px;color:var(--text-secondary);max-width:700px;line-height:1.6;margin-bottom:12px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+.chip{font-size:11.5px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary)}
+.chip.teal{background:var(--teal-pale);border-color:var(--teal-border);color:var(--teal)}
+.chip.navy{background:var(--navy-pale);border-color:var(--navy-border);color:var(--navy)}
+.chip.amber{background:var(--amber-pale);border-color:var(--amber-border);color:var(--amber)}
+.chip.purple{background:var(--purple-pale);border-color:var(--purple-border);color:var(--purple)}
+.chip.green{background:var(--exec-pale);border-color:var(--exec-border);color:var(--exec)}
+
+/* SUMMARY */
+.summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:3px solid transparent;box-shadow:var(--shadow-sm)}
+.sc-gap{border-left-color:#d06060}.sc-sol{border-left-color:#0d7377}.sc-val{border-left-color:#4a7fd4}
+.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.sc-gap .sc-lbl{color:#c04040}.sc-sol .sc-lbl{color:var(--teal)}.sc-val .sc-lbl{color:#2a4faa}
+.sc-txt{font-size:13px;line-height:1.5}.sc-val .sc-txt{font-weight:600;color:var(--teal)}
+
+/* STRATEGY BANNER */
+.strategy-banner{background:var(--teal);border-radius:10px;padding:16px 22px;margin-bottom:24px;box-shadow:var(--shadow-md);border-left:5px solid #f5c882}
+.sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#f5c882;margin-bottom:6px}
+.sb-text{font-size:13.5px;color:rgba(255,255,255,.88);line-height:1.65}
+.sb-text strong{color:#fff}
+
+/* SECTION TITLES */
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.section-title h2{font-family:'DM Serif Display',serif;font-size:18px;color:var(--teal);letter-spacing:-.01em;white-space:nowrap}
+.section-title .s-line{flex:1;height:1px;background:var(--border)}
+
+/* MATURITY LADDER */
+.ladder-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px 18px;box-shadow:var(--shadow-sm);margin-bottom:28px}
+.ladder-intro{font-size:12.5px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5}
+.ladder-intro strong{color:var(--text-primary)}
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;position:relative}
+.ladder::before{content:'';position:absolute;top:22px;left:10%;right:10%;height:3px;background:linear-gradient(to right,#d0ccc6,#c8c4bc,var(--amber-border),var(--teal-border),var(--amber-border));border-radius:2px;z-index:0}
+.ladder-step{position:relative;z-index:1;border-radius:10px;padding:12px 10px 10px;cursor:pointer;transition:box-shadow .18s,transform .18s;border:1.5px solid transparent;text-align:center}
+.ladder-step:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.ladder-step.active{box-shadow:0 0 0 3px rgba(13,115,119,.15),var(--shadow-md)}
+.ls-1,.ls-2{background:#f5f4f1;border-color:#d0ccc6}
+.ls-3{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-4{background:var(--teal-pale);border-color:var(--teal-border)}
+.ls-5{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-num{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.ls-1 .ls-num,.ls-2 .ls-num{color:var(--text-muted)}
+.ls-3 .ls-num{color:var(--amber)}
+.ls-4 .ls-num{color:var(--teal)}
+.ls-5 .ls-num{color:var(--amber)}
+.ls-icon{font-size:22px;margin-bottom:5px;line-height:1}
+.ls-name{font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:3px}
+.ls-focus{font-size:11px;color:var(--text-secondary);line-height:1.3;margin-bottom:7px}
+.ls-btn{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.ls-1 .ls-btn,.ls-2 .ls-btn{background:#ece9e3;color:var(--text-secondary)}
+.ls-3 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.ls-4 .ls-btn{background:var(--teal-pale);color:var(--teal);border:1px solid var(--teal-border)}
+.ls-5 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.emerging-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+.ladder-legend{display:flex;align-items:center;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border-light)}
+.ll-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-secondary)}
+.ll-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ═══ MAIN DIAGRAM ═══ */
+.diagram-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:visible;box-shadow:var(--shadow-md);margin-bottom:28px}
+.diag-titlebar{background:var(--teal);padding:11px 20px;display:flex;align-items:center;gap:10px;border-radius:13px 13px 0 0}
+.diag-titlebar span{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em}
+.diag-titlebar small{font-size:11.5px;color:rgba(255,255,255,.45)}
+.diagram-inner{padding:22px 20px 0;display:flex;flex-direction:column;gap:0}
+
+/* ── TIER 1: SENTRY COCKPIT ──────────────────────────────────────────── */
+.tier-cockpit{
+  background:var(--teal-pale);
+  border:1.5px solid var(--teal-border);
+  border-radius:12px;
+  padding:16px 18px 14px;
+  margin-bottom:18px;
+  cursor:pointer;
+  transition:box-shadow .15s;
+}
+.tier-cockpit:hover{box-shadow:var(--shadow-md)}
+.tier-cockpit.active{box-shadow:0 0 0 3px rgba(13,115,119,.12),var(--shadow-md)}
+.tier-label-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.tier-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--teal)}
+.tier-btn{margin-left:auto;font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid var(--teal-border);background:var(--surface);color:var(--teal);cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0}
+
+/* Staging queue table */
+.queue-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.queue-table th{background:var(--teal);color:#fff;padding:7px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em}
+.queue-table td{padding:8px 10px;border-bottom:1px solid var(--border-light);vertical-align:middle;line-height:1.4}
+.queue-table tr:last-child td{border-bottom:none}
+.queue-table tr:nth-child(even) td{background:rgba(13,115,119,.03)}
+.conf-bar-wrap{display:flex;align-items:center;gap:6px}
+.conf-track{width:60px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;flex-shrink:0}
+.conf-fill{height:100%;border-radius:3px}
+.conf-val{font-family:'DM Mono',monospace;font-size:10.5px;font-weight:700}
+.status-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px}
+.s-auto{background:#d4edda;color:#1a6b35}
+.s-review{background:#fff3cd;color:#856404}
+.s-conflict{background:#fde8e8;color:#9a1f1f}
+.path-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px}
+.path-fast{background:var(--teal-pale);color:var(--teal);border:1px solid var(--teal-border)}
+.path-review{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+
+/* ── TIER 2: CLASSIFICATION → FORK ──────────────────────────────────── */
+.classify-row{
+  display:flex;align-items:center;gap:0;
+  margin-bottom:0;
+  position:relative;
+}
+
+/* Single classification node centred */
+.classify-node{
+  background:var(--surface);border:1.5px solid var(--border);border-top:3px solid var(--teal);
+  border-radius:10px;padding:12px 14px;
+  width:200px;flex-shrink:0;
+  cursor:pointer;transition:box-shadow .18s,transform .18s;box-shadow:var(--shadow-sm);
+  margin:0 auto;
+  position:relative;z-index:3;
+}
+.classify-node:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.classify-node.active{border-color:var(--teal)!important;box-shadow:0 0 0 3px rgba(13,115,119,.12)}
+.cn-icon{font-size:18px;margin-bottom:3px}
+.cn-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:3px}
+.cn-desc{font-size:10.5px;color:var(--text-secondary);line-height:1.4;margin-bottom:6px}
+.cn-btn{font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;background:var(--teal-pale);color:var(--teal)}
+
+/* Down arrow from sentry cockpit to classification */
+.down-connector{display:flex;justify-content:center;padding:10px 0}
+.down-connector svg{display:block}
+
+/* FORK VISUAL */
+.fork-wrap{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-top:0;
+  position:relative;
+}
+/* Fork arms — decorative lines from centre to each lane */
+.fork-header{
+  grid-column:1/-1;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  position:relative;
+  padding-top:12px;
+}
+.fork-header::before{
+  content:'';
+  position:absolute;
+  top:0;left:25%;right:25%;
+  height:2px;
+  background:linear-gradient(to right,var(--teal),var(--teal) 50%,var(--amber) 50%,var(--amber));
+  border-radius:2px;
+}
+.fork-arm{
+  display:flex;flex-direction:column;align-items:center;
+  padding-top:0;
+  position:relative;
+}
+.fork-arm::before{
+  content:'';
+  position:absolute;
+  top:0;left:50%;
+  width:2px;height:14px;
+}
+.fork-arm.arm-teal::before{background:var(--teal)}
+.fork-arm.arm-amber::before{background:var(--amber)}
+.fork-label{
+  display:flex;align-items:center;gap:6px;
+  font-size:10.5px;font-weight:700;
+  padding:4px 14px;border-radius:20px;
+  margin-bottom:12px;
+  border:1.5px solid;
+}
+.fork-label.teal-label{background:var(--teal-pale);color:var(--teal);border-color:var(--teal-border)}
+.fork-label.amber-label{background:var(--amber-pale);color:var(--amber);border-color:var(--amber-border)}
+
+/* LANE PIPELINE */
+.lane-pipeline{
+  display:flex;flex-direction:column;gap:10px;
+}
+.lane-wrap{
+  border-radius:12px;padding:14px;
+  position:relative;
+}
+.lane-wrap.teal-lane{
+  background:var(--opp-overlay);
+  border:1.5px dashed var(--opp-overlay-border);
+}
+.lane-wrap.amber-lane{
+  background:rgba(184,106,0,0.05);
+  border:1.5px dashed rgba(184,106,0,0.3);
+}
+
+/* Pipeline node inside lane */
+.pnode{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:9px;padding:10px 12px;
+  cursor:pointer;transition:box-shadow .15s,transform .15s;box-shadow:var(--shadow-sm);
+  position:relative;z-index:2;
+}
+.pnode:hover{box-shadow:var(--shadow-md);transform:translateX(2px)}
+.pnode.active{border-color:var(--teal)!important;box-shadow:0 0 0 2px rgba(13,115,119,.12)}
+.pnode.n-teal{border-top:3px solid var(--teal)}
+.pnode.n-amber{border-top:3px solid var(--amber)}
+.pnode.n-purple{border-top:3px solid var(--purple)}
+.pnode.n-navy{border-top:3px solid var(--navy)}
+.pn-stage{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:2px}
+.pn-icon{font-size:16px;margin-bottom:2px}
+.pn-title{font-size:11.5px;font-weight:700;color:var(--text-primary);margin-bottom:3px}
+.pn-desc{font-size:10.5px;color:var(--text-secondary);line-height:1.35;margin-bottom:6px}
+.pn-btn{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.n-teal .pn-btn{background:var(--teal-pale);color:var(--teal)}
+.n-amber .pn-btn{background:var(--amber-pale);color:var(--amber)}
+.n-purple .pn-btn{background:var(--purple-pale);color:var(--purple)}
+.n-navy .pn-btn{background:var(--navy-pale);color:var(--navy)}
+
+/* Small down arrows between nodes in lane */
+.lane-arr{display:flex;justify-content:center;padding:2px 0}
+
+/* Merge indicator */
+.merge-wrap{
+  grid-column:1/-1;
+  display:flex;flex-direction:column;align-items:center;
+  padding:14px 0 0;
+  position:relative;
+}
+.merge-wrap::before{
+  content:'';
+  position:absolute;
+  top:0;left:25%;right:25%;
+  height:2px;
+  background:linear-gradient(to right,var(--teal),var(--teal) 50%,var(--amber) 50%,var(--amber));
+}
+.merge-label{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--teal);background:var(--surface);
+  padding:2px 10px;border-radius:10px;border:1px solid var(--teal-border);
+  margin-top:6px;
+}
+
+/* ── TIER 3: GOLDEN RECORD ───────────────────────────────────────────── */
+.golden-tier{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;
+  background:var(--navy);
+  border-radius:0 0 13px 13px;
+  padding:16px 18px 18px;
+  margin-top:0;
+}
+.golden-header{
+  grid-column:1/-1;
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:10px;
+}
+.golden-header-icon{font-size:20px}
+.golden-header-title{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em}
+.golden-header-sub{font-size:12px;color:rgba(255,255,255,.55)}
+.golden-header-btn{margin-left:auto;font-size:10.5px;font-weight:600;padding:4px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0}
+.golden-part{background:rgba(255,255,255,.1);border-radius:8px;padding:12px 13px;cursor:pointer;transition:background .15s;border:1px solid rgba(255,255,255,.15)}
+.golden-part:hover{background:rgba(255,255,255,.16)}
+.golden-part.active{background:rgba(255,255,255,.22)}
+.gp-icon{font-size:18px;margin-bottom:5px}
+.gp-title{font-size:12px;font-weight:700;color:#fff;margin-bottom:3px}
+.gp-desc{font-size:11px;color:rgba(255,255,255,.65);line-height:1.4;margin-bottom:6px}
+.gp-btn{font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+/* RESEARCH */
+.research{padding-top:24px;border-top:1px solid var(--border)}
+.research h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--teal);margin-bottom:16px;letter-spacing:-.01em}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.r-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.r-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:7px}
+.r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.r-rows{display:flex;flex-direction:column;gap:7px}
+.r-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.r-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:155px}
+.r-key::after{content:':'}
+.r-val{color:var(--text-secondary)}
+.threat-callout{background:var(--red-pale);border:1.5px solid var(--red-border);border-left:5px solid var(--red);border-radius:10px;padding:18px 20px;box-shadow:var(--shadow-sm)}
+.tc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--red);margin-bottom:6px}
+.tc-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--teal);margin-bottom:7px;letter-spacing:-.01em}
+.tc-body{font-size:13px;color:var(--text-secondary);line-height:1.65}
+.tc-body strong{color:var(--text-primary)}
+.ref-list{display:flex;flex-direction:column;gap:6px}
+.ref-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.ref-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--teal-pale);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.ref-txt{color:var(--text-secondary)}.ref-txt strong{color:var(--text-primary)}
+.page-footer{text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:28px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(20,18,14,.45);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(3px)}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:14px;width:540px;max-width:calc(100vw - 32px);max-height:calc(100vh - 60px);overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(12px) scale(.98);transition:transform .22s cubic-bezier(.34,1.56,.64,1)}
+.overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-hdr{padding:20px 22px 15px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2;border-radius:14px 14px 0 0}
+.m-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block}
+.m-title{font-family:'DM Serif Display',serif;font-size:19px;color:var(--teal);line-height:1.25;margin-bottom:4px;padding-right:30px}
+.m-sub{font-size:12.5px;color:var(--text-secondary);font-style:italic}
+.m-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:15px;font-family:'DM Sans',sans-serif;transition:background .12s}
+.m-close:hover{background:var(--border)}
+.m-body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:14px}
+.info-sec{display:flex;flex-direction:column;gap:7px}
+.info-sec-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);padding-bottom:5px;border-bottom:1px solid var(--border-light)}
+.info-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.info-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:165px}
+.info-key::after{content:':'}
+.info-val{color:var(--text-secondary)}
+.mono-field{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-primary);background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:8px 10px;line-height:1.6;white-space:pre-wrap}
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="nav-back" onclick="window.history.back()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11L5 7l4-4"/></svg>
+    Back to Matrix
+  </button>
+  <div class="nav-crumb">
+    <span>Fixed Income</span><span class="sep">/</span>
+    <span>Data Fragmentation</span><span class="sep">/</span>
+    <span class="active">AI Data Sentry</span>
+  </div>
+  <div class="nav-badge">📊 Data Fragmentation</div>
+</nav>
+
+<div class="page">
+
+  <div class="uc-num">Use Case #1 &nbsp;·&nbsp; Data Foundation &nbsp;·&nbsp; Strategic Impact 8/10</div>
+  <h1>AI Data Sentry — Intelligent Ingestion &amp; Governance</h1>
+  <p class="header-sub">In the bond market, data arrives as a fragmented puzzle — Bloomberg terminals, dealer chat logs, PDF prospectuses, SWIFT messages — each with different reliability, latency, and structure. The Sentry sits at the gate and ensures nothing reaches the Golden Record until it is verified.</p>
+  <div class="chips">
+    <span class="chip teal">Agentic LLM</span>
+    <span class="chip navy">Apache Kafka</span>
+    <span class="chip purple">Neo4j Graph DB</span>
+    <span class="chip amber">Threshold Approval</span>
+    <span class="chip teal">Pilot Stage 2026</span>
+    <span class="chip green">Implementation Readiness: 8/10</span>
+  </div>
+
+  <div class="summary-row">
+    <div class="sc sc-gap"><div class="sc-lbl">The Gap</div><div class="sc-txt">Bond data systems are passive — they store whatever arrives, contaminated or not. A wrong yield from a stale Bloomberg feed sits alongside a verified exchange price with no distinction, corrupting every downstream model that reads it.</div></div>
+    <div class="sc sc-sol"><div class="sc-lbl">AI Solution</div><div class="sc-txt">An Agentic LLM at the database gate classifies, routes, and stages every incoming data packet before it can write to production. Nothing bypasses the Sentry — not a price update, not a covenant change, not a new issuer record.</div></div>
+    <div class="sc sc-val"><div class="sc-lbl">Value Created</div><div class="sc-txt">Every downstream AI model — credit scoring, covenant monitoring, portfolio analytics — is trained and operating on verified truth, not digital noise. The database becomes a vetted knowledge base, not a data swamp.</div></div>
+  </div>
+
+  <!-- STRATEGY BANNER -->
+  <div class="strategy-banner">
+    <div class="sb-label">Strategic Framing — Trustworthy Infrastructure</div>
+    <div class="sb-text">"By placing an Agentic LLM at the gate of the database, we move from <strong>Passive Storage</strong> to <strong>Active Governance</strong>. In the fragmented bond market, the database is often a liability because it contains contaminated data. The AI Data Sentry transforms it into a <strong>Vetted Knowledge Base</strong> — ensuring every downstream AI application builds on verified truth, not digital noise."</div>
+  </div>
+
+  <!-- MATURITY LADDER -->
+  <div class="section-title">
+    <h2>AI Maturity Ladder — Data Ingestion Governance</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="ladder-wrap">
+    <p class="ladder-intro">Most bond data operations sit at <strong>Level 2–3</strong> today. The proposed architecture is <strong>Level 4</strong>. Level 5 is an emerging capability — amber-flagged given regulatory requirements for human oversight on material data changes. Click any level for detail.</p>
+    <div class="ladder">
+      <div class="ladder-step ls-1" onclick="openModal('l1')">
+        <div class="ls-num">Level 1</div><div class="ls-icon">⌨️</div>
+        <div class="ls-name">Manual Entry</div><div class="ls-focus">Analysts type from PDFs</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-2" onclick="openModal('l2')">
+        <div class="ls-num">Level 2</div><div class="ls-icon">🔄</div>
+        <div class="ls-name">Basic ETL</div><div class="ls-focus">Scripts scrape to dump DB</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-3" onclick="openModal('l3')">
+        <div class="ls-num">Level 3</div><div class="ls-icon">🏷️</div>
+        <div class="ls-name">AI Classification</div><div class="ls-focus">LLM tags, one-DB dump</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-4" onclick="openModal('l4')">
+        <div class="ls-num">Level 4</div><div class="ls-icon">🛡️</div>
+        <div class="ls-name">Intelligent Staging</div><div class="ls-focus">Sentry + Quarantine + Review</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-5" onclick="openModal('l5')">
+        <div class="ls-num">Level 5</div>
+        <div class="ls-icon">🤖</div>
+        <div class="emerging-badge">⚡ Emerging</div>
+        <div class="ls-name">Autonomous Governance</div><div class="ls-focus">AI resolves 99.9% autonomously</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+    </div>
+    <div class="ladder-legend">
+      <div class="ll-item"><div class="ll-dot" style="background:#c8c4bc;"></div>Current state — most bond operations today</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--amber);"></div>Emerging / proposed architecture entry</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--teal);"></div>Proposed architecture</div>
+    </div>
+  </div>
+
+  <!-- MAIN DIAGRAM -->
+  <div class="section-title">
+    <h2>The Sentry-to-Golden-Record Architecture</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="diag-titlebar">
+      <span>Three-Tier Governance · Fast Path (auto-commit) and Review Path (human-gated) · Click any element</span>
+      <small>&nbsp;·&nbsp; Both paths write only to the Golden Record</small>
+    </div>
+
+    <div class="diagram-inner">
+
+      <!-- TIER 1: SENTRY COCKPIT -->
+      <div class="tier-cockpit" onclick="openModal('cockpit')">
+        <div class="tier-label-row">
+          <span style="font-size:16px;">🖥️</span>
+          <span class="tier-label">Tier 1 — Sentry Cockpit · Staging Queue</span>
+          <button class="tier-btn">Details →</button>
+        </div>
+        <table class="queue-table">
+          <thead>
+            <tr>
+              <th>Data Packet</th>
+              <th>Type</th>
+              <th>Source</th>
+              <th>Confidence</th>
+              <th>Path</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight:600;">HDFC Bank NCD — Yield 7.45%</td>
+              <td>Price Update</td>
+              <td>Bloomberg</td>
+              <td><div class="conf-bar-wrap"><div class="conf-track"><div class="conf-fill" style="width:98%;background:var(--teal);"></div></div><span class="conf-val" style="color:var(--teal);">98%</span></div></td>
+              <td><span class="path-badge path-fast">⚡ Fast</span></td>
+              <td><span class="status-badge s-auto">Auto-Commit</span></td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;">Reliance Retail — New Bond Issue</td>
+              <td>New Issuer</td>
+              <td>PDF Prospectus</td>
+              <td><div class="conf-bar-wrap"><div class="conf-track"><div class="conf-fill" style="width:82%;background:var(--amber);"></div></div><span class="conf-val" style="color:var(--amber);">82%</span></td>
+              <td><span class="path-badge path-review">⏳ Review</span></td>
+              <td><span class="status-badge s-review">Pending Admin</span></td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;">Tata Motors — Covenant Change</td>
+              <td>Covenant</td>
+              <td>SWIFT MT564</td>
+              <td><div class="conf-bar-wrap"><div class="conf-track"><div class="conf-fill" style="width:71%;background:var(--amber);"></div></div><span class="conf-val" style="color:var(--amber);">71%</span></td>
+              <td><span class="path-badge path-review">⏳ Review</span></td>
+              <td><span class="status-badge s-conflict">⚠ Conflict Detected</span></td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;">SBI — Registered Address Update</td>
+              <td>Entity Meta</td>
+              <td>MCA Registry</td>
+              <td><div class="conf-bar-wrap"><div class="conf-track"><div class="conf-fill" style="width:99%;background:var(--teal);"></div></div><span class="conf-val" style="color:var(--teal);">99%</span></td>
+              <td><span class="path-badge path-fast">⚡ Fast</span></td>
+              <td><span class="status-badge s-auto">Auto-Commit</span></td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;">Adani Ports — Rating Downgrade</td>
+              <td>Credit Event</td>
+              <td>CRISIL Feed</td>
+              <td><div class="conf-bar-wrap"><div class="conf-track"><div class="conf-fill" style="width:94%;background:var(--teal);"></div></div><span class="conf-val" style="color:var(--teal);">94%</span></td>
+              <td><span class="path-badge path-review">⏳ Review</span></td>
+              <td><span class="status-badge s-review">High Impact</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- DOWN ARROW: Cockpit → Classification -->
+      <div class="down-connector">
+        <svg width="24" height="28" viewBox="0 0 24 28">
+          <line x1="12" y1="0" x2="12" y2="20" stroke="#8ecece" stroke-width="2"/>
+          <polygon points="12,28 6,16 18,16" fill="#8ecece"/>
+        </svg>
+      </div>
+
+      <!-- CLASSIFICATION NODE (single, centred) -->
+      <div style="display:flex;justify-content:center;margin-bottom:0;">
+        <div class="classify-node" onclick="openModal('classify')">
+          <div class="cn-icon">🔍</div>
+          <div class="cn-title">LLM Classifier + Entity Resolver</div>
+          <div class="cn-desc">Interrogates every incoming packet — tags type, links to parent entity in Neo4j graph, assigns confidence score and path</div>
+          <button class="cn-btn">Details →</button>
+        </div>
+      </div>
+
+      <!-- FORK HEADER — the visual split -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:14px 0 0;position:relative;">
+        <!-- Fork line -->
+        <div style="position:absolute;top:0;left:25%;right:25%;height:2px;background:linear-gradient(to right,var(--teal) 50%,var(--amber) 50%);border-radius:2px;"></div>
+        <!-- Teal arm drop -->
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div style="width:2px;height:14px;background:var(--teal);"></div>
+          <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid var(--teal);"></div>
+          <div class="fork-label teal-label" style="margin-top:6px;">⚡ Fast Path &nbsp;·&nbsp; Structured / High Confidence</div>
+        </div>
+        <!-- Amber arm drop -->
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div style="width:2px;height:14px;background:var(--amber);"></div>
+          <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid var(--amber);"></div>
+          <div class="fork-label amber-label" style="margin-top:6px;">⏳ Review Path &nbsp;·&nbsp; Unstructured / High-Entropy</div>
+        </div>
+      </div>
+
+      <!-- TWO PARALLEL LANES -->
+      <div class="fork-wrap" style="margin-bottom:0;padding-bottom:0;">
+
+        <!-- FAST PATH (teal, left) -->
+        <div class="lane-wrap teal-lane">
+          <div class="lane-pipeline">
+
+            <div class="pnode n-teal" onclick="openModal('routing')">
+              <div class="pn-stage">Step 1</div><div class="pn-icon">🗺️</div>
+              <div class="pn-title">Routing</div>
+              <div class="pn-desc">Agent determines target schema — price DB, entity graph, or covenant store</div>
+              <button class="pn-btn">Details →</button>
+            </div>
+
+            <div class="lane-arr">
+              <svg width="16" height="18" viewBox="0 0 16 18"><line x1="8" y1="0" x2="8" y2="12" stroke="#8ecece" stroke-width="1.5"/><polygon points="8,18 3,10 13,10" fill="#8ecece"/></svg>
+            </div>
+
+            <div class="pnode n-teal" onclick="openModal('autocommit')">
+              <div class="pn-stage">Step 2</div><div class="pn-icon">✅</div>
+              <div class="pn-title">Auto-Commit</div>
+              <div class="pn-desc">High-confidence structured data written directly to production with lineage tag</div>
+              <button class="pn-btn">Details →</button>
+            </div>
+
+            <div style="margin-top:8px;background:rgba(13,115,119,.12);border-radius:7px;padding:8px 10px;">
+              <div style="font-size:10px;font-weight:700;color:var(--teal);margin-bottom:3px;">LINEAGE TAG WRITTEN</div>
+              <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-secondary);">Source: Bloomberg &nbsp;·&nbsp; Conf: 98% &nbsp;·&nbsp; T: 14:02:33</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- REVIEW PATH (amber, right) -->
+        <div class="lane-wrap amber-lane">
+          <div class="lane-pipeline">
+
+            <div class="pnode n-amber" onclick="openModal('staging')">
+              <div class="pn-stage">Step 1</div><div class="pn-icon">🔒</div>
+              <div class="pn-title">Staging / Quarantine</div>
+              <div class="pn-desc">Data parked in temporary store — cannot touch production until approved</div>
+              <button class="pn-btn">Details →</button>
+            </div>
+
+            <div class="lane-arr">
+              <svg width="16" height="18" viewBox="0 0 16 18"><line x1="8" y1="0" x2="8" y2="12" stroke="#f5c882" stroke-width="1.5"/><polygon points="8,18 3,10 13,10" fill="#f5c882"/></svg>
+            </div>
+
+            <div class="pnode n-amber" onclick="openModal('conflict')">
+              <div class="pn-stage">Step 2</div><div class="pn-icon">⚔️</div>
+              <div class="pn-title">Conflict Detection</div>
+              <div class="pn-desc">Incoming data compared against existing record — mismatches flagged in red with GenAI rationale</div>
+              <button class="pn-btn">Details →</button>
+            </div>
+
+            <div class="lane-arr">
+              <svg width="16" height="18" viewBox="0 0 16 18"><line x1="8" y1="0" x2="8" y2="12" stroke="#f5c882" stroke-width="1.5"/><polygon points="8,18 3,10 13,10" fill="#f5c882"/></svg>
+            </div>
+
+            <div class="pnode n-purple" onclick="openModal('adminreview')">
+              <div class="pn-stage">Step 3</div><div class="pn-icon">👤</div>
+              <div class="pn-title">Admin Review</div>
+              <div class="pn-desc">Side-by-side current vs incoming + AI rationale — single-click Approve / Reject</div>
+              <button class="pn-btn">Details →</button>
+            </div>
+
+          </div>
+        </div>
+
+      </div><!-- end fork-wrap -->
+
+      <!-- MERGE + DOWN TO GOLDEN -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-bottom:0;">
+        <div style="display:flex;justify-content:center;padding:10px 0 0;">
+          <svg width="24" height="28" viewBox="0 0 24 28"><line x1="12" y1="0" x2="12" y2="20" stroke="#8ecece" stroke-width="2"/><polygon points="12,28 6,16 18,16" fill="#8ecece"/></svg>
+        </div>
+        <div style="display:flex;justify-content:center;padding:10px 0 0;">
+          <svg width="24" height="28" viewBox="0 0 24 28"><line x1="12" y1="0" x2="12" y2="20" stroke="#f5c882" stroke-width="2"/><polygon points="12,28 6,16 18,16" fill="#f5c882"/></svg>
+        </div>
+      </div>
+
+      <!-- TIER 3: GOLDEN RECORD -->
+      <div class="golden-tier" onclick="openModal('goldenrecord')">
+        <div class="golden-header">
+          <div class="golden-header-icon">🏆</div>
+          <div>
+            <div class="golden-header-title">Tier 3 — The Golden Record · Production Database</div>
+            <div class="golden-header-sub">The only database that matters — every entry verified, tagged with lineage, and immutably logged</div>
+          </div>
+          <button class="golden-header-btn" onclick="event.stopPropagation();openModal('goldenrecord')">Details →</button>
+        </div>
+        <div class="golden-part" onclick="event.stopPropagation();openModal('verified')">
+          <div class="gp-icon">✅</div>
+          <div class="gp-title">Verified Data Only</div>
+          <div class="gp-desc">Only data that has passed the Sentry — via auto-commit or admin approval — can write here. No exceptions.</div>
+          <button class="gp-btn">Details →</button>
+        </div>
+        <div class="golden-part" onclick="event.stopPropagation();openModal('lineage')">
+          <div class="gp-icon">🏷️</div>
+          <div class="gp-title">Full Lineage Tags</div>
+          <div class="gp-desc">Every data point carries: Source, Confidence Score, Timestamp, Path taken, and Approving admin (if applicable).</div>
+          <button class="gp-btn">Details →</button>
+        </div>
+        <div class="golden-part" onclick="event.stopPropagation();openModal('auditlog')">
+          <div class="gp-icon">🔗</div>
+          <div class="gp-title">Immutable Audit Log</div>
+          <div class="gp-desc">Every write is logged: Who, When, Why, and which raw source packet it originated from. Fully traceable for regulatory review.</div>
+          <button class="gp-btn">Details →</button>
+        </div>
+      </div>
+
+    </div><!-- end diagram-inner -->
+  </div><!-- end diagram-wrap -->
+
+  <!-- RESEARCH -->
+  <div class="research">
+    <h2>Research Notes</h2>
+    <div class="r-grid">
+
+      <div class="threat-callout">
+        <div class="tc-label">⚠ Operational Risk — The Human Speed-Bump</div>
+        <div class="tc-title">10,000 Approvals a Day Turns Governance Into Theatre</div>
+        <div class="tc-body">If an admin must approve every single incoming data packet, they will stop paying attention within days — approving everything reflexively, defeating the entire purpose of the Review Path. The solution is <strong>Threshold Approval</strong>: the Sentry only interrupts the admin for <strong>High-Entropy events</strong> — a credit rating change, a price deviation greater than 5%, a new bond issue from an unknown entity, or any data that contradicts an existing record. Routine updates (address changes, minor metadata corrections, price confirmations already matching three sources) are auto-committed to the Fast Path with a lineage tag. The admin's attention is rationed to the decisions that actually require human judgment.</div>
+      </div>
+
+      <div class="threat-callout">
+        <div class="tc-label">⚠ Latency Risk — Stale Data in the Staging Area</div>
+        <div class="tc-title">A 4-Hour Approval Lag Makes Bond Prices Worthless</div>
+        <div class="tc-body">Bond markets move in milliseconds. If a yield update for a major NCD sits in the Staging Area for four hours waiting for admin approval, it is not just stale — it is <strong>actively dangerous</strong>. A trader reading the production database will see the old yield, make a decision based on it, and execute a trade at the wrong price. The mitigation has two layers: first, price data specifically should be tiered — prices from confirmed multi-source consensus (same figure from three independent feeds) bypass the Review Path entirely and go Fast Path. Second, the admin SLA for High-Entropy items must be enforced by an escalation timer — if no action is taken within 30 minutes, the item auto-escalates to a senior approver and a flag is added to the production record noting that the entry may be pending update.</div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--teal);"></div>Technical Architecture</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">LLM Classifier</span><span class="r-val">GPT-4o or Claude 3.5 for classification — identifies data type, extracts key fields, generates the rationale text shown to the admin in the Review Path</span></div>
+          <div class="r-row"><span class="r-key">Apache Kafka</span><span class="r-val">Message queue between the Sentry agent and the staging area — decouples ingestion speed from processing speed. Also provides durability: if the classifier goes down, no packets are lost</span></div>
+          <div class="r-row"><span class="r-key">Neo4j Graph DB</span><span class="r-val">Entity resolution layer — when "Reliance Retail" arrives, Neo4j confirms it belongs under "Reliance Industries Ltd" and routes the data to the correct parent node. Clean relationships enable accurate contagion mapping</span></div>
+          <div class="r-row"><span class="r-key">Staging Area</span><span class="r-val">Separate temporary database — completely isolated from production. Data in staging cannot influence any trading system until it has been committed. The quarantine is the safety guarantee.</span></div>
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--navy);"></div>Why This Matters for Downstream AI</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">Cleaner training sets</span><span class="r-val">Downstream credit models, covenant monitors, and portfolio analytics are trained and operated only on approved data — eliminating model drift caused by contaminated inputs</span></div>
+          <div class="r-row"><span class="r-key">Calibrated confidence</span><span class="r-val">Every data point in the Golden Record carries a confidence score. A model reading a 62% confidence yield will weight it differently from a 98% confidence yield — systematically better decisions than treating all inputs equally</span></div>
+          <div class="r-row"><span class="r-key">Contagion mapping</span><span class="r-val">Because the Neo4j graph is populated only with clean, resolved entity relationships, the question "what happens to our portfolio if Reliance defaults?" produces accurate answers — not answers corrupted by unresolved aliases or missing parent-subsidiary links</span></div>
+          <div class="r-row"><span class="r-key">Regulatory traceability</span><span class="r-val">Every data point links back to its original raw source and the admin decision that approved it — the audit trail required by SEBI and MiFID II data governance obligations</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-footer">
+    Hexaware Financial Services &nbsp;·&nbsp; AI in Fixed Income Markets &nbsp;·&nbsp; Data Fragmentation &nbsp;·&nbsp; Preliminary Research 2026
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="m-tag" id="mTag"></div>
+      <div class="m-title" id="mTitle"></div>
+      <div class="m-sub" id="mSub"></div>
+      <button class="m-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="m-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+const NODES = {
+  l1:{tag:'Level 1 · Manual Entry',ts:'background:#ece9e3;color:#6b6760;',title:'Manual Entry',sub:'Junior analysts read PDFs and type data into spreadsheets — the baseline that most mid-size bond operations still partially rely on',sections:[
+    {t:'How It Works',rows:[{k:'Process',v:'An analyst receives a bond prospectus PDF, reads it, and manually enters the yield, maturity date, issuer name, and covenant terms into the database. Repeat for hundreds of bonds per week.'},{k:'Error rate',v:'Manual re-keying of financial data produces error rates of 1–3%. In a bond portfolio of 500 positions, that means 5–15 records with incorrect data at any given time.'},{k:'Scale ceiling',v:'A team of 10 analysts can process perhaps 200–400 bond records per day at acceptable quality. A hyperscaler with thousands of bond positions daily hits this ceiling immediately.'}]}
+  ]},
+  l2:{tag:'Level 2 · Basic ETL',ts:'background:#ece9e3;color:#6b6760;',title:'Basic ETL Scripts',sub:'Scripts scrape websites and vendor feeds, dumping raw data into a single database with minimal validation',sections:[
+    {t:'How It Works',rows:[{k:'Technology',v:'Extract-Transform-Load pipelines pull data from Bloomberg, Reuters, and exchange websites on a scheduled basis — hourly, daily, or on-demand'},{k:'Improvement',v:'Eliminates most manual re-keying. Data arrives faster and at higher volume than human analysts could process.'},{k:'The dump DB problem',v:'"High noise" — the ETL script does not distinguish between a verified price from three matching sources and a single stale figure from a lagging feed. Everything lands in the same table with equal apparent authority.'},{k:'Garbage in',v:'If Bloomberg has a data error, it goes straight into production. The database now contains contaminated data with no mechanism to detect or quarantine it.'}]}
+  ]},
+  l3:{tag:'Level 3 · AI Classification',ts:'background:#fff8ed;color:#b86a00;',title:'AI Classification',sub:'LLMs tag incoming data by type — but everything still writes to a single database without a staging gate',sections:[
+    {t:'What It Does',rows:[{k:'Technology',v:'An LLM classifier reads each incoming data packet and tags it: "This is a Yield Update for HDFC Bank NCD." "This is a Covenant Change for Tata Motors." The tags improve searchability and downstream processing.'},{k:'Improvement over Level 2',v:'Tagged data enables better routing to the right analytical tools. A credit model knows to look for covenant tags; a pricing model knows to look for yield tags.'},{k:'What it still lacks',v:'The fundamental problem remains: all tagged data still writes directly to production. A tagged incorrect yield is still an incorrect yield in the database. Classification without staging is labelling without quarantine.'}]}
+  ]},
+  l4:{tag:'Level 4 · Proposed Architecture',ts:'background:#e6f7f7;color:#0d7377;',title:'Intelligent Staging — The Sentry Architecture',sub:'The proposed model: classification + routing + quarantine + threshold approval. Nothing touches production until verified.',sections:[
+    {t:'The Core Innovation',rows:[{k:'The gate',v:'Every data packet must pass through the Sentry before it can write to production. The Sentry classifies, routes, and stages — auto-committing low-risk data and quarantining high-entropy data for human review.'},{k:'Threshold approval',v:'The system distinguishes between routine updates (auto-commit) and high-entropy events (admin review) — rationing human attention to decisions that actually require judgment'},{k:'Conflict detection',v:'Before staging, the system compares incoming data against the existing record. A yield of 5.2% arriving when the DB shows 5.0% is flagged as a conflict with a GenAI rationale for the admin to review.'},{k:'Lineage tagging',v:'Every committed record carries its provenance: source, confidence, timestamp, path taken. Downstream models know exactly how much to trust each data point.'}]}
+  ]},
+  l5:{tag:'Level 5 · Emerging Capability',ts:'background:#fff8ed;color:#b86a00;',title:'Autonomous Governance',sub:'AI agents auto-resolve 99.9% of data conflicts without human touch — marked amber because regulatory requirements still mandate oversight for material changes',sections:[
+    {t:'What It Means',rows:[{k:'Vision',v:'The system auto-resolves conflicts by weighting source credibility, cross-referencing multiple feeds, and applying learned patterns from historical admin decisions — only escalating genuine edge cases (true Black Swan data events) to humans.'},{k:'Current constraint',v:'MiFID II, SEBI data governance regulations, and internal risk policies for most institutions still require human sign-off on material data changes — credit rating changes, new bond issues, covenant modifications. Fully autonomous governance at Level 5 is architecturally feasible but regulatory permission is the bottleneck.'},{k:'Timeline',v:'Achievable within 3–5 years as regulators develop audit frameworks that can validate autonomous data governance systems. DTCC\'s smart contract pilots are the nearest analogue — they show regulators are open to the concept.'}]}
+  ]},
+  cockpit:{tag:'Tier 1 · Sentry Cockpit',ts:'background:#e6f7f7;color:#0d7377;',title:'Sentry Cockpit — Staging Queue',sub:'The admin\'s view — only what requires human attention, organised by urgency and path',sections:[
+    {t:'What the Admin Sees',rows:[{k:'Staging Queue',v:'A live list of all data packets currently in the system — those on the Fast Path with their auto-commit confirmation, and those on the Review Path awaiting decision'},{k:'Confidence scores',v:'Each packet shows its LLM confidence score — a proxy for how certain the system is about its classification and the data\'s accuracy. Below 85% triggers the Review Path by default.'},{k:'Path assignment',v:'Fast Path (teal) = structured data, high confidence, multi-source confirmation. Review Path (amber) = unstructured documents, single source, high-entropy events, or any conflict with existing records.'},{k:'Conflict flag',v:'Any packet where the incoming data contradicts the existing production record is marked in red regardless of confidence score — the conflict must be resolved by a human before commit'}]},
+    {t:'SLA Management',rows:[{k:'Escalation timer',v:'Review Path items that receive no admin action within 30 minutes automatically escalate to a senior approver and a warning flag is appended to the staging record'},{k:'Throughput metrics',v:'The cockpit shows daily volume by path (Fast vs Review), average approval time, and auto-commit rate — used to tune the confidence threshold over time'}]}
+  ]},
+  classify:{tag:'Classification Engine · Central',ts:'background:#e6f7f7;color:#0d7377;',title:'LLM Classifier + Entity Resolver',sub:'The brain of the Sentry — reads every incoming packet, understands it, and decides where it belongs',sections:[
+    {t:'Classification',rows:[{k:'Technology',v:'GPT-4o or Claude 3.5 reads the raw data packet — whether it\'s a Bloomberg price update, a PDF clause, or a SWIFT message — and outputs a structured classification'},{k:'Output fields',v:'Data type (Yield Update / New Issuer / Covenant Change / Entity Metadata / Credit Event), affected entity name, key extracted values, confidence score, and path recommendation (Fast or Review)'},{k:'Speed',v:'Classification completes in 200–400ms per packet — fast enough for real-time price feeds, comfortably ahead of document processing requirements'}]},
+    {t:'Entity Resolution via Neo4j',rows:[{k:'The problem',v:'"Reliance Retail" arrives in a packet. Is this a new entity? An alias? A subsidiary? Without resolution, it might create a duplicate node in the database or worse, overwrite the wrong entity\'s record.'},{k:'How it works',v:'The classifier queries the Neo4j graph database with the entity name. Neo4j returns the closest matching node and its parent chain — confirming that "Reliance Retail" is a subsidiary under "Reliance Industries Ltd" with 99.2% confidence.'},{k:'Result',v:'The data is automatically routed to the correct parent node in the graph. No duplicates, no misrouting, no broken relationships.'}]}
+  ]},
+  routing:{tag:'Fast Path · Step 1',ts:'background:#e6f7f7;color:#0d7377;',title:'Routing',sub:'Determines the correct database schema and table for the verified data packet',sections:[
+    {t:'Routing Logic',rows:[{k:'Price updates',v:'Directed to the time-series pricing database — the schema that stores yield, spread, and duration history for every bond in the portfolio'},{k:'Entity data',v:'Directed to the Neo4j graph database — the schema that stores corporate structures, parent-subsidiary relationships, and issuer metadata'},{k:'Covenant data',v:'Directed to the covenant monitoring store — the schema that the Covenant Breach Early Warning system reads from'},{k:'Credit events',v:'Directed to both the entity graph (to update credit status) and the portfolio analytics system (to trigger re-valuation)'}]},
+    {t:'Why Routing Matters',rows:[{k:'Schema integrity',v:'Writing a yield figure to the entity graph or an address update to the pricing database would corrupt both schemas. The routing step enforces schema correctness automatically.'},{k:'Kafka as buffer',v:'The routing decision and the actual write are decoupled by Kafka. If the target database is temporarily unavailable, the message is queued and delivered when it recovers — no data loss.'}]}
+  ]},
+  autocommit:{tag:'Fast Path · Step 2',ts:'background:#e6f7f7;color:#0d7377;',title:'Auto-Commit',sub:'High-confidence, low-entropy data writes directly to the production Golden Record with a lineage tag',sections:[
+    {t:'Commit Criteria',rows:[{k:'Confidence threshold',v:'Data with a classifier confidence score above 90% AND no conflict with existing records is eligible for auto-commit'},{k:'Multi-source confirmation',v:'Price data specifically requires confirmation from at least two independent sources before auto-commit — a single Bloomberg figure is staged; a Bloomberg figure matching a Reuters figure auto-commits'},{k:'Low-entropy types',v:'Entity metadata updates (addresses, registration numbers), price confirmations with multi-source agreement, and routine coupon payment confirmations are the primary auto-commit candidates'}]},
+    {t:'What Gets Written',rows:[{k:'Data value',v:'The extracted, classified, entity-resolved data point — e.g. "HDFC Bank NCD yield: 7.45%"'},{k:'Lineage tag',v:'"Source: Bloomberg (primary) + Reuters (confirmation) · Confidence: 98% · Classifier: Claude 3.5 · Timestamp: 2026-03-15T14:02:33Z · Path: Fast Auto"'},{k:'No human required',v:'The entire Fast Path — classification, entity resolution, routing, commit, lineage tagging — completes in under 2 seconds for structured data updates'}]}
+  ]},
+  staging:{tag:'Review Path · Step 1',ts:'background:#fff8ed;color:#b86a00;',title:'Staging / Quarantine',sub:'High-entropy data parked in a completely isolated temporary store — it cannot influence any production system until approved',sections:[
+    {t:'What Quarantine Means',rows:[{k:'Isolation guarantee',v:'The staging database is a completely separate system from the production Golden Record. There are no read connections between staging and any trading system, pricing model, or analytics platform.'},{k:'What goes here',v:'Any data below the confidence threshold, any unstructured document (prospectus PDFs, SWIFT narrative fields), any single-source price update without confirmation, and any data that triggered a conflict with existing records'},{k:'Retention',v:'Staged data that is neither approved nor rejected within 24 hours is automatically archived with a "Stale — Not Committed" tag and flagged to the data governance team for review'}]},
+    {t:'Zero-Hallucination Guarantee',rows:[{k:'The principle',v:'The staging architecture provides the core guarantee of the Sentry system: no AI-classified data can ever directly influence a trading decision without either passing the confidence threshold or receiving explicit human approval'},{k:'Why this matters',v:'An LLM misreading a bond yield from a poorly formatted PDF and auto-committing 7.45% when the actual figure is 4.75% is a direct financial loss. Staging ensures that misreads are caught in quarantine, not in the trading system.'}]}
+  ]},
+  conflict:{tag:'Review Path · Step 2',ts:'background:#fff8ed;color:#b86a00;',title:'Conflict Detection',sub:'Incoming data compared against the existing Golden Record — every discrepancy surfaced with a GenAI rationale',sections:[
+    {t:'How It Works',rows:[{k:'Comparison',v:'Before the staged data is presented to the admin, the Conflict Detector queries the production DB for the existing record on the same entity and field. If the incoming value differs, a conflict is raised.'},{k:'Severity rating',v:'Conflicts are rated by magnitude: a 0.05% yield difference is "Minor Discrepancy"; a 2% yield difference is "Major Conflict"; a previously unseen entity is "Unknown — Cannot Resolve"'},{k:'GenAI rationale',v:'The admin sees a text box saying: "I suggest updating the yield to 5.2% because 3 separate dealer feeds now match this value, despite the legacy Bloomberg feed still showing 5.0%. The legacy feed\'s last update was 14 hours ago."'}]},
+    {t:'Conflict Types',rows:[{k:'Price conflict',v:'Incoming yield differs from existing by more than a configurable threshold (default 5 basis points for investment grade bonds)'},{k:'Entity conflict',v:'Incoming data references an entity name that partially matches but does not exactly resolve to an existing graph node — possible alias or new subsidiary'},{k:'Covenant conflict',v:'Incoming covenant terms differ from the existing indenture record — the most serious conflict type, always requires human review regardless of confidence score'}]}
+  ]},
+  adminreview:{tag:'Review Path · Step 3',ts:'background:#f3f0fb;color:#5b3faa;',title:'Admin Review — The Human-in-the-Loop',sub:'The decision cockpit for high-entropy data — side-by-side comparison, AI rationale, and single-click resolution',sections:[
+    {t:'What the Admin Sees',rows:[{k:'Side-by-side view',v:'Left column: the current production record. Right column: the incoming staged data. Differences highlighted in amber.'},{k:'AI rationale',v:'A 2–3 sentence plain-English explanation of why the Sentry flagged this for review, which sources confirm the incoming data, and what the downstream impact of approving or rejecting would be'},{k:'Source confidence breakdown',v:'A mini bar chart showing which sources agree with the incoming value and which do not — e.g. "3 dealer feeds: 5.2% / Bloomberg legacy: 5.0%"'},{k:'Actions',v:'Approve (commit to Golden Record), Reject (discard and archive), or Defer (return to staging with a note for re-evaluation after more data arrives)'}]},
+    {t:'Approve to Commit Flow',rows:[{k:'On approval',v:'Admin clicks Approve. The staged data is moved to the Golden Record with an additional lineage tag: "Approved by: [Admin ID] · Timestamp · Reason: Multi-source confirmation"'},{k:'Notification',v:'A push notification is sent to the Trading Desk: "HDFC Bank NCD yield updated to 7.45% — previously 7.40%. Effective immediately in all analytics."'},{k:'Immutable log',v:'The approval decision, the admin ID, the timestamp, and the full staged record are written to the Audit Log — the regulatory proof that material data changes had human oversight'}]}
+  ]},
+  goldenrecord:{tag:'Tier 3 · Golden Record',ts:'background:#edf3fb;color:#1c3557;',title:'The Golden Record',sub:'The only database that matters — every entry has passed the Sentry, carries full lineage, and is immutably logged',sections:[
+    {t:'What Makes It Golden',rows:[{k:'Admission control',v:'The only entries that exist here are ones that either passed the auto-commit confidence threshold or received explicit admin approval. There is no other path in.'},{k:'Two-tier trust',v:'Records carry a trust tier: "Auto-Committed" (high confidence, multi-source) and "Admin-Approved" (lower initial confidence, human-verified). Downstream models can weight these differently.'},{k:'Downstream consumers',v:'Every AI model in the Fixed Income stack reads from here: the Creditworthiness engine, the Covenant Breach monitor, the Yield Curve modeller, the BondPulse platform, the Liquidity Risk scorer. They all depend on this being clean.'}]}
+  ]},
+  verified:{tag:'Golden Record · Property 1',ts:'background:#e6f7f7;color:#0d7377;',title:'Verified Data Only',sub:'The admission guarantee — no unverified data can exist in production',sections:[
+    {t:'The Guarantee',rows:[{k:'Hard constraint',v:'The staging and production databases have no direct write path between them except through the Sentry\'s commit action — which requires either auto-commit approval or admin sign-off'},{k:'Monitoring',v:'A continuous integrity check verifies that no records exist in production without a corresponding Sentry commit event in the audit log. Any anomaly triggers an immediate alert to the data governance team'},{k:'Recovery',v:'If a bad record is somehow discovered in production (e.g. from a legacy ETL process still running), it is immediately quarantined back to staging and its lineage is investigated before any trading system is alerted to re-read'}]}
+  ]},
+  lineage:{tag:'Golden Record · Property 2',ts:'background:#e6f7f7;color:#0d7377;',title:'Full Lineage Tags',sub:'Every data point knows exactly where it came from and how confident we should be in it',sections:[
+    {t:'What Every Record Carries',rows:[{k:'Source',v:'The originating system — Bloomberg Terminal, Reuters, SWIFT MT564, CRISIL feed, MCA registry, PDF prospectus'},{k:'Confidence score',v:'The LLM classifier\'s confidence in its extraction and classification — a critical input for downstream models that need to know how much to trust each data point'},{k:'Path taken',v:'Fast Path auto-commit or Review Path admin-approved — allows downstream models to apply different trust weights to each'},{k:'Timestamp chain',v:'Three timestamps: when the raw data arrived at the Sentry gate, when it was committed to the Golden Record, and (for Review Path) when the admin made their decision'}]},
+    {t:'Why Lineage Enables Better AI',rows:[{k:'Confidence-weighted inference',v:'A credit model that knows yield X has 98% confidence and yield Y has 62% confidence can weight them appropriately in its risk calculation — rather than treating both as equally authoritative'},{k:'Data freshness',v:'The arrival timestamp tells every downstream model how old this data point is — enabling proper staleness checks before making time-sensitive decisions'}]}
+  ]},
+  auditlog:{tag:'Golden Record · Property 3',ts:'background:#e6f7f7;color:#0d7377;',title:'Immutable Audit Log',sub:'The complete regulatory record — every write, every decision, every approval, linked back to the original raw source',sections:[
+    {t:'What Gets Logged',rows:[{k:'Every commit',v:'For every record written to the Golden Record: the full staged packet, the classifier output, the confidence score, the path taken, and the commit timestamp'},{k:'Every admin decision',v:'For Review Path approvals: admin ID, decision (Approve/Reject/Defer), decision timestamp, and the rationale text shown to the admin at decision time'},{k:'Every conflict',v:'Every conflict detection event — even those that were auto-resolved by the classifier — is logged with the resolution rationale for retrospective analysis'},{k:'Raw source link',v:'Every Golden Record entry links back to the original raw data packet in the archive — a regulator can trace any data point in the trading system back to the exact Bloomberg message or PDF paragraph it originated from'}]},
+    {t:'Regulatory Use',rows:[{k:'SEBI data governance',v:'SEBI requires regulated entities to maintain records of data sources and data quality processes for audit. The Audit Log satisfies this requirement comprehensively.'},{k:'MiFID II audit trail',v:'For EU-regulated operations, MiFID II requires demonstrable data quality processes. The Admin Review step specifically — with its human sign-off on material data changes — is the regulatory evidence of governance-by-design.'}]}
+  ]}
+};
+
+function openModal(key){
+  const d=NODES[key];if(!d)return;
+  document.querySelectorAll('.ladder-step,.classify-node,.pnode,.tier-cockpit,.golden-part,.golden-tier').forEach(n=>n.classList.remove('active'));
+  if(event&&event.currentTarget)event.currentTarget.classList.add('active');
+  document.getElementById('mTag').textContent=d.tag;
+  document.getElementById('mTag').style.cssText=d.ts+'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block;';
+  document.getElementById('mTitle').textContent=d.title;
+  document.getElementById('mSub').textContent=d.sub;
+  const body=document.getElementById('mBody');body.innerHTML='';
+  d.sections.forEach(sec=>{
+    const sd=document.createElement('div');sd.className='info-sec';
+    const st=document.createElement('div');st.className='info-sec-title';st.textContent=sec.t;sd.appendChild(st);
+    if(sec.rows)sec.rows.forEach(r=>{const row=document.createElement('div');row.className='info-row';row.innerHTML=`<span class="info-key">${r.k}</span><span class="info-val">${r.v}</span>`;sd.appendChild(row);});
+    body.appendChild(sd);
+  });
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  document.querySelectorAll('.ladder-step,.classify-node,.pnode,.tier-cockpit,.golden-part,.golden-tier').forEach(n=>n.classList.remove('active'));
+}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target===document.getElementById('overlay'))closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+</script>
+</body>
+</html>

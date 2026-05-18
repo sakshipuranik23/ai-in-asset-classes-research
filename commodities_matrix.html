@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI in Financial Markets — Commodities Use Case Matrix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+
+  /* Commodities deep earth green */
+  --cm:#2d6a2d;--cm-light:#3a8a3a;--cm-pale:#edf7ed;--cm-border:#90c890;
+
+  /* Quadrant colours — green tones */
+  --stars-fill:#f0faf0;--stars-border:#7bc87b;--stars-dot:#2d6a2d;
+  --priority-fill:#e8f5e8;--priority-border:#5aaa5a;--priority-dot:#2d6a2d;
+  --stakes-fill:#f5f9ef;--stakes-border:#9dc87a;--stakes-dot:#4a7a28;
+  --monitor-fill:#faf5f5;--monitor-border:#d49090;--monitor-dot:#a04040;
+
+  /* Category colours */
+  --earth:#2d6a2d;--earth-pale:#edf7ed;--earth-border:#90c890;
+  --deriv:#1c3557;--deriv-pale:#edf3fb;--deriv-border:#a8c4e0;
+  --policy:#8B6914;--policy-pale:#fdf6e3;--policy-border:#d4b96a;
+  --platform:#5b3faa;--platform-pale:#f3f0fb;--platform-border:#c4b0f0;
+
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg:0 12px 40px rgba(0,0,0,0.12);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);min-height:100vh;font-size:14px;line-height:1.5}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-sm)}
+.nav-brand{font-family:'DM Serif Display',serif;font-size:15px;color:var(--cm);margin-right:36px;white-space:nowrap;letter-spacing:-.01em}
+.nav-brand span{color:var(--text-muted);font-style:italic}
+.nav-tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tab{padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;color:var(--text-secondary);transition:all .15s;border:none;background:none;font-family:'DM Sans',sans-serif}
+.nav-tab:hover{background:var(--bg);color:var(--text-primary)}
+.nav-tab.active{background:var(--cm);color:#fff}
+.nav-tab.soon{color:var(--text-muted);cursor:default}
+
+/* PAGE */
+.page{max-width:1240px;margin:0 auto;padding:24px 24px 32px}
+
+/* Asset banner */
+.asset-banner{background:var(--cm);border-radius:10px 10px 0 0;padding:10px 18px;display:flex;align-items:center;gap:12px}
+.ab-icon{font-size:18px}
+.ab-label{font-family:'DM Serif Display',serif;font-size:13px;color:#fff;letter-spacing:-.01em}
+.ab-sub{font-size:11.5px;color:rgba(255,255,255,.55)}
+.ab-constraint{margin-left:auto;font-size:11px;font-weight:600;color:rgba(255,255,255,.8);background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:3px 10px}
+
+/* Header */
+.header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:24px;background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.header-left h1{font-family:'DM Serif Display',serif;font-size:24px;color:var(--cm);letter-spacing:-.02em;line-height:1.2;margin-bottom:4px}
+.header-left p{color:var(--text-secondary);font-size:13px}
+.header-stats{display:flex;gap:12px;flex-shrink:0}
+.stat-chip{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 14px;text-align:center;box-shadow:var(--shadow-sm)}
+.stat-chip .num{font-family:'DM Serif Display',serif;font-size:22px;color:var(--cm);line-height:1}
+.stat-chip .lbl{font-size:11px;color:var(--text-muted);font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+
+/* Physical-financial callout */
+.thesis-bar{background:var(--cm);border-radius:10px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow-md)}
+.tb-quote{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em;flex:1}
+.tb-quote em{color:rgba(255,255,255,.6);font-style:normal}
+.tb-icons{display:flex;align-items:center;gap:8px;flex-shrink:0;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 14px}
+.tb-icons span{font-size:22px}
+.tb-arr{font-size:16px;color:rgba(255,255,255,.6)}
+
+/* Filter */
+.filter-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.filter-label{font-size:12px;color:var(--text-muted);font-weight:500}
+.filter-btn{padding:4px 11px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:12px;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:all .12s;font-family:'DM Sans',sans-serif}
+.filter-btn:hover{border-color:var(--cm);color:var(--cm)}
+.filter-btn.active{background:var(--cm);color:#fff;border-color:var(--cm)}
+.filter-btn.earth{border-color:var(--earth-border);color:var(--earth)}
+.filter-btn.earth.active{background:var(--earth);color:#fff}
+.filter-btn.deriv{border-color:var(--deriv-border);color:var(--deriv)}
+.filter-btn.deriv.active{background:var(--deriv);color:#fff}
+.filter-btn.policy{border-color:var(--policy-border);color:var(--policy)}
+.filter-btn.policy.active{background:var(--policy);color:#fff}
+.filter-btn.platform{border-color:var(--platform-border);color:var(--platform)}
+.filter-btn.platform.active{background:var(--platform);color:#fff}
+
+/* Legend */
+.legend{display:flex;align-items:center;gap:20px;margin-bottom:16px;flex-wrap:wrap}
+.legend-label{font-size:12px;color:var(--text-muted);font-weight:500}
+.legend-items{display:flex;gap:16px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-secondary);font-weight:500}
+.legend-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.legend-extra{display:flex;gap:12px;margin-left:8px;padding-left:20px;border-left:1px solid var(--border);flex-wrap:wrap}
+.leg-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px}
+.lb-proposed{background:var(--cm-pale);color:var(--cm);border:1px solid var(--cm-border)}
+.lb-flagship{background:var(--platform-pale);color:var(--platform);border:1px solid var(--platform-border)}
+
+/* Matrix */
+.matrix-wrapper{display:flex;gap:16px;align-items:flex-start}
+.y-axis-label{writing-mode:vertical-rl;transform:rotate(180deg);font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;padding:8px 0;flex-shrink:0}
+.matrix-col{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.x-axis-label{text-align:center;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.08em;padding:8px 0 0}
+.matrix-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:6px;background:var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-md)}
+.quadrant{position:relative;min-height:320px;padding:14px;overflow:visible;cursor:default}
+.quadrant.stars{background:var(--stars-fill)}
+.quadrant.priority{background:var(--priority-fill)}
+.quadrant.stakes{background:var(--stakes-fill)}
+.quadrant.monitor{background:var(--monitor-fill)}
+.q-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;opacity:.7;margin-bottom:2px}
+.q-desc{font-size:11px;opacity:.55;margin-bottom:10px;line-height:1.3}
+.stars .q-label{color:#1f5a1f}.priority .q-label{color:#1f5a1f}
+.stakes .q-label{color:#2a5a1a}.monitor .q-label{color:#7a2020}
+
+/* Dots */
+.dots-area{position:absolute;inset:46px 10px 10px 10px;min-height:240px;overflow:visible}
+.dot-wrapper{position:absolute;transform:translate(-50%,-50%);cursor:pointer;z-index:10}
+.dot{border-radius:50%;border:2.5px solid rgba(255,255,255,.9);transition:transform .18s,box-shadow .18s;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:rgba(255,255,255,.95);box-shadow:0 2px 8px rgba(0,0,0,.18);position:relative}
+.dot-wrapper:hover .dot{transform:scale(1.18);box-shadow:0 4px 16px rgba(0,0,0,.28);z-index:20}
+.dot-wrapper:hover .dot-tip{opacity:1;pointer-events:none;transform:translateX(-50%) translateY(0)}
+.dot-tip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);background:var(--cm);color:#fff;font-size:11px;font-weight:500;padding:5px 9px;border-radius:6px;white-space:normal;text-align:center;line-height:1.3;opacity:0;transition:opacity .15s,transform .15s;pointer-events:none;z-index:9999;max-width:200px;box-shadow:var(--shadow-md)}
+.dot-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--cm)}
+.dot-tip.tip-below{bottom:auto;top:calc(100% + 8px);transform:translateX(-50%) translateY(-4px)}
+.dot-wrapper:hover .dot-tip.tip-below{transform:translateX(-50%) translateY(0)}
+.dot-tip.tip-below::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:var(--cm)}
+.stars .dot{background:var(--stars-dot)}
+.priority .dot{background:var(--priority-dot)}
+.stakes .dot{background:var(--stakes-dot)}
+.monitor .dot{background:var(--monitor-dot)}
+
+/* Category ring on dot */
+.cat-ring{position:absolute;inset:-4px;border-radius:50%;border:2px solid transparent;pointer-events:none}
+.cr-earth{border-color:var(--earth)}
+.cr-deriv{border-color:var(--deriv)}
+.cr-policy{border-color:var(--policy)}
+.cr-platform{border-color:var(--platform)}
+
+/* Proposed + flagship badges */
+.proposed-badge-dot{position:absolute;top:-4px;right:-4px;width:13px;height:13px;border-radius:50%;background:#fff;border:1.5px solid var(--cm);color:var(--cm);font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center;z-index:5}
+.flagship-badge-dot{position:absolute;top:-4px;right:-4px;width:13px;height:13px;border-radius:50%;background:var(--platform);border:1.5px solid #fff;color:#fff;font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center;z-index:5}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(20,18,14,.45);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(3px)}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:14px;width:500px;max-width:calc(100vw - 32px);max-height:calc(100vh - 60px);overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(12px) scale(.98);transition:transform .22s cubic-bezier(.34,1.56,.64,1)}
+.modal-overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-header{padding:20px 22px 16px;border-bottom:1px solid var(--border);position:relative}
+.modal-badge-row{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.modal-badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px}
+.modal-title{font-family:'DM Serif Display',serif;font-size:18px;color:var(--cm);line-height:1.25;letter-spacing:-.01em;margin-bottom:6px;padding-right:28px}
+.modal-meta{display:flex;gap:8px;flex-wrap:wrap}
+.meta-tag{font-size:11px;color:var(--text-secondary);background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-weight:500}
+.meta-tag.earth{background:var(--earth-pale);border-color:var(--earth-border);color:var(--earth)}
+.meta-tag.deriv{background:var(--deriv-pale);border-color:var(--deriv-border);color:var(--deriv)}
+.meta-tag.policy{background:var(--policy-pale);border-color:var(--policy-border);color:var(--policy)}
+.meta-tag.platform{background:var(--platform-pale);border-color:var(--platform-border);color:var(--platform)}
+.modal-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:16px;transition:background .12s;font-family:'DM Sans',sans-serif}
+.modal-close:hover{background:var(--border)}
+.modal-body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:12px}
+.info-block{border-radius:8px;padding:12px 14px;border-left:3px solid transparent}
+.info-block .block-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.info-block .block-text{font-size:13.5px;line-height:1.55;color:var(--text-primary)}
+.block-gap{background:#fff5f5;border-left-color:#d06060}
+.block-gap .block-label{color:#c04040}
+.block-sol{background:var(--cm-pale);border-left-color:var(--cm-border)}
+.block-sol .block-label{color:var(--cm)}
+.block-val{background:#f0f5ff;border-left-color:#4a7fd4}
+.block-val .block-label{color:#2a4faa}
+.block-val .block-text{font-weight:600;color:var(--cm)}
+.modal-scores{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:2px}
+.score-cell{background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;text-align:center}
+.score-cell .sc-val{font-family:'DM Serif Display',serif;font-size:20px;color:var(--cm);line-height:1}
+.score-cell .sc-lbl{font-size:10px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.badge-stars{background:#e8f5e8;color:#1f5a1f}
+.badge-priority{background:var(--cm-pale);color:var(--cm)}
+.badge-stakes{background:#f0f5e8;color:#3a6a18}
+.view-more-btn{display:block;width:100%;margin-top:4px;padding:9px;background:var(--cm-pale);color:var(--cm);border:1px solid var(--cm-border);border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s;text-align:center}
+.view-more-btn:hover{background:#d4edd4}
+
+.footer-note{text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">AI in Financial Markets <span>/ FS Research</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab" onclick="window.location.href='index.html';">Equity</button>
+    <button class="nav-tab" title="Fixed Income" onclick="window.location.href='fixed_income_matrix.html';" >Fixed Income</button>
+    <button class="nav-tab" title="Forex" onclick="window.location.href='forex_matrix.html';">Forex</button>
+    <button class="nav-tab active" title="Commodities" onclick="window.location.href='commodities_matrix.html';">Commodities</button>
+    <button class="nav-tab" title="Research Paper" style="color: #f15014;
+    font-weight: 800;" onclick="downloadWhitePaper()" >Download Research Paper</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- ASSET BANNER -->
+  <div class="asset-banner">
+    <div class="ab-icon">🌍</div>
+    <div>
+      <div class="ab-label">Commodities Markets — AI Use Case Matrix</div>
+      <div class="ab-sub">Energy · Agriculture · Metals · Bulk Shipping</div>
+    </div>
+    <div class="ab-constraint">🌍 → 💰 &nbsp; Physical Space connects to Financial Capital</div>
+  </div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>Commodities — AI Use Case Matrix</h1>
+      <p>Use cases organised by category &nbsp;·&nbsp; Click any dot to explore &nbsp;·&nbsp; ★ = proposed &nbsp;·&nbsp; 🚩 = flagship page</p>
+    </div>
+    <div class="header-stats">
+      <div class="stat-chip"><div class="num">10</div><div class="lbl">Use Cases</div></div>
+      <div class="stat-chip"><div class="num">4</div><div class="lbl">Categories</div></div>
+      <div class="stat-chip"><div class="num">2</div><div class="lbl">Flagship Pages</div></div>
+    </div>
+  </div>
+
+  <!-- THESIS BAR -->
+  <div class="thesis-bar">
+    <div class="tb-quote">"The commodity market's defining characteristic is that <em>price is a lagging reflection of physical reality.</em> Soil dries before futures move. Tanks fill before spreads widen. Ships slow before demurrage accrues. <em>The AI edge is reading the physical world faster than the financial world can price it.</em>"</div>
+    <div class="tb-icons">
+      <span>🛰️</span><div class="tb-arr">→</div>
+      <span>🌊</span><div class="tb-arr">→</div>
+      <span>🌾</span><div class="tb-arr">→</div>
+      <span>💰</span>
+    </div>
+  </div>
+
+  <!-- FILTER -->
+  <div class="filter-row">
+    <span class="filter-label">Filter by category:</span>
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn earth" data-filter="Earth Sentry">🌍 Earth Sentry Layer</button>
+    <button class="filter-btn deriv" data-filter="Derivative & Risk">📊 Derivative &amp; Risk Intelligence</button>
+    <button class="filter-btn policy" data-filter="Policy & ESG">⚖️ Policy &amp; ESG Signals</button>
+    <button class="filter-btn platform" data-filter="Platform">🚀 Platform</button>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <span class="legend-label">Quadrant:</span>
+    <div class="legend-items">
+      <div class="legend-item"><span class="legend-dot" style="background:var(--stars-dot)"></span>Strategic Bets</div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--priority-dot)"></span>Immediate Priorities</div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--stakes-dot)"></span>Table Stakes</div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--monitor-dot)"></span>Monitor</div>
+    </div>
+    <div class="legend-extra">
+      <span class="leg-badge lb-proposed">★ Proposed</span>
+      <span class="leg-badge lb-flagship">🚩 Flagship Page</span>
+      <div class="legend-item" style="gap:5px;">
+        <span style="display:inline-block;width:13px;height:13px;border-radius:50%;border:2px solid var(--earth);vertical-align:middle;"></span>
+        <span style="font-size:11px;color:var(--earth);">Earth</span>
+      </div>
+      <div class="legend-item" style="gap:5px;">
+        <span style="display:inline-block;width:13px;height:13px;border-radius:50%;border:2px solid var(--deriv);vertical-align:middle;"></span>
+        <span style="font-size:11px;color:var(--deriv);">Deriv</span>
+      </div>
+      <div class="legend-item" style="gap:5px;">
+        <span style="display:inline-block;width:13px;height:13px;border-radius:50%;border:2px solid var(--policy);vertical-align:middle;"></span>
+        <span style="font-size:11px;color:var(--policy);">Policy</span>
+      </div>
+      <div class="legend-item" style="gap:5px;">
+        <span style="display:inline-block;width:13px;height:13px;border-radius:50%;border:2px solid var(--platform);vertical-align:middle;"></span>
+        <span style="font-size:11px;color:var(--platform);">Platform</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MATRIX -->
+  <div class="matrix-wrapper">
+    <div class="y-axis-label">↑ Strategic Impact (Business Value + Novelty)</div>
+    <div class="matrix-col">
+      <div class="matrix-grid">
+        <div class="quadrant stars" id="q-stars">
+          <div class="q-label">Strategic Bets</div>
+          <div class="q-desc">High impact · harder to implement</div>
+          <div class="dots-area" id="dots-stars"></div>
+        </div>
+        <div class="quadrant priority" id="q-priority">
+          <div class="q-label">Immediate Priorities</div>
+          <div class="q-desc">High impact · feasible now</div>
+          <div class="dots-area" id="dots-priority"></div>
+        </div>
+        <div class="quadrant monitor" id="q-monitor">
+          <div class="q-label">Monitor &amp; Deprioritise</div>
+          <div class="q-desc">Low impact · low feasibility</div>
+          <div class="dots-area" id="dots-monitor"></div>
+        </div>
+        <div class="quadrant stakes" id="q-stakes">
+          <div class="q-label">Table Stakes</div>
+          <div class="q-desc">Lower impact · implement to stay competitive</div>
+          <div class="dots-area" id="dots-stakes"></div>
+        </div>
+      </div>
+      <div class="x-axis-label">Implementation Readiness (Feasibility + Data Readiness) →</div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Financial Services &nbsp;·&nbsp; AI in Commodities Markets &nbsp;·&nbsp; Strategic Roadmap 2026 &nbsp;·&nbsp; ★ Proposed Solutions &nbsp;·&nbsp; 🚩 Flagship pages available
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-badge-row" id="mBadgeRow"></div>
+      <div class="modal-title" id="mTitle"></div>
+      <div class="modal-meta" id="mMeta"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+const VIEW_MORE = {
+  3: 'maritime_telemetry.html',
+  7: 'terrapulse.html',
+};
+
+const USE_CASES = [
+  // EARTH SENTRY
+  {id:1,name:'Weather-to-Price Inference Engine',cat:'Earth Sentry',x:7,y:8.5,reach:4,proposed:false,flagship:false,
+   tech:'Deep Learning Weather Simulation · Price Elasticity Curves',participants:'Commodity Hedge Funds · Agricultural Trading Desks',
+   gap:'Official crop condition reports are weekly and retrospective. By the time USDA publishes a crop stress index, futures prices have already moved based on satellite data that sophisticated traders were reading days earlier.',
+   solution:'Combines deep learning weather simulation (modelling soil moisture, temperature stress, and precipitation anomalies at field level) with historical price elasticity curves to calculate how a 15% drop in Brazilian coffee belt soil moisture impacts near-month futures, accounting for crop vulnerability phases.',
+   value:'Produces price impact estimates 5–10 days ahead of official crop condition reports — allowing early positioning before consensus has formed.'},
+  {id:2,name:'Floating Roof Radar Analytics',cat:'Earth Sentry',x:6.5,y:9.5,reach:4,proposed:false,flagship:false,
+   tech:'Synthetic Aperture Radar (SAR) · Computer Vision',participants:'Energy Trading Desks · Macro Hedge Funds',
+   gap:'Official oil inventory data (EIA, IEA) covers only reporting jurisdictions and is published weekly with a 3–5 day lag. Strategic reserves in Iran, Venezuela, and China are never reported. The market is structurally blind to a significant fraction of global crude supply.',
+   solution:'SAR satellites penetrate cloud cover and measure the shadow cast by the floating roofs of crude oil storage tanks. As oil levels rise, the roof rises and the shadow geometry changes. Computer vision converts shadow measurements into precise volume estimates — including tanks in non-reporting jurisdictions that have never appeared in any official dataset.',
+   value:'Continuously updated global crude inventory estimates that include politically opaque reserves — the earliest available signal for genuine supply gluts or crunches that official data cannot see.'},
+  {id:3,name:'Maritime Telemetry Bottleneck Nowcaster',cat:'Earth Sentry',x:8,y:9,reach:4,proposed:false,flagship:true,
+   tech:'AIS Data Processing · RL Routing Logic',participants:'Physical Commodity Trading Houses · Bulk Shipping Desks',
+   gap:'Demurrage penalties — the fee charged when a vessel waits beyond its contracted unloading window — cost the commodities industry billions annually. Congestion at the Panama Canal, major grain ports, and key straits builds 10–14 days in advance in AIS data that nobody is systematically reading.',
+   solution:'Processes AIS shipping transponder data alongside historical port congestion, canal throughput, and weather vectors to predict demurrage penalties and transit delays up to 14 days before a vessel reaches its destination bottleneck.',
+   value:'14-day advance warning of demurrage exposure allows rerouting, contract renegotiation, or financial hedging before the penalty accrues — converting an unpredictable cost into a manageable, quantified risk.'},
+
+  // DERIVATIVE & RISK
+  {id:4,name:'Crack Spread & Basis Optimizer',cat:'Derivative & Risk',x:7.5,y:7.5,reach:3,proposed:false,flagship:false,
+   tech:'ML Architecture · Regional Regulatory Modelling',participants:'Refineries · Energy Trading Desks',
+   gap:'Refinery processing margins (crack spreads) vary by region due to environmental regulations, seasonal maintenance, and feedstock quality differences — but most trading desks apply static spread models that cannot capture this regional heterogeneity in real time.',
+   solution:'ML models analyse regional environmental regulations (California LCFS, EU ETS, Texas exemptions), seasonal refinery maintenance schedules, and localised feedstock flows simultaneously — recommending optimal execution windows and leg ratios for multi-asset spreads across crude, gasoline, and jet fuel.',
+   value:'Maximises refinery processing margins by identifying regional regulatory arbitrage and timing seasonal spread dislocations before they are priced by the consensus.'},
+  {id:5,name:'Geopolitical Export Restraint NLP',cat:'Derivative & Risk',x:6,y:8,reach:4,proposed:false,flagship:false,
+   tech:'LLMs · Deep Semantic Text Parsing · Native Language NLP',participants:'Macro Hedge Funds · Agricultural Trading Desks',
+   gap:'Export bans and trade restrictions — Russia\'s 2022 fertilizer ban, India\'s 2023 rice export ban, Indonesia\'s 2022 palm oil ban — move agricultural commodity prices more than most weather events. These policies are signalled in local legislative drafts and ministerial communications that English-language terminals pick up 24–48 hours after the original source.',
+   solution:'LLMs continuously scan global legislative drafts, local news in native languages (Russian Duma notes, Indonesian ministerial circulars, Indian government press releases), and trade policy announcements — assigning probability scores to upcoming export restrictions before they hit translated newswires.',
+   value:'24–48 hour information edge over firms relying on English-language terminal alerts — the difference between entering a position before and after the market has already repriced.'},
+  {id:6,name:'Force Majeure Attribution Auditor',cat:'Derivative & Risk',x:5,y:8,reach:3,proposed:true,flagship:false,
+   tech:'Graph AI · Contract Matching Engine',participants:'Physical Trading Houses · Energy Majors',
+   gap:'When an infrastructure event occurs — a pipeline rupture, a power grid failure, a port closure — trading firms with dozens of overlapping physical delivery contracts and financial hedges cannot rapidly assess their net exposure. Manual contract review takes hours; prices move in minutes.',
+   solution:'Graph AI maps every infrastructure node (pipelines, power grids, extraction zones, ports) against the firm\'s full contract and hedge book. The moment an infrastructure node goes offline, the system instantly audits total net exposure across physical delivery obligations and financial hedges — surfacing uncovered positions before human review begins.',
+   value:'Converts infrastructure event response from hours to seconds — the window in which hedging or position adjustment is still possible at reasonable prices.'},
+  {id:9,name:'Physical Delivery Optionality Engine',cat:'Derivative & Risk',x:6,y:7,reach:3,proposed:true,flagship:false,
+   tech:'ML Option Valuation · Freight Rate Modelling',participants:'Physical Trading Houses · Commodity Futures Desks',
+   gap:'Commodity futures contracts contain embedded physical delivery options — the short position can deliver at multiple locations, grades, and time windows. The cheapest-to-deliver calculation becomes exponentially complex when real-time freight rates, grade quality differentials, and logistics disruptions are incorporated.',
+   solution:'An ML model continuously values the full delivery option tree across all eligible delivery locations, grades, and timing windows — incorporating live freight rates, port congestion data, and quality basis differentials to identify the cheapest-to-deliver combination in real time.',
+   value:'Direct P&L impact for any firm holding short futures positions into expiry — the cheapest-to-deliver edge translates immediately to realised margin improvement.'},
+
+  // POLICY & ESG
+  {id:8,name:'Carbon Credit & Green Premium Arbitrage',cat:'Policy & ESG',x:6.5,y:8,reach:4,proposed:true,flagship:false,
+   tech:'Carbon Intensity Tracking · Multi-Market Correlation',participants:'Energy Trading Desks · ESG Fund Managers',
+   gap:'EU ETS carbon prices, California cap-and-trade allowances, and voluntary carbon market offsets are correlated with but not identical to commodity prices — creating arbitrage opportunities between carbon-intensive and low-carbon supply chains that are currently unmodelled by most trading systems.',
+   solution:'Tracks carbon intensity differentials across competing supply chains (Brazilian soy vs US soy, Australian coal vs Indonesian coal) and maps those intensity differences to green premium pricing opportunities as CBAM (Carbon Border Adjustment Mechanism) becomes active in 2026.',
+   value:'Identifies systematic green premium mispricings across commodity supply chains before carbon border adjustment pricing is fully arbitraged away by the market — a time-limited alpha opportunity as CBAM regulation beds in.'},
+  {id:10,name:'Deforestation & Land Use Change Signal',cat:'Policy & ESG',x:6,y:7.5,reach:3,proposed:true,flagship:false,
+   tech:'Satellite Change Detection · NLP Permit Tracking',participants:'Agricultural Trading Desks · ESG-Constrained Funds',
+   gap:'Deforestation in Brazil\'s Cerrado and Amazon regions is a leading indicator of future soy and beef supply with a 12–18 month lag — but no systematic real-time signal connects satellite-detected clearing activity to futures price forecasting.',
+   solution:'Satellite change detection algorithms track deforestation permits, land clearing activity, and planting activity in real time — providing multi-season agricultural supply forecasts that no official data source publishes, with ESG compliance screening as a secondary output.',
+   value:'Multi-season supply forecast for agricultural commodities derived from physical satellite observation rather than official statistics — plus ESG compliance evidence for banks and trading houses under pressure to demonstrate their agricultural exposure is deforestation-free.'},
+
+  // PLATFORM
+  {id:7,name:'TerraPulse — Geospatial Commodity Dashboard',cat:'Platform',x:7,y:9.5,reach:5,proposed:true,flagship:true,
+   tech:'GIS Platform · GenAI · Multi-Engine Integration',participants:'Commodity Trading Desks · Industrial Procurement · Macro Hedge Funds',
+   gap:'Physical commodity market intelligence is fragmented across satellite data vendors, weather services, shipping trackers, and policy databases — none of which are integrated with each other or with the financial derivatives pricing that translates physical signals into actionable trades.',
+   solution:'A B2B enterprise GIS platform that maps earth observation data directly onto financial pricing inferences. An interactive world map filtered by commodity allows users to click any region and see localised physical vectors alongside their financial correlation scores — with a scenario simulation engine that translates physical variable changes into curve shift forecasts.',
+   value:'The unified interface that makes all Earth Sentry, Derivative Intelligence, and Policy Signal use cases commercially accessible to trading desks and procurement teams without requiring each user to integrate disparate data sources independently.'},
+];
+
+function getQuadrant(x,y){
+  if(y>=7&&x>=7)return'priority';
+  if(y>=7&&x<7)return'stars';
+  if(y<7&&x>=7)return'stakes';
+  return'monitor';
+}
+
+function resolveCollisions(cases){
+  const pos=cases.map(uc=>({...uc,px:uc.x,py:uc.y}));
+  const MIN=19;
+  for(let i=0;i<150;i++){
+    for(let a=0;a<pos.length;a++){
+      for(let b=a+1;b<pos.length;b++){
+        if(getQuadrant(pos[a].x,pos[a].y)!==getQuadrant(pos[b].x,pos[b].y))continue;
+        const dx=pos[a].px-pos[b].px,dy=pos[a].py-pos[b].py;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<MIN&&dist>0){
+          const p=(MIN-dist)/2,nx=dx/dist,ny=dy/dist;
+          pos[a].px+=nx*p*.8;pos[a].py+=ny*p*.8;
+          pos[b].px-=nx*p*.8;pos[b].py-=ny*p*.8;
+        }
+      }
+    }
+  }
+  return pos;
+}
+
+const CAT_CLASS={
+  'Earth Sentry':'earth',
+  'Derivative & Risk':'deriv',
+  'Policy & ESG':'policy',
+  'Platform':'platform',
+};
+
+function renderDots(filter='all'){
+  ['stars','priority','stakes','monitor'].forEach(q=>{
+    document.getElementById('dots-'+q).innerHTML='';
+  });
+  const filtered=filter==='all'?USE_CASES:USE_CASES.filter(uc=>uc.cat===filter||
+    (filter==='Earth Sentry'&&uc.cat==='Earth Sentry')||
+    (filter==='Derivative & Risk'&&uc.cat==='Derivative & Risk')||
+    (filter==='Policy & ESG'&&uc.cat==='Policy & ESG')||
+    (filter==='Platform'&&uc.cat==='Platform')
+  );
+  const pos=resolveCollisions(filtered);
+  pos.forEach(uc=>{
+    const q=getQuadrant(uc.x,uc.y);
+    const container=document.getElementById('dots-'+q);
+    if(!container)return;
+    let lx,ly;
+    if(q==='priority'){lx=((uc.px-7)/3)*.85+.08;ly=1-((uc.py-7)/3)*.85-.08;}
+    else if(q==='stars'){lx=((uc.px-1)/6)*.85+.05;ly=1-((uc.py-7)/3)*.85-.08;}
+    else if(q==='stakes'){lx=((uc.px-7)/3)*.85+.08;ly=1-((uc.py-1)/6)*.85-.05;}
+    else{lx=((uc.px-1)/6)*.85+.05;ly=1-((uc.py-1)/6)*.85-.05;}
+    lx=Math.max(.06,Math.min(.94,lx));
+    ly=Math.max(.06,Math.min(.94,ly));
+    const dotSize=14+(uc.reach-1)*5;
+    const wrapper=document.createElement('div');
+    wrapper.className='dot-wrapper';
+    wrapper.style.left=(lx*100)+'%';
+    wrapper.style.top=(ly*100)+'%';
+    wrapper.onclick=()=>openModal(uc.id);
+    const dot=document.createElement('div');
+    dot.className='dot';
+    dot.style.width=dotSize+'px';
+    dot.style.height=dotSize+'px';
+    dot.textContent=uc.id;
+    // Category ring
+    const ring=document.createElement('div');
+    ring.className='cat-ring cr-'+(CAT_CLASS[uc.cat]||'earth');
+    dot.appendChild(ring);
+    // Badge
+    if(uc.flagship){
+      const fb=document.createElement('div');
+      fb.className='flagship-badge-dot';fb.textContent='🚩';
+      dot.appendChild(fb);
+    } else if(uc.proposed){
+      const pb=document.createElement('div');
+      pb.className='proposed-badge-dot';pb.textContent='★';
+      dot.appendChild(pb);
+    }
+    const tip=document.createElement('div');
+    tip.className='dot-tip'+(ly<0.35?' tip-below':'');
+    tip.textContent=uc.name;
+    wrapper.appendChild(dot);
+    wrapper.appendChild(tip);
+    container.appendChild(wrapper);
+  });
+}
+
+function openModal(id){
+  const uc=USE_CASES.find(u=>u.id===id);
+  if(!uc)return;
+  const q=getQuadrant(uc.x,uc.y);
+  const qNames={priority:'Immediate Priority',stars:'Strategic Bet',stakes:'Table Stakes',monitor:'Monitor'};
+  const qBadge={priority:'badge-priority',stars:'badge-stars',stakes:'badge-stakes',monitor:''};
+  const catCls=CAT_CLASS[uc.cat]||'earth';
+  document.getElementById('mBadgeRow').innerHTML=
+    `<span class="modal-badge ${qBadge[q]}" style="font-size:10px;">${qNames[q]}</span>
+     <span class="modal-badge" style="background:var(--${catCls}-pale);color:var(--${catCls});border:1px solid var(--${catCls}-border);font-size:10px;">${uc.cat}</span>
+     ${uc.proposed?`<span class="modal-badge" style="background:var(--cm-pale);color:var(--cm);border:1px solid var(--cm-border);font-size:10px;">★ Proposed</span>`:''}
+     ${uc.flagship?`<span class="modal-badge" style="background:var(--platform-pale);color:var(--platform);border:1px solid var(--platform-border);font-size:10px;">🚩 Flagship Page</span>`:''}`;
+  document.getElementById('mTitle').textContent=uc.name;
+  document.getElementById('mMeta').innerHTML=
+    `<span class="meta-tag ${catCls}">${uc.tech}</span>`;
+  const body=document.getElementById('mBody');
+  body.innerHTML='';
+  [{cls:'block-gap',lbl:'The Gap',txt:uc.gap},
+   {cls:'block-sol',lbl:'AI Solution',txt:uc.solution},
+   {cls:'block-val',lbl:'Value Created',txt:uc.value}
+  ].forEach(b=>{
+    const el=document.createElement('div');
+    el.className='info-block '+b.cls;
+    el.innerHTML=`<div class="block-label">${b.lbl}</div><div class="block-text">${b.txt}</div>`;
+    body.appendChild(el);
+  });
+  const sc=document.createElement('div');sc.className='modal-scores';
+  sc.innerHTML=`
+    <div class="score-cell"><div class="sc-val">${uc.x}</div><div class="sc-lbl">Readiness</div></div>
+    <div class="score-cell"><div class="sc-val">${uc.y}</div><div class="sc-lbl">Impact</div></div>
+    <div class="score-cell"><div class="sc-val" style="font-size:11px;padding-top:2px;">${uc.participants.split('·')[0].trim()}</div><div class="sc-lbl">Primary Buyer</div></div>
+  `;
+  body.appendChild(sc);
+  if(VIEW_MORE[uc.id]){
+    const btn=document.createElement('button');
+    btn.className='view-more-btn';
+    btn.textContent='View Full Process Flow →';
+    btn.onclick=()=>window.location.href=VIEW_MORE[uc.id];
+    body.appendChild(btn);
+  }
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal(){document.getElementById('overlay').classList.remove('open')}
+
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const f=btn.dataset.filter;
+    renderDots(f==='all'?'all':f);
+  });
+});
+document.getElementById('overlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('overlay'))closeModal();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+window.addEventListener('load',()=>renderDots('all'));
+window.addEventListener('resize',()=>{
+  const a=document.querySelector('.filter-btn.active');
+  renderDots(a?a.dataset.filter:'all');
+});
+
+function downloadWhitePaper() {
+  const link = document.createElement('a');
+  link.href = 'hexaware_ai_financial_markets_whitepaper.pdf';
+  link.download = 'hexaware_ai_financial_markets_whitepaper.pdf';
+  link.click();
+}
+
+function downloadWhitePaper() {
+  const link = document.createElement('a');
+  link.href = 'hexaware_ai_financial_markets_whitepaper.pdf';
+  link.download = 'hexaware_ai_financial_markets_whitepaper.pdf';
+  link.click();
+}
+
+</script>
+</body>
+</html>

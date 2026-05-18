@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dynamic Liquidity Risk Scoring — Process Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+  --teal:#0d7377;--teal-pale:#e6f7f7;--teal-border:#8ecece;
+  --navy:#1c3557;--navy-pale:#edf3fb;--navy-border:#a8c4e0;
+  --exec:#1a6b35;--exec-pale:#edf7f1;--exec-border:#a8d9bc;
+  --amber:#b86a00;--amber-pale:#fff8ed;--amber-border:#f5c882;
+  --purple:#5b3faa;--purple-pale:#f3f0fb;--purple-border:#c4b0f0;
+  --red:#c04040;--red-pale:#fdf0f0;--red-border:#f0b8b8;
+  --opp-overlay:rgba(13,115,119,0.07);--opp-overlay-border:rgba(13,115,119,0.28);
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,0.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.nav-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--text-secondary);padding:5px 14px 5px 0;border-right:1px solid var(--border);margin-right:16px;background:none;border-top:none;border-bottom:none;border-left:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .15s}
+.nav-back:hover{color:var(--teal)}
+.nav-crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+.nav-crumb .active{color:var(--teal);font-weight:600}
+.nav-crumb .sep{color:var(--border)}
+.nav-badge{margin-left:auto;background:var(--teal-pale);color:var(--teal);border:1px solid var(--teal-border);border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;text-transform:uppercase;letter-spacing:.06em}
+
+/* PAGE */
+.page{max-width:1100px;margin:0 auto;padding:28px 24px 48px}
+.uc-num{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--teal);letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+.header-sub{font-size:14px;color:var(--text-secondary);max-width:700px;line-height:1.6;margin-bottom:12px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+.chip{font-size:11.5px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary)}
+.chip.teal{background:var(--teal-pale);border-color:var(--teal-border);color:var(--teal)}
+.chip.navy{background:var(--navy-pale);border-color:var(--navy-border);color:var(--navy)}
+.chip.amber{background:var(--amber-pale);border-color:var(--amber-border);color:var(--amber)}
+.chip.purple{background:var(--purple-pale);border-color:var(--purple-border);color:var(--purple)}
+.chip.green{background:var(--exec-pale);border-color:var(--exec-border);color:var(--exec)}
+
+/* SUMMARY */
+.summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:3px solid transparent;box-shadow:var(--shadow-sm)}
+.sc-gap{border-left-color:#d06060}.sc-sol{border-left-color:var(--teal)}.sc-val{border-left-color:#4a7fd4}
+.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.sc-gap .sc-lbl{color:#c04040}.sc-sol .sc-lbl{color:var(--teal)}.sc-val .sc-lbl{color:#2a4faa}
+.sc-txt{font-size:13px;line-height:1.5}.sc-val .sc-txt{font-weight:600;color:var(--teal)}
+
+/* STRATEGY BANNER */
+.strategy-banner{background:var(--teal);border-radius:10px;padding:16px 22px;margin-bottom:24px;box-shadow:var(--shadow-md);border-left:5px solid #f5c882}
+.sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#f5c882;margin-bottom:6px}
+.sb-text{font-size:13.5px;color:rgba(255,255,255,.88);line-height:1.65}
+.sb-text strong{color:#fff}
+
+/* SECTION TITLES */
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.section-title h2{font-family:'DM Serif Display',serif;font-size:18px;color:var(--teal);letter-spacing:-.01em;white-space:nowrap}
+.section-title .s-line{flex:1;height:1px;background:var(--border)}
+
+/* MATURITY LADDER */
+.ladder-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px 18px;box-shadow:var(--shadow-sm);margin-bottom:28px}
+.ladder-intro{font-size:12.5px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5}
+.ladder-intro strong{color:var(--text-primary)}
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;position:relative}
+.ladder::before{content:'';position:absolute;top:22px;left:10%;right:10%;height:3px;background:linear-gradient(to right,#d0ccc6,#c8c4bc,#c8c4bc,var(--teal-border),var(--amber-border));border-radius:2px;z-index:0}
+.ladder-step{position:relative;z-index:1;border-radius:10px;padding:12px 10px 10px;cursor:pointer;transition:box-shadow .18s,transform .18s;border:1.5px solid transparent;text-align:center}
+.ladder-step:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.ladder-step.active{box-shadow:0 0 0 3px rgba(13,115,119,.15),var(--shadow-md)}
+.ls-1,.ls-2,.ls-3{background:#f5f4f1;border-color:#d0ccc6}
+.ls-3{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-4{background:var(--teal-pale);border-color:var(--teal-border)}
+.ls-5{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-num{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.ls-1 .ls-num,.ls-2 .ls-num{color:var(--text-muted)}
+.ls-3 .ls-num{color:var(--amber)}
+.ls-4 .ls-num{color:var(--teal)}
+.ls-5 .ls-num{color:var(--amber)}
+.ls-icon{font-size:22px;margin-bottom:5px;line-height:1}
+.ls-name{font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:3px}
+.ls-focus{font-size:11px;color:var(--text-secondary);line-height:1.3;margin-bottom:7px}
+.ls-btn{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.ls-1 .ls-btn,.ls-2 .ls-btn{background:#ece9e3;color:var(--text-secondary)}
+.ls-3 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.ls-4 .ls-btn{background:var(--teal-pale);color:var(--teal);border:1px solid var(--teal-border)}
+.ls-5 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.current-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.emerging-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.ladder-legend{display:flex;align-items:center;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border-light)}
+.ll-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-secondary)}
+.ll-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ═══ DIAGRAM ═══ */
+.diagram-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:visible;box-shadow:var(--shadow-md);margin-bottom:28px}
+.diag-titlebar{background:var(--teal);padding:11px 20px;display:flex;align-items:center;gap:10px;border-radius:13px 13px 0 0}
+.diag-titlebar span{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em}
+.diag-titlebar small{font-size:11.5px;color:rgba(255,255,255,.45)}
+.diagram-inner{padding:20px 20px 0;display:flex;flex-direction:column;gap:0}
+
+/* ── TRADER'S HEATMAP ──────────────────────────────────────────────────── */
+.heatmap-section{
+  background:var(--navy-pale);border:1.5px solid var(--navy-border);
+  border-radius:12px;padding:16px 18px 14px;
+  margin-bottom:18px;cursor:pointer;
+  transition:box-shadow .15s;
+}
+.heatmap-section:hover{box-shadow:var(--shadow-md)}
+.heatmap-section.active{box-shadow:0 0 0 3px rgba(13,115,119,.12)}
+.hs-toprow{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.hs-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--navy)}
+.hs-btn{margin-left:auto;font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid var(--navy-border);background:var(--surface);color:var(--navy);cursor:pointer;font-family:'DM Sans',sans-serif}
+.heatmap-body{display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start}
+
+/* Bond heatmap grid */
+.heatmap-grid{display:flex;flex-direction:column;gap:5px}
+.hm-header{display:grid;grid-template-columns:1fr 70px 60px 80px;gap:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);padding:0 4px;margin-bottom:2px}
+.hm-row{display:grid;grid-template-columns:1fr 70px 60px 80px;gap:8px;align-items:center;background:var(--surface);border-radius:6px;padding:7px 8px;border:1px solid var(--border-light)}
+.hm-name{font-size:11.5px;font-weight:600;color:var(--text-primary)}
+.hm-score{font-family:'DM Mono',monospace;font-size:12px;font-weight:700}
+.hm-ttl{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-secondary)}
+.hm-bar-wrap{display:flex;align-items:center;gap:5px}
+.hm-bar-track{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.hm-bar-fill{height:100%;border-radius:3px}
+.liq-high{color:var(--exec)}.liq-med{color:var(--amber)}.liq-low{color:var(--red)}
+
+/* Time-to-Liquidate meter */
+.ttl-meter{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:12px 14px}
+.ttl-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:10px}
+.ttl-gauge-wrap{display:flex;flex-direction:column;gap:8px}
+.ttl-bond-row{display:flex;flex-direction:column;gap:3px}
+.ttl-bond-name{font-size:10.5px;font-weight:600;color:var(--text-primary)}
+.ttl-track{height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.ttl-fill{height:100%;border-radius:4px}
+.ttl-label{display:flex;justify-content:space-between;font-size:9.5px;color:var(--text-muted)}
+
+/* ── PIPELINE ──────────────────────────────────────────────────────────── */
+.pipeline-section{
+  border:2px dashed var(--opp-overlay-border);
+  background:var(--opp-overlay);
+  border-radius:12px;padding:18px 16px 16px;
+  margin-bottom:0;position:relative;
+}
+.prop-label{position:absolute;top:-14px;right:16px;display:flex;align-items:center;gap:5px}
+.prop-label span{font-size:10px;font-weight:700;color:var(--teal);background:var(--surface);padding:2px 9px;border-radius:20px;border:1.5px solid var(--teal-border);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
+
+/* Pipeline flow row */
+.pipeline-row{display:flex;align-items:flex-start;gap:0;position:relative}
+
+/* Pipeline node */
+.pnode{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;flex:1;min-width:0;cursor:pointer;transition:box-shadow .18s,transform .18s;box-shadow:var(--shadow-sm);position:relative;z-index:2}
+.pnode:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.pnode.active{border-color:var(--teal)!important;box-shadow:0 0 0 3px rgba(13,115,119,.12)}
+.pnode.n-teal{border-top:3px solid var(--teal)}
+.pnode.n-navy{border-top:3px solid var(--navy)}
+.pnode.n-purple{border-top:3px solid var(--purple)}
+.pnode.n-exec{border-top:3px solid var(--exec)}
+.pnode.n-amber{border-top:3px solid var(--amber)}
+.pnode.n-red{border-top:3px solid var(--red)}
+.pn-stage{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:2px}
+.pn-icon{font-size:17px;margin-bottom:3px;line-height:1}
+.pn-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:3px;line-height:1.3}
+.pn-desc{font-size:10.5px;color:var(--text-secondary);line-height:1.35;margin-bottom:6px}
+.pn-btn{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.n-teal .pn-btn{background:var(--teal-pale);color:var(--teal)}
+.n-navy .pn-btn{background:var(--navy-pale);color:var(--navy)}
+.n-purple .pn-btn{background:var(--purple-pale);color:var(--purple)}
+.n-exec .pn-btn{background:var(--exec-pale);color:var(--exec)}
+.n-amber .pn-btn{background:var(--amber-pale);color:var(--amber)}
+.n-red .pn-btn{background:var(--red-pale);color:var(--red)}
+
+/* Caution badge on dealer sentiment node */
+.caution-badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border);margin-bottom:5px}
+
+/* Pipeline arrows */
+.parr{display:flex;align-items:center;flex-shrink:0;width:18px;padding-top:38px}
+.parr-line{height:2px;background:#c8c4bc;flex:1}
+.parr-head{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:7px solid #c8c4bc;flex-shrink:0}
+
+/* CDS node — side input below correlational analysis */
+.cds-node-wrap{position:relative;display:flex;flex-direction:column;align-items:center;flex:1;min-width:0}
+.cds-side-node{
+  background:var(--navy-pale);border:1.5px dashed var(--navy-border);
+  border-radius:8px;padding:7px 10px;
+  font-size:10.5px;cursor:pointer;
+  transition:box-shadow .15s;box-shadow:var(--shadow-sm);
+  margin-top:8px;width:100%;
+}
+.cds-side-node:hover{box-shadow:var(--shadow-md)}
+.cds-side-node.active{border-color:var(--navy)!important}
+.cds-icon{font-size:14px;margin-bottom:2px}
+.cds-title{font-size:10.5px;font-weight:700;color:var(--navy);margin-bottom:2px}
+.cds-desc{font-size:10px;color:var(--text-secondary);line-height:1.3;margin-bottom:4px}
+.cds-btn{font-size:9.5px;font-weight:600;padding:2px 6px;border-radius:4px;border:1px solid var(--navy-border);background:var(--surface);color:var(--navy);cursor:pointer;font-family:'DM Sans',sans-serif}
+.cds-arrow{width:2px;height:12px;background:var(--navy-border);margin:0 auto}
+.cds-arrow-head{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid var(--navy-border);margin:0 auto}
+
+/* ── BONDPULSE BRIDGE ──────────────────────────────────────────────────── */
+.bp-bridge{
+  display:flex;align-items:center;gap:12px;
+  background:linear-gradient(135deg,var(--teal-pale),#e8f5f5);
+  border:1.5px solid var(--teal-border);
+  border-radius:10px;padding:12px 18px;
+  margin-top:14px;margin-bottom:0;
+  cursor:pointer;transition:box-shadow .15s;
+}
+.bp-bridge:hover{box-shadow:var(--shadow-md)}
+.bp-bridge.active{box-shadow:0 0 0 3px rgba(13,115,119,.12)}
+.bp-icon{font-size:22px;flex-shrink:0}
+.bp-body{flex:1}
+.bp-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);margin-bottom:3px}
+.bp-title{font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:2px;font-family:'DM Serif Display',serif;letter-spacing:-.01em}
+.bp-desc{font-size:12px;color:var(--text-secondary);line-height:1.45}
+.bp-arrow{font-size:20px;color:var(--teal);flex-shrink:0;font-weight:700}
+.bp-btn{font-size:11px;font-weight:600;padding:5px 13px;border-radius:7px;border:1.5px solid var(--teal);background:var(--teal);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0}
+
+/* ── REFERENCE SENTRY ─────────────────────────────────────────────────── */
+.sentry-ref{
+  display:flex;align-items:center;gap:12px;
+  background:var(--navy);border-radius:0 0 13px 13px;
+  padding:12px 20px;
+}
+.sr-icon{font-size:18px}
+.sr-body{flex:1}
+.sr-title{font-size:12.5px;font-weight:700;color:#fff}
+.sr-desc{font-size:11px;color:rgba(255,255,255,.55);line-height:1.4}
+.sr-btn{font-size:10.5px;font-weight:600;padding:4px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0}
+
+/* RESEARCH */
+.research{padding-top:24px;border-top:1px solid var(--border)}
+.research h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--teal);margin-bottom:16px;letter-spacing:-.01em}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.r-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.r-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:7px}
+.r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.r-rows{display:flex;flex-direction:column;gap:7px}
+.r-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.r-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:155px}
+.r-key::after{content:':'}
+.r-val{color:var(--text-secondary)}
+.threat-callout{background:var(--red-pale);border:1.5px solid var(--red-border);border-left:5px solid var(--red);border-radius:10px;padding:18px 20px;box-shadow:var(--shadow-sm)}
+.tc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--red);margin-bottom:6px}
+.tc-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--teal);margin-bottom:7px;letter-spacing:-.01em}
+.tc-body{font-size:13px;color:var(--text-secondary);line-height:1.65}
+.tc-body strong{color:var(--text-primary)}
+.ref-list{display:flex;flex-direction:column;gap:6px}
+.ref-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.ref-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--teal-pale);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.ref-txt{color:var(--text-secondary)}.ref-txt strong{color:var(--text-primary)}
+.page-footer{text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:28px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(20,18,14,.45);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(3px)}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:14px;width:540px;max-width:calc(100vw - 32px);max-height:calc(100vh - 60px);overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(12px) scale(.98);transition:transform .22s cubic-bezier(.34,1.56,.64,1)}
+.overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-hdr{padding:20px 22px 15px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2;border-radius:14px 14px 0 0}
+.m-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block}
+.m-title{font-family:'DM Serif Display',serif;font-size:19px;color:var(--teal);line-height:1.25;margin-bottom:4px;padding-right:30px}
+.m-sub{font-size:12.5px;color:var(--text-secondary);font-style:italic}
+.m-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:15px;font-family:'DM Sans',sans-serif;transition:background .12s}
+.m-close:hover{background:var(--border)}
+.m-body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:14px}
+.info-sec{display:flex;flex-direction:column;gap:7px}
+.info-sec-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);padding-bottom:5px;border-bottom:1px solid var(--border-light)}
+.info-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.info-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:165px}
+.info-key::after{content:':'}
+.info-val{color:var(--text-secondary)}
+.warn-box{background:var(--amber-pale);border:1px solid var(--amber-border);border-left:3px solid var(--amber);border-radius:7px;padding:10px 13px;font-size:12.5px;color:var(--text-primary);line-height:1.55;margin-top:4px}
+.warn-box strong{color:var(--amber)}
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="nav-back" onclick="window.history.back()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11L5 7l4-4"/></svg>
+    Back to Matrix
+  </button>
+  <div class="nav-crumb">
+    <span>Fixed Income</span><span class="sep">/</span>
+    <span>Credit &amp; Counterparty Risk</span><span class="sep">/</span>
+    <span class="active">Liquidity Risk Scoring</span>
+  </div>
+  <div class="nav-badge">📊 Credit &amp; Counterparty Risk</div>
+</nav>
+
+<div class="page">
+
+  <div class="uc-num">Use Case #9 &nbsp;·&nbsp; Risk Management &nbsp;·&nbsp; Strategic Impact 8/10</div>
+  <h1>Dynamic Liquidity Risk Scoring</h1>
+  <p class="header-sub">A stock like Apple is always liquid. A bond issued by the same company might be liquid on Tuesday and impossible to sell on Wednesday if a macro signal shifts. Static liquidity tiers built at issuance are a liability — the market moves in real time and so must the score.</p>
+  <div class="chips">
+    <span class="chip teal">XGBoost / Gradient Boosting</span>
+    <span class="chip navy">Graph AI / CDS Signals</span>
+    <span class="chip purple">Time-Series ML</span>
+    <span class="chip teal">Anomaly Detection</span>
+    <span class="chip amber">⚠ Dealer Sentiment NLP — Use With Caution</span>
+    <span class="chip green">Implementation Readiness: 7/10</span>
+  </div>
+
+  <div class="summary-row">
+    <div class="sc sc-gap"><div class="sc-lbl">The Gap</div><div class="sc-txt">Bond liquidity is a moving target — classified once at issuance and rarely updated. A portfolio manager discovering a bond is illiquid at the moment they need to exit has no actionable warning, only a costly problem.</div></div>
+    <div class="sc sc-sol"><div class="sc-lbl">AI Solution</div><div class="sc-txt">A five-stage Liquidity Pulse pipeline ingests real-time TRACE/SEBI data, detects volume decay, reads CDS cross-instrument signals, and scores each bond 0–100 — updating continuously and alerting on anomalous deterioration before it becomes a crisis.</div></div>
+    <div class="sc sc-val"><div class="sc-lbl">Value Created</div><div class="sc-txt">Portfolio managers see exactly how fast they can exit each position, in normal and stressed markets — turning liquidity from an invisible risk into a quantified, manageable dimension of portfolio construction.</div></div>
+  </div>
+
+  <!-- STRATEGY BANNER -->
+  <div class="strategy-banner">
+    <div class="sb-label">Strategic Framing — Invisible Risk Made Visible</div>
+    <div class="sb-text">"The bond market's greatest hidden risk is not credit risk — it is the assumption of liquidity that evaporates precisely when you need it most. By scoring every bond in a portfolio in real time, Dynamic Liquidity Scoring turns an <strong>invisible tail risk</strong> into a <strong>quantified, daily-managed dimension</strong> of portfolio construction — and gives retail investors, for the first time, a credible answer to the question: <em>'Can I get my money out when I need it?'</em>"</div>
+  </div>
+
+  <!-- MATURITY LADDER -->
+  <div class="section-title">
+    <h2>AI Maturity Ladder — Liquidity Scoring</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="ladder-wrap">
+    <p class="ladder-intro">Level 3 is the <strong>current production standard</strong> at most Tier-1 banks in 2026 — competitors like MarketAxess and Bloomberg LQA operate here. The proposed architecture is <strong>Level 4</strong>. Level 5 carries systemic risk concerns — marked amber. Click any level for detail.</p>
+    <div class="ladder">
+      <div class="ladder-step ls-1" onclick="openModal('l1')">
+        <div class="ls-num">Level 1</div><div class="ls-icon">📋</div>
+        <div class="ls-name">Static Tiers</div><div class="ls-focus">Size-at-issuance grouping</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-2" onclick="openModal('l2')">
+        <div class="ls-num">Level 2</div><div class="ls-icon">📊</div>
+        <div class="ls-name">Historical Stats</div><div class="ls-focus">Quarterly bid-ask review</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-3" onclick="openModal('l3')">
+        <div class="ls-num">Level 3</div>
+        <div class="ls-icon">⚡</div>
+        <div class="current-badge">🏭 Industry Standard</div>
+        <div class="ls-name">Dynamic ML</div><div class="ls-focus">Live TRACE scoring</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-4" onclick="openModal('l4')">
+        <div class="ls-num">Level 4</div><div class="ls-icon">🔮</div>
+        <div class="ls-name">Predictive Stress</div><div class="ls-focus">48-hour forward score</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-5" onclick="openModal('l5')">
+        <div class="ls-num">Level 5</div><div class="ls-icon">🤖</div>
+        <div class="emerging-badge">⚠ Systemic Risk</div>
+        <div class="ls-name">Autonomous Rebalancing</div><div class="ls-focus">Auto-sell at liquidity floor</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+    </div>
+    <div class="ladder-legend">
+      <div class="ll-item"><div class="ll-dot" style="background:#c8c4bc;"></div>Legacy — most firms below Level 3 until recently</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--amber);"></div>Industry standard 2026 / systemic risk flag</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--teal);"></div>Proposed architecture</div>
+    </div>
+  </div>
+
+  <!-- MAIN DIAGRAM -->
+  <div class="section-title">
+    <h2>The Liquidity Pulse Architecture</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="diag-titlebar">
+      <span>Trader's Heatmap above · Five-stage pipeline below · CDS proxy signal feeds Correlational Analysis</span>
+      <small>&nbsp;·&nbsp; Click any element for detail</small>
+    </div>
+
+    <div class="diagram-inner">
+
+      <!-- TRADER'S HEATMAP -->
+      <div class="heatmap-section" onclick="openModal('heatmap')">
+        <div class="hs-toprow">
+          <span style="font-size:16px;">🌡️</span>
+          <span class="hs-label">Trader's Heatmap — Portfolio Liquidity View &amp; Time-to-Liquidate Meter</span>
+          <button class="hs-btn">Details →</button>
+        </div>
+        <div class="heatmap-body">
+          <!-- Bond grid -->
+          <div class="heatmap-grid">
+            <div class="hm-header">
+              <span>Bond</span><span>Liq. Score</span><span>TTL</span><span>Status</span>
+            </div>
+            <div class="hm-row">
+              <span class="hm-name">HDFC Bank NCD 2027</span>
+              <span class="hm-score liq-high">88</span>
+              <span class="hm-ttl">~1d</span>
+              <div class="hm-bar-wrap"><div class="hm-bar-track"><div class="hm-bar-fill" style="width:88%;background:var(--exec);"></div></div></div>
+            </div>
+            <div class="hm-row">
+              <span class="hm-name">SBI Perpetual AT1</span>
+              <span class="hm-score liq-high">74</span>
+              <span class="hm-ttl">~3d</span>
+              <div class="hm-bar-wrap"><div class="hm-bar-track"><div class="hm-bar-fill" style="width:74%;background:#5aaa72;"></div></div></div>
+            </div>
+            <div class="hm-row">
+              <span class="hm-name">Tata Motors NCD 2025</span>
+              <span class="hm-score liq-med">51</span>
+              <span class="hm-ttl">~7d</span>
+              <div class="hm-bar-wrap"><div class="hm-bar-track"><div class="hm-bar-fill" style="width:51%;background:var(--amber);"></div></div></div>
+            </div>
+            <div class="hm-row" style="border:1.5px solid var(--red-border);background:var(--red-pale);">
+              <span class="hm-name" style="color:var(--red);">⚠ Adani Ports 2029</span>
+              <span class="hm-score liq-low">28</span>
+              <span class="hm-ttl" style="color:var(--red);">~18d</span>
+              <div class="hm-bar-wrap"><div class="hm-bar-track"><div class="hm-bar-fill" style="width:28%;background:var(--red);"></div></div></div>
+            </div>
+            <div class="hm-row" style="border:1.5px solid #d06060;background:#fff0f0;">
+              <span class="hm-name" style="color:var(--red);">⚠ Reliance Retail 2030</span>
+              <span class="hm-score liq-low">19</span>
+              <span class="hm-ttl" style="color:var(--red);">~30d+</span>
+              <div class="hm-bar-wrap"><div class="hm-bar-track"><div class="hm-bar-fill" style="width:19%;background:#c04040;"></div></div></div>
+            </div>
+          </div>
+          <!-- TTL Meter -->
+          <div class="ttl-meter">
+            <div class="ttl-title">Time-to-Liquidate Meter (₹50 Cr exit, no market impact)</div>
+            <div class="ttl-gauge-wrap">
+              <div class="ttl-bond-row">
+                <span class="ttl-bond-name">HDFC Bank NCD</span>
+                <div class="ttl-track"><div class="ttl-fill" style="width:12%;background:var(--exec);"></div></div>
+                <div class="ttl-label"><span>~1 day</span><span style="color:var(--exec);font-weight:700;">SAFE</span></div>
+              </div>
+              <div class="ttl-bond-row">
+                <span class="ttl-bond-name">Tata Motors NCD</span>
+                <div class="ttl-track"><div class="ttl-fill" style="width:46%;background:var(--amber);"></div></div>
+                <div class="ttl-label"><span>~7 days</span><span style="color:var(--amber);font-weight:700;">WATCH</span></div>
+              </div>
+              <div class="ttl-bond-row">
+                <span class="ttl-bond-name">Adani Ports 2029</span>
+                <div class="ttl-track"><div class="ttl-fill" style="width:75%;background:var(--red);"></div></div>
+                <div class="ttl-label"><span>~18 days</span><span style="color:var(--red);font-weight:700;">ALERT</span></div>
+              </div>
+              <div class="ttl-bond-row">
+                <span class="ttl-bond-name">Reliance Retail 2030</span>
+                <div class="ttl-track"><div class="ttl-fill" style="width:100%;background:#c04040;"></div></div>
+                <div class="ttl-label"><span>30+ days</span><span style="color:var(--red);font-weight:700;">CRITICAL</span></div>
+              </div>
+              <div style="font-size:9.5px;color:var(--text-muted);font-style:italic;margin-top:4px;">TTL = (Position Size) ÷ (ADV × Impact-Adjusted Fill Rate). Stress scenario: market at 40% normal volume.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DOWN ARROW -->
+      <div style="display:flex;justify-content:center;padding:10px 0;">
+        <svg width="24" height="28" viewBox="0 0 24 28"><line x1="12" y1="0" x2="12" y2="20" stroke="#8ecece" stroke-width="2"/><polygon points="12,28 6,16 18,16" fill="#8ecece"/></svg>
+      </div>
+
+      <!-- PIPELINE -->
+      <div class="pipeline-section">
+        <div class="prop-label">
+          <svg width="28" height="22" viewBox="0 0 28 22" fill="none" style="position:relative;top:2px;">
+            <path d="M24 2 C24 12, 8 8, 4 18" stroke="#0d7377" stroke-width="1.8" stroke-dasharray="3,2" fill="none" stroke-linecap="round"/>
+            <polygon points="4,18 2,12 8,14" fill="#0d7377"/>
+          </svg>
+          <span>Proposed Architecture — Level 4</span>
+        </div>
+
+        <div class="pipeline-row">
+
+          <!-- Stage 1: Ingestion -->
+          <div class="pnode n-teal" onclick="openModal('ingestion')">
+            <div class="pn-stage">Stage 1</div><div class="pn-icon">📡</div>
+            <div class="pn-title">Ingestion</div>
+            <div class="pn-desc">TRACE / SEBI feeds + dealer indicative quotes standardised in real time</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <!-- Stage 2: Activity Mapping -->
+          <div class="pnode n-navy" onclick="openModal('activity')">
+            <div class="pn-stage">Stage 2</div><div class="pn-icon">📉</div>
+            <div class="pn-title">Activity Mapping</div>
+            <div class="pn-desc">Time since last trade, volume decay rate — detects "fading" interest</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <!-- Stage 3: Correlational + CDS (stacked) -->
+          <div class="cds-node-wrap">
+            <div class="pnode n-purple" onclick="openModal('correlational')" style="width:100%;">
+              <div class="pn-stage">Stage 3</div><div class="pn-icon">🕸️</div>
+              <div class="pn-title">Correlational Analysis</div>
+              <div class="pn-desc">Sector peers + CDS proxy signals fused to find hidden liquidity warnings</div>
+              <button class="pn-btn">Details →</button>
+            </div>
+            <!-- CDS side node below -->
+            <div class="cds-arrow"></div>
+            <div class="cds-arrow-head"></div>
+            <div class="cds-side-node" onclick="openModal('cds')">
+              <div class="cds-icon">📈</div>
+              <div class="cds-title">CDS Spread Signal</div>
+              <div class="cds-desc">Cross-instrument proxy — CDS widening predicts bond illiquidity before any trade occurs</div>
+              <button class="cds-btn">Details →</button>
+            </div>
+          </div>
+          <div class="parr" style="padding-top:30px;"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <!-- Stage 4: Scoring -->
+          <div class="pnode n-exec" onclick="openModal('scoring')">
+            <div class="pn-stage">Stage 4</div><div class="pn-icon">🎯</div>
+            <div class="pn-title">Scoring</div>
+            <div class="pn-desc">XGBoost generates 0–100 Liquidity Score + Time-to-Liquidate estimate</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <!-- Stage 5: Alerting (with Dealer Sentiment caution) -->
+          <div class="pnode n-amber" onclick="openModal('alerting')">
+            <div class="pn-stage">Stage 5</div><div class="pn-icon">🔔</div>
+            <div class="caution-badge">⚠ Caution — Dealer NLP</div>
+            <div class="pn-title">Alerting + Dealer Sentiment</div>
+            <div class="pn-desc">Anomaly detection flags liquidity decay; NLP parses dealer quotes with regulatory caveats</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+
+        </div>
+
+        <!-- BondPulse Bridge -->
+        <div class="bp-bridge" onclick="openModal('bondpulse')">
+          <div class="bp-icon">🚗</div>
+          <div class="bp-body">
+            <div class="bp-label">→ Powers Consumer Product</div>
+            <div class="bp-title">BondPulse — The Retail Interface</div>
+            <div class="bp-desc">Liquidity Risk Scoring is the engine. BondPulse is the car — packaging this institutional-grade score as a "Liquid-Exit Guarantee" for retail investors. The same 0–100 score that a Tier-1 bank uses becomes the answer to: <em>"Can I get my money out when I need it?"</em></div>
+          </div>
+          <div class="bp-btn" onclick="event.stopPropagation();openModal('bondpulse')">Details →</div>
+        </div>
+
+      </div>
+
+      <!-- REFERENCE SENTRY -->
+      <div class="sentry-ref">
+        <div class="sr-icon">🛡️</div>
+        <div class="sr-body">
+          <div class="sr-title">Depends on: AI Data Sentry — Intelligent Ingestion Layer</div>
+          <div class="sr-desc">All TRACE/SEBI data feeding this pipeline is first verified by the Data Sentry. Only Golden Record-confirmed trade data is used to calculate liquidity scores — eliminating the "hallucinated price" risk.</div>
+        </div>
+        <button class="sr-btn">Use Case #1</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RESEARCH -->
+  <div class="research">
+    <h2>Research Notes</h2>
+    <div class="r-grid">
+
+      <!-- Crowded Door Trap -->
+      <div class="threat-callout">
+        <div class="tc-label">⚠ Critical Risk — The Crowded Door Trap</div>
+        <div class="tc-title">When the AI's Warning Causes the Crisis It Predicted</div>
+        <div class="tc-body">The Crowded Door Trap is a second-order systems failure with a precise mechanism: the AI scores Bond X as "liquidity deteriorating," <strong>all institutional clients on the same platform receive the alert simultaneously</strong>, all decide to sell at the same moment, and the collective sell pressure causes the illiquidity the model predicted. The prediction becomes self-fulfilling — the AI didn't warn about a crisis, it <strong>created one</strong>. The mitigations are architectural: first, <strong>staggered alert delivery</strong> — clients receive alerts at slightly different times based on portfolio priority, not simultaneously. Second, <strong>score bands rather than binary thresholds</strong> — instead of "illiquid / not illiquid," the score moves along a continuum so different clients act at different trigger points. Third, <strong>position-size-adjusted timing</strong> — a client with ₹200 Cr in the bond gets an earlier warning than one with ₹5 Cr, giving large holders more exit runway. None of these eliminate the risk entirely; they manage it. The crowded door is an inherent tension in any shared early-warning system.</div>
+      </div>
+
+      <!-- Regime Shift Failure -->
+      <div class="threat-callout">
+        <div class="tc-label">⚠ Model Risk — The Regime Shift Failure</div>
+        <div class="tc-title">A Model Trained on 10 Years of Low Rates Will Fail in a High-Rate World</div>
+        <div class="tc-body">The 2022–2026 interest rate environment was structurally different from the decade that preceded it — rates rose faster and higher than any ML model trained on 2010–2021 data had ever seen. Liquidity scoring models calibrated on that low-rate period <strong>systematically underestimated illiquidity risk</strong> in rising-rate environments because the training data contained almost no examples of the behaviour they were being asked to predict. The failure mode is not random error — it is <strong>directional bias</strong>: the model confidently assigns a score of 65 to a bond that should score 40 in the current regime. The fix is multi-layered: <strong>regime detection</strong> (a separate model that identifies when macroeconomic conditions have shifted outside training distribution), <strong>stress scenario overlays</strong> (a 2008-style or 2020-style stress adjustment applied on top of the base score when the regime flag is active), and <strong>continuous retraining</strong> with a short lookback window that weights recent data more heavily than historical averages. The OTC Market Simulator (Use Case #3) exists partly for this reason — to generate synthetic data for regimes that real history cannot provide.</div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--teal);"></div>Technical Architecture</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">TRACE / SEBI Feeds</span><span class="r-val">The primary data source — post-trade transaction reporting from US bond markets (TRACE) and Indian bond markets (SEBI reporting). The only source of ground-truth bond transaction data.</span></div>
+          <div class="r-row"><span class="r-key">Time-Series ML</span><span class="r-val">Detects volume decay — the rate at which trading activity in a specific bond is declining over time. A bond that traded 10 times a day three months ago and trades twice a day today is showing early liquidity deterioration.</span></div>
+          <div class="r-row"><span class="r-key">XGBoost Scorer</span><span class="r-val">Weighs all features — volume, bid-ask spread, time-since-trade, CDS signal, peer comparison — to generate the 0–100 score. Gradient boosting is chosen for interpretability: the score can be decomposed into contributing factors for regulatory reporting.</span></div>
+          <div class="r-row"><span class="r-key">Zero-Trade Imputation</span><span class="r-val">When a bond has not traded in 10+ days, the OTC Market Simulator generates synthetic "how should this bond behave" data from sector peer activity. Prevents the score from freezing on stale data.</span></div>
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--navy);"></div>Competitor Landscape</div>
+        <div class="ref-list">
+          <div class="ref-item"><div class="ref-num">1</div><div class="ref-txt"><strong>MarketAxess (CP+)</strong> — industry leader; Composite Price uses ML to estimate values and liquidity for 30,000+ bonds globally. The benchmark that any new system must match or beat.</div></div>
+          <div class="ref-item"><div class="ref-num">2</div><div class="ref-txt"><strong>Bloomberg (LQA)</strong> — Liquidity Quantitative Analysis scores 1M+ securities; widely used for regulatory reporting under MiFID II liquidity stress testing requirements.</div></div>
+          <div class="ref-item"><div class="ref-num">3</div><div class="ref-txt"><strong>BlackRock (Aladdin)</strong> — integrates liquidity scoring into portfolio risk management; allows PMs to model how a liquidity shock ripples through a multi-asset fund in real time.</div></div>
+          <div class="ref-item"><div class="ref-num">4</div><div class="ref-txt"><strong>Overbond</strong> — AI-first player specialising in predicting bid-ask spreads for corporate bonds using deep learning; particularly strong on the Canadian and US IG credit markets.</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-footer">
+    Hexaware Financial Services &nbsp;·&nbsp; AI in Fixed Income Markets &nbsp;·&nbsp; Credit &amp; Counterparty Risk &nbsp;·&nbsp; Preliminary Research 2026
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="m-tag" id="mTag"></div>
+      <div class="m-title" id="mTitle"></div>
+      <div class="m-sub" id="mSub"></div>
+      <button class="m-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="m-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+const NODES = {
+  l1:{tag:'Level 1 · Static',ts:'background:#ece9e3;color:#6b6760;',title:'Static Tiers',sub:'Bonds classified as Liquid or Illiquid at issuance based on issue size — never updated',sections:[
+    {t:'How It Works',rows:[{k:'Classification',v:'A bond with issuance size above ₹500 Cr is classified "Liquid." Below that threshold, "Illiquid." The classification is set once and remains fixed for the life of the bond.'},{k:'The failure mode',v:'A large AAA-rated bond issued in 2019 during a low-rate environment might have been genuinely liquid then. In 2024 with rates volatile and duration risk elevated, the same bond may have no natural buyers — but its classification still says "Liquid."'},{k:'Who still uses this',v:'Most retail-facing platforms, many mid-size asset managers, and any firm without a quantitative risk function. The classification feeds regulatory liquidity buffers that are systematically miscalibrated as a result.'}]}
+  ]},
+  l2:{tag:'Level 2 · Historical',ts:'background:#ece9e3;color:#6b6760;',title:'Historical Statistics',sub:'Quarterly review of average bid-ask spreads — better than static, still dangerously lagging',sections:[
+    {t:'How It Works',rows:[{k:'Process',v:'A risk team pulls average bid-ask spread data from Bloomberg for each bond in the portfolio, quarterly. Bonds where the spread has widened significantly are flagged for discussion in the next investment committee meeting.'},{k:'Improvement',v:'At least the classification updates. A bond that was genuinely liquid 12 months ago and has become illiquid in the current environment will eventually be recategorised.'},{k:'The lag problem',v:'Quarterly is three months behind. In March 2020, the investment-grade credit market froze in a matter of days. A quarterly review process would have flagged the problem in June 2020 — three months after the crisis had already passed.'}]}
+  ]},
+  l3:{tag:'Level 3 · Industry Standard 2026',ts:'background:#fff8ed;color:#b86a00;',title:'Dynamic ML — Current Production Standard',sub:'Real-time scoring using live trade feeds — what MarketAxess CP+ and Bloomberg LQA do today',sections:[
+    {t:'What Level 3 Does',rows:[{k:'Technology',v:'ML models trained on historical bid-ask spread data, trade frequency, and volume — scoring each bond continuously as new TRACE/SEBI data arrives'},{k:'Improvement',v:'The score updates in real time. A bond showing signs of illiquidity today receives a lower score today — not in three months.'},{k:'What it still lacks',v:'Level 3 systems are primarily reactive — they score current conditions. They do not predict where liquidity will be 48 hours from now, nor do they incorporate cross-instrument signals like CDS spreads that lead the bond market by hours or days.'}]},
+    {t:'Why This Matters as Context',rows:[{k:'The competitive baseline',v:'Any system claiming to offer "liquidity scoring" in 2026 that does not reach Level 3 is offering an inferior product to what MarketAxess already provides for free to their platform participants. Level 3 is table stakes; Level 4 is the differentiator.'},{k:'Regulatory standard',v:'MiFID II liquidity stress testing and SEBI portfolio liquidity disclosure requirements both assume at minimum Level 3 capability for regulated fund managers.'}]}
+  ]},
+  l4:{tag:'Level 4 · Proposed Architecture',ts:'background:#e6f7f7;color:#0d7377;',title:'Predictive Stress — 48-Hour Forward Score',sub:'The proposed architecture: predicting where liquidity will be before the deterioration shows up in trade data',sections:[
+    {t:'What Level 4 Adds',rows:[{k:'CDS integration',v:'Credit Default Swap spreads widen before bond liquidity deteriorates — because CDS is a more liquid instrument and faster to trade. Level 4 reads CDS as a leading indicator.'},{k:'Macro signal fusion',v:'Central bank sentiment shifts, yield curve changes, and sector-wide credit events are incorporated as forward-looking inputs — allowing the model to predict that a bond will become illiquid before the first failed trade occurs.'},{k:'48-hour forecast',v:'Instead of "this bond scores 28 now," the system outputs "this bond will score approximately 19 in 48 hours, based on current CDS trajectory and sector peer deterioration." The portfolio manager has time to act.'},{k:'Stress scenario overlay',v:'The score also shows a stressed-market version: "In a 2020-style credit freeze, this bond\'s score would be 8 and exit would take 45+ days." Tail risk is quantified and visible.'}]}
+  ]},
+  l5:{tag:'Level 5 · ⚠ Systemic Risk',ts:'background:#fff8ed;color:#b86a00;',title:'Autonomous Rebalancing',sub:'AI agents auto-sell bonds below a liquidity floor — marked amber because of Flash Crash-style systemic risk',sections:[
+    {t:'What It Means',rows:[{k:'The concept',v:'An autonomous agent monitors liquidity scores continuously and automatically initiates sell orders when a bond falls below a predefined liquidity floor — without human intervention.'},{k:'The systemic risk',v:'If every fund running this system has the same floor threshold, they will all trigger auto-sells simultaneously when the same bond crosses the threshold. The collective sell pressure can cause the very fire sale the system was designed to prevent — the bond market equivalent of the 2010 Flash Crash.'},{k:'Regulatory position',v:'SEBI, FCA, and SEC have all expressed concern about algorithmic auto-selling in stressed markets. Most jurisdictions require a human in the loop for position reduction above a certain size threshold.'}]},
+    {t:'Why It Is Flagged Amber',rows:[{k:'Not a question of capability',v:'The technology to do this exists. The question is whether deploying it at scale creates more systemic risk than it mitigates for individual portfolios.'},{k:'Viable use case',v:'Autonomous rebalancing is viable for small position sizes below regulatory thresholds, for internal stress tests (selling in simulation), and for generating draft sell recommendations for human approval. The auto-execute step is where the flag applies.'}]}
+  ]},
+  heatmap:{tag:'Trader\'s Heatmap · Portfolio View',ts:'background:#edf3fb;color:#1c3557;',title:'Trader\'s Heatmap',sub:'The portfolio manager\'s primary liquidity view — every bond scored and colour-coded, the Time-to-Liquidate meter showing exit runways',sections:[
+    {t:'What the Trader Sees',rows:[{k:'Colour-coded grid',v:'Green (score 70–100) = liquid, normal market conditions allow exit within 1–3 days. Amber (40–69) = watch, exit may take 5–10 days. Red (below 40) = alert, illiquid — exit would require significant price concession or extended time.'},{k:'Time-to-Liquidate',v:'Calculated as: Position Size ÷ (Average Daily Volume × Impact-Adjusted Fill Rate). The stress scenario version applies a 40% volume haircut to simulate a market operating at reduced capacity.'},{k:'The two red positions',v:'Adani Ports 2029 (score 28, TTL ~18 days) and Reliance Retail 2030 (score 19, TTL 30+ days) are flagged for the portfolio manager\'s immediate attention. These are risk concentrations that may need active management.'}]},
+    {t:'Regulatory Use',rows:[{k:'MiFID II liquidity laddering',v:'European regulators require funds to demonstrate they can meet 90% of redemptions in 7 days under stress. The TTL meter directly supports this calculation.'},{k:'SEBI disclosure',v:'SEBI\'s liquidity risk management framework for open-ended debt funds requires quarterly liquidity bucketing — this dashboard provides the data in real time rather than quarterly.'}]}
+  ]},
+  ingestion:{tag:'Stage 1 · Ingestion',ts:'background:#e6f7f7;color:#0d7377;',title:'Ingestion',sub:'Real-time collection and standardisation of trade data from every available source',sections:[
+    {t:'Data Sources',rows:[{k:'TRACE',v:'The US Financial Industry Regulatory Authority\'s Trade Reporting and Compliance Engine — the gold standard for US corporate and municipal bond transaction reporting. Reports trade size, price, and time within 15 minutes of execution.'},{k:'SEBI Bond Reporting',v:'SEBI\'s electronic bond platform (EBP) and NSE/BSE bond reporting — the equivalent for Indian corporate bond market transactions. Coverage improving but still less comprehensive than TRACE.'},{k:'Dealer indicative quotes',v:'Bloomberg and MarketAxess stream "indicative" bid and offer prices from dealers — not firm quotes, but signals of where dealers are willing to trade. Used to supplement sparse actual trade data.'},{k:'Data Sentry dependency',v:'All incoming data is first verified by the AI Data Sentry (Use Case #1) before entering the scoring pipeline. Only Golden Record-confirmed data influences liquidity scores.'}]}
+  ]},
+  activity:{tag:'Stage 2 · Activity Mapping',ts:'background:#edf3fb;color:#1c3557;',title:'Activity Mapping',sub:'Detecting fading interest before it becomes zero interest',sections:[
+    {t:'What Gets Measured',rows:[{k:'Time since last trade',v:'"Days since last transaction" is one of the strongest single predictors of current illiquidity. A bond that last traded 1 day ago is more liquid than one that last traded 15 days ago — even if all other metrics look similar.'},{k:'Volume decay rate',v:'The rate of decline in trading activity over rolling windows (7-day, 30-day, 90-day). A bond that traded 10 times per day three months ago and trades twice per day today is showing accelerating decay.'},{k:'Bid-ask spread widening',v:'The spread between the best bid price and best ask price is a direct measure of market-maker willingness to take the other side. Widening spread = market makers are reducing their commitment to maintaining liquidity.'},{k:'Zero-trade imputation',v:'When a bond has not traded in 10+ days, the time-series model uses OTC Simulator-generated synthetic data from sector peers to maintain a score rather than freezing on stale observations.'}]}
+  ]},
+  correlational:{tag:'Stage 3 · Correlational Analysis',ts:'background:#f3f0fb;color:#5b3faa;',title:'Correlational Analysis',sub:'Graph AI finds proxy liquidity signals from related securities — particularly CDS spreads as leading indicators',sections:[
+    {t:'Why Correlations Matter',rows:[{k:'The core insight',v:'Bond markets are interconnected. If liquidity is deteriorating in other Adani group bonds, Adani Ports 2029 is likely to follow — even if Adani Ports hasn\'t shown its own deterioration yet. Peer correlation is a leading signal.'},{k:'Sector peer mapping',v:'Graph AI maps bonds to their peer group: same issuer, same rating bucket, same sector, same duration range. When the peer group average liquidity score drops, each individual bond\'s score is adjusted downward as a precaution.'},{k:'CDS proxy signal',v:'See the CDS node below — this is the most important cross-instrument signal in the pipeline.'}]}
+  ]},
+  cds:{tag:'Stage 3 · CDS Proxy Signal',ts:'background:#edf3fb;color:#1c3557;',title:'CDS Spread Signal',sub:'Credit Default Swaps as a leading indicator of bond illiquidity — the derivatives market sees it first',sections:[
+    {t:'What a CDS Is',rows:[{k:'Definition',v:'A Credit Default Swap is an insurance contract — the buyer pays a periodic premium; if the reference issuer defaults, the seller pays the buyer the bond\'s face value. CDS spreads (the cost of this insurance) widen when default risk increases.'},{k:'Why CDS leads bonds',v:'CDS is a more liquid instrument than the underlying bond. Sophisticated investors who believe an issuer is deteriorating will trade CDS before they can sell the bond — the bond market is too illiquid to act quickly. CDS spread widening therefore precedes bond illiquidity by hours or days.'},{k:'How it feeds the model',v:'The pipeline monitors 5-year CDS spreads for every issuer with bonds in the portfolio. A CDS spread widening above a defined threshold (e.g. +50 basis points in 24 hours) triggers an automatic downward adjustment to the issuer\'s bond liquidity scores — before any bond trade confirms the deterioration.'}]},
+    {t:'Example',rows:[{k:'Scenario',v:'Adani Ports 5-year CDS widens from 180 bps to 265 bps overnight. No Adani Ports bond has traded in 5 days.'},{k:'Without CDS signal',v:'The model has no new information. Liquidity score stays at 45 based on the last available trade data.'},{k:'With CDS signal',v:'The model detects the +85 bps CDS move and immediately adjusts the bond liquidity score to 28 — generating the red alert visible on the Trader\'s Heatmap. The portfolio manager has hours to act before other market participants notice.'}]}
+  ]},
+  scoring:{tag:'Stage 4 · Scoring',ts:'background:#edf7f1;color:#1a6b35;',title:'Scoring — XGBoost Liquidity Engine',sub:'All signals fused into a single 0–100 score with a Time-to-Liquidate estimate',sections:[
+    {t:'The Score',rows:[{k:'Scale',v:'0 = completely illiquid (no bid, no trade, no exit possible at any price). 100 = highly liquid (institutional size executable within a single trading session at minimal spread).'},{k:'Feature weights',v:'XGBoost assigns importance weights to each input feature. In current conditions: Time-since-trade (28%), Volume decay rate (22%), CDS signal (18%), Peer correlation (15%), Bid-ask spread (12%), Macro regime flag (5%).'},{k:'Interpretability',v:'Unlike a black-box neural network, XGBoost\'s score can be decomposed into its contributing factors for each bond — a regulatory requirement for liquidity scoring used in fund reporting.'}]},
+    {t:'Time-to-Liquidate Calculation',rows:[{k:'Formula',v:'TTL = Position Size ÷ (Average Daily Volume × Impact-Adjusted Fill Rate). The fill rate is adjusted for market impact — a ₹50 Cr sell order in a bond that typically trades ₹10 Cr per day cannot be executed at the market price; the model applies a price concession factor.'},{k:'Stress version',v:'A 40% volume haircut is applied to simulate a market under stress — based on observed volume declines during historical credit stress events (2008, March 2020). This produces the "stressed TTL" visible on the heatmap.'}]}
+  ]},
+  alerting:{tag:'Stage 5 · Alerting',ts:'background:#fff8ed;color:#b86a00;',title:'Alerting + Dealer Sentiment NLP',sub:'Anomaly detection flags deteriorating bonds — with a caution on NLP parsing of dealer communications',sections:[
+    {t:'Anomaly Detection Alerts',rows:[{k:'What triggers an alert',v:'A bond\'s score moving more than 15 points in a single day, a score crossing below 40 (entering the red zone), a TTL estimate extending beyond 10 days, or a score deteriorating faster than 95% of historical deterioration events in the same sector.'},{k:'Staggered delivery',v:'To avoid the Crowded Door Trap, alerts are delivered to clients in staggered waves based on position size and portfolio priority — large holders first, then progressively smaller positions. No two clients receive the alert at the identical millisecond.'},{k:'Alert format',v:'The alert shows: current score, direction of change, estimated TTL in normal and stressed conditions, the primary contributing factor, and a one-click link to the full heatmap.'}]},
+    {t:'⚠ Dealer Sentiment NLP — Use With Caution',warn:true}
+  ]},
+  bondpulse:{tag:'→ Powers Consumer Product',ts:'background:#e6f7f7;color:#0d7377;',title:'BondPulse — The Retail Interface',sub:'The Engine (Liquidity Risk Scoring) powering the Car (BondPulse consumer platform)',sections:[
+    {t:'The Engine / Car Distinction',rows:[{k:'Liquidity Risk Scoring',v:'A backend risk management tool used by brokers, portfolio managers, and risk teams. Institutional-grade, technically complex, regulatory-facing. The engine.'},{k:'BondPulse',v:'A consumer platform that packages the same 0–100 liquidity score as a "Liquid-Exit Guarantee" — answering the retail investor\'s actual question: "Can I get my money out in a pinch?" The car.'},{k:'Why they are separate use cases',v:'They serve completely different users (institutional vs retail), have different value propositions (risk management vs access democratisation), and have different X/Y coordinates in the matrix. The engine being Level 7 readiness does not mean the consumer product is equally ready — consumer-facing requires regulatory approval, UX design, and trust-building that institutional tools do not.'}]},
+    {t:'The Gamified OTC Simulator Inside BondPulse',rows:[{k:'The concept',v:'BondPulse includes a "Try-Before-You-Buy" simulator where retail investors can see how their prospective bond portfolio would have performed in historical stress scenarios — the 2020 credit freeze, the 2022 rate shock — before committing capital.'},{k:'Why this is strategically brilliant',v:'It takes a backend training tool (the OTC Market Simulator used by banks for stress testing) and repurposes it as a trust-building sales tool. Instead of saying "bonds are safe," the platform shows the investor exactly what "not safe" looks like — and then shows them the liquidity score that would have warned them in advance.'},{k:'The retail pitch',v:'"BondPulse uses the same Dynamic Liquidity Scoring used by Tier-1 banks to give individual investors a Liquid-Exit Guarantee — showing them exactly how fast they can convert their bonds to cash, even in a stressed market."'}]}
+  ]}
+};
+
+function openModal(key){
+  const d=NODES[key];if(!d)return;
+  document.querySelectorAll('.ladder-step,.pnode,.cds-side-node,.heatmap-section,.bp-bridge').forEach(n=>n.classList.remove('active'));
+  if(event&&event.currentTarget)event.currentTarget.classList.add('active');
+  document.getElementById('mTag').textContent=d.tag;
+  document.getElementById('mTag').style.cssText=d.ts+'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block;';
+  document.getElementById('mTitle').textContent=d.title;
+  document.getElementById('mSub').textContent=d.sub;
+  const body=document.getElementById('mBody');body.innerHTML='';
+  d.sections.forEach(sec=>{
+    const sd=document.createElement('div');sd.className='info-sec';
+    const st=document.createElement('div');st.className='info-sec-title';st.textContent=sec.t;sd.appendChild(st);
+    if(sec.warn){
+      const wb=document.createElement('div');wb.className='warn-box';
+      wb.innerHTML=`<strong>⚠ Use With Caution — Two Regulatory Risks:</strong><br><br>
+        <strong>1. Spoofing / Market Manipulation:</strong> If an AI system monitors dealer chat for who is "quoting but not trading," sophisticated dealers will learn to manipulate those signals — deliberately talking up or down bonds they have no intention of trading to move the AI's sentiment score. This is market manipulation. Regulators in the US, UK, and EU have prosecuted similar behaviour in other asset classes. Any deployment of dealer chat NLP must have anti-spoofing detection built in from day one.<br><br>
+        <strong>2. Privacy and Regulatory Compliance:</strong> Bloomberg Terminal chats and voice communications between dealers are not public data. Using them for market intelligence raises questions under MiFID II's market abuse regulation, SEBI's market integrity rules, and general data privacy law. Some chat data is protected; some dealers have not consented to their communications being used for AI training. Legal review is mandatory before any dealer communication NLP is deployed in a regulated context.`;
+      sd.appendChild(wb);
+    }
+    if(sec.rows)sec.rows.forEach(r=>{const row=document.createElement('div');row.className='info-row';row.innerHTML=`<span class="info-key">${r.k}</span><span class="info-val">${r.v}</span>`;sd.appendChild(row);});
+    body.appendChild(sd);
+  });
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  document.querySelectorAll('.ladder-step,.pnode,.cds-side-node,.heatmap-section,.bp-bridge').forEach(n=>n.classList.remove('active'));
+}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target===document.getElementById('overlay'))closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+</script>
+</body>
+</html>

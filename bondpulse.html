@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BondPulse — HNI Fixed Income Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+  --teal:#0d7377;--teal-pale:#e6f7f7;--teal-border:#8ecece;
+  --navy:#1c3557;--navy-pale:#edf3fb;--navy-border:#a8c4e0;
+  --exec:#1a6b35;--exec-pale:#edf7f1;--exec-border:#a8d9bc;
+  --amber:#b86a00;--amber-pale:#fff8ed;--amber-border:#f5c882;
+  --purple:#5b3faa;--purple-pale:#f3f0fb;--purple-border:#c4b0f0;
+  --red:#c04040;--red-pale:#fdf0f0;--red-border:#f0b8b8;
+  /* BondPulse gold accent */
+  --gold:#c9a227;--gold-pale:#fef9ec;--gold-border:#e8d47a;
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,0.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.nav-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--text-secondary);padding:5px 14px 5px 0;border-right:1px solid var(--border);margin-right:16px;background:none;border-top:none;border-bottom:none;border-left:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .15s}
+.nav-back:hover{color:var(--teal)}
+.nav-crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+.nav-crumb .active{color:var(--gold);font-weight:600}
+.nav-crumb .sep{color:var(--border)}
+.nav-badge{margin-left:auto;background:var(--gold-pale);color:var(--gold);border:1px solid var(--gold-border);border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;text-transform:uppercase;letter-spacing:.06em}
+
+/* PAGE */
+.page{max-width:1100px;margin:0 auto;padding:0 24px 48px}
+
+/* ── HERO ──────────────────────────────────────────────────────────────── */
+.hero{
+  background:linear-gradient(135deg,var(--navy) 0%,#1a3f5c 50%,var(--teal) 100%);
+  border-radius:0 0 20px 20px;
+  padding:40px 36px 36px;
+  margin:0 0 28px;
+  position:relative;
+  overflow:hidden;
+  box-shadow:var(--shadow-lg);
+}
+.hero::before{
+  content:'BONDPULSE';
+  position:absolute;right:-20px;top:-20px;
+  font-family:'DM Serif Display',serif;
+  font-size:130px;color:rgba(255,255,255,.04);
+  line-height:1;pointer-events:none;letter-spacing:-.04em;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--gold-pale);color:var(--gold);
+  border:1px solid var(--gold-border);border-radius:20px;
+  font-size:11px;font-weight:700;padding:3px 12px;
+  text-transform:uppercase;letter-spacing:.07em;
+  margin-bottom:14px;
+}
+.hero-title{
+  font-family:'DM Serif Display',serif;
+  font-size:38px;color:#fff;
+  letter-spacing:-.03em;line-height:1.1;
+  margin-bottom:6px;
+}
+.hero-title span{color:var(--gold)}
+.hero-sub{font-size:15px;color:rgba(255,255,255,.7);max-width:580px;line-height:1.6;margin-bottom:24px}
+.hero-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.hero-chip{
+  font-size:12px;font-weight:500;padding:4px 12px;border-radius:20px;
+  background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);
+  border:1px solid rgba(255,255,255,.2);
+}
+.hero-chip.gold{background:rgba(201,162,39,.2);color:var(--gold);border-color:rgba(201,162,39,.4)}
+
+/* HNI Profile box inside hero */
+.hni-box{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);
+  border-radius:10px;padding:14px 18px;
+  display:flex;align-items:center;gap:16px;
+}
+.hni-icon{font-size:24px;flex-shrink:0}
+.hni-text{flex:1}
+.hni-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:4px}
+.hni-title{font-size:13px;font-weight:600;color:#fff;margin-bottom:2px}
+.hni-desc{font-size:12px;color:rgba(255,255,255,.6);line-height:1.45}
+.hni-criteria{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+.hni-pill{font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:20px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.2)}
+
+/* ── SECTION TITLES ──────────────────────────────────────────────────── */
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.section-title h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy);letter-spacing:-.01em;white-space:nowrap}
+.section-title .s-line{flex:1;height:1px;background:var(--border)}
+.section-title .s-badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px;flex-shrink:0;text-transform:uppercase;letter-spacing:.07em}
+.gold-badge{background:var(--gold-pale);color:var(--gold);border:1px solid var(--gold-border)}
+.teal-badge{background:var(--teal-pale);color:var(--teal);border:1px solid var(--teal-border)}
+
+/* ── PROBLEM SECTION ─────────────────────────────────────────────────── */
+.problem-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px}
+.prob-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 14px;box-shadow:var(--shadow-sm);border-top:3px solid var(--red)}
+.prob-icon{font-size:22px;margin-bottom:8px}
+.prob-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:5px}
+.prob-desc{font-size:11.5px;color:var(--text-secondary);line-height:1.45}
+
+/* ── ENGINE CARDS ────────────────────────────────────────────────────── */
+.engines-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:28px}
+.engine-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:18px 18px 16px;box-shadow:var(--shadow-md);
+  display:flex;flex-direction:column;gap:0;
+  position:relative;overflow:hidden;
+}
+.engine-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0;
+}
+.ec-liq::after{background:var(--exec)}
+.ec-curve::after{background:var(--teal)}
+.ec-credit::after{background:var(--purple)}
+.ec-icon{font-size:26px;margin-bottom:8px}
+.ec-engine-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.ec-liq .ec-engine-label{color:var(--exec)}
+.ec-curve .ec-engine-label{color:var(--teal)}
+.ec-credit .ec-engine-label{color:var(--purple)}
+.ec-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--navy);letter-spacing:-.01em;margin-bottom:5px}
+.ec-engine-name{font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border-light)}
+.ec-desc{font-size:12.5px;color:var(--text-secondary);line-height:1.55;flex:1;margin-bottom:12px}
+.ec-output{
+  background:var(--bg);border:1px solid var(--border);border-radius:7px;
+  padding:8px 10px;margin-bottom:10px;
+}
+.ec-output-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:4px}
+.ec-output-value{font-size:13px;font-weight:700}
+.ec-liq .ec-output-value{color:var(--exec)}
+.ec-curve .ec-output-value{color:var(--teal)}
+.ec-credit .ec-output-value{color:var(--purple)}
+.ec-link{font-size:11px;font-weight:600;padding:5px 0;color:var(--text-muted);text-decoration:none;display:flex;align-items:center;gap:4px;transition:color .12s;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.ec-liq .ec-link:hover{color:var(--exec)}
+.ec-curve .ec-link:hover{color:var(--teal)}
+.ec-credit .ec-link:hover{color:var(--purple)}
+
+/* ── PRODUCT DASHBOARD MOCK ──────────────────────────────────────────── */
+.dashboard-wrap{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow-lg);
+  margin-bottom:28px;
+}
+.dash-header{
+  background:linear-gradient(to right,var(--navy),#1e4060);
+  padding:14px 20px;
+  display:flex;align-items:center;gap:12px;
+}
+.dash-header-brand{font-family:'DM Serif Display',serif;font-size:17px;color:#fff;letter-spacing:-.01em}
+.dash-header-brand span{color:var(--gold)}
+.dash-header-sub{font-size:12px;color:rgba(255,255,255,.5)}
+.dash-header-badge{
+  margin-left:auto;background:rgba(201,162,39,.2);color:var(--gold);
+  border:1px solid rgba(201,162,39,.4);border-radius:20px;
+  font-size:10.5px;font-weight:600;padding:3px 10px;
+}
+.dash-body{padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+
+/* Portfolio summary row */
+.portfolio-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.pf-stat{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center}
+.pf-num{font-family:'DM Serif Display',serif;font-size:22px;line-height:1}
+.pf-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;margin-top:2px}
+
+/* Bond rows in dashboard */
+.bonds-table-wrap{background:var(--bg);border-radius:9px;overflow:hidden;border:1px solid var(--border)}
+.bt-header{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr;gap:0;background:var(--navy);padding:8px 12px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.7)}
+.bt-row{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr;gap:0;padding:9px 12px;border-bottom:1px solid var(--border-light);align-items:center;font-size:12px;transition:background .12s}
+.bt-row:last-child{border-bottom:none}
+.bt-row:hover{background:var(--surface)}
+.bt-name{font-weight:600;color:var(--text-primary)}
+.bt-yield{font-family:'DM Mono',monospace;font-weight:600}
+.score-pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace}
+.sp-green{background:#d4edda;color:#1a6b35}
+.sp-amber{background:#fff3cd;color:#856404}
+.sp-red{background:#fde8e8;color:#9a1f1f}
+.ttl-mini{font-size:11px;font-family:'DM Mono',monospace;color:var(--text-secondary)}
+.rate-arrow{font-size:11px;font-weight:700}
+.rate-up{color:var(--red)}
+.rate-down{color:var(--exec)}
+.rate-flat{color:var(--text-muted)}
+
+/* Alert bar */
+.dash-alert{
+  display:flex;align-items:center;gap:10px;
+  background:var(--red-pale);border:1px solid var(--red-border);
+  border-radius:8px;padding:10px 14px;font-size:12.5px;
+}
+.da-dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse 1.4s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.da-text{flex:1;color:var(--text-primary)}
+.da-action{font-size:11px;font-weight:600;padding:4px 11px;border-radius:6px;background:var(--red);color:#fff;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+/* ── GAMIFIED SIMULATOR ──────────────────────────────────────────────── */
+.sim-wrap{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow-md);
+  margin-bottom:28px;
+}
+.sim-header{
+  background:linear-gradient(135deg,var(--navy),var(--teal));
+  padding:14px 20px;display:flex;align-items:center;gap:12px;
+}
+.sim-header-icon{font-size:22px}
+.sim-header-body{flex:1}
+.sim-header-title{font-family:'DM Serif Display',serif;font-size:16px;color:#fff;margin-bottom:2px}
+.sim-header-sub{font-size:12px;color:rgba(255,255,255,.55)}
+.sim-header-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(201,162,39,.25);color:var(--gold);border:1px solid rgba(201,162,39,.4);flex-shrink:0}
+.sim-body{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+
+/* Scenario selector */
+.scenario-col{display:flex;flex-direction:column;gap:10px}
+.scenario-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:4px}
+.scenario-btn{
+  display:flex;align-items:center;gap:10px;
+  background:var(--bg);border:1.5px solid var(--border);border-radius:9px;
+  padding:11px 13px;cursor:pointer;transition:all .15s;
+  text-align:left;font-family:'DM Sans',sans-serif;
+}
+.scenario-btn:hover{border-color:var(--teal);background:var(--teal-pale)}
+.scenario-btn.active{border-color:var(--teal);background:var(--teal-pale);box-shadow:0 0 0 2px rgba(13,115,119,.12)}
+.scenario-btn.danger.active{border-color:var(--red);background:var(--red-pale);box-shadow:0 0 0 2px rgba(192,64,64,.12)}
+.scenario-btn.danger:hover{border-color:var(--red);background:var(--red-pale)}
+.sb-icon{font-size:20px;flex-shrink:0}
+.sb-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:2px}
+.sb-desc{font-size:11px;color:var(--text-secondary);line-height:1.3}
+.sb-tag{font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:4px;margin-top:4px;display:inline-block}
+.sb-tag.hist{background:var(--amber-pale);color:var(--amber)}
+.sb-tag.hyp{background:var(--teal-pale);color:var(--teal)}
+
+/* Simulation result */
+.result-col{display:flex;flex-direction:column;gap:10px}
+.result-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:4px}
+.result-scenario-name{font-family:'DM Serif Display',serif;font-size:16px;color:var(--navy);margin-bottom:8px;letter-spacing:-.01em}
+.result-cards{display:flex;flex-direction:column;gap:7px}
+.result-card{background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:9px 11px;display:flex;align-items:center;gap:10px}
+.rc-label{font-size:11.5px;color:var(--text-secondary);flex:1}
+.rc-before{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);text-decoration:line-through}
+.rc-after{font-family:'DM Mono',monospace;font-size:12px;font-weight:700}
+.rc-pos{color:var(--exec)}.rc-neg{color:var(--red)}.rc-flat{color:var(--text-muted)}
+.result-insight{
+  background:var(--teal-pale);border:1px solid var(--teal-border);border-left:3px solid var(--teal);
+  border-radius:7px;padding:10px 12px;font-size:12px;color:var(--text-primary);line-height:1.55;
+}
+.result-insight strong{color:var(--teal)}
+
+/* ── STRATEGIC SUMMARY ───────────────────────────────────────────────── */
+.strategy-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px}
+.strat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.strat-title{font-family:'DM Serif Display',serif;font-size:15px;color:var(--navy);letter-spacing:-.01em;margin-bottom:8px}
+.strat-rows{display:flex;flex-direction:column;gap:7px}
+.strat-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.strat-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:148px}
+.strat-key::after{content:':'}
+.strat-val{color:var(--text-secondary)}
+
+/* Quote callout */
+.quote-callout{
+  background:var(--navy);border-radius:12px;padding:22px 26px;
+  margin-bottom:28px;box-shadow:var(--shadow-md);border-left:5px solid var(--gold);
+}
+.qc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px}
+.qc-text{font-family:'DM Serif Display',serif;font-size:18px;color:#fff;line-height:1.5;letter-spacing:-.01em}
+.qc-text em{color:rgba(255,255,255,.65);font-style:normal}
+
+.page-footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:16px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="nav-back" onclick="window.history.back()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11L5 7l4-4"/></svg>
+    Back to Matrix
+  </button>
+  <div class="nav-crumb">
+    <span>Fixed Income</span><span class="sep">/</span>
+    <span>Retail Access Gap</span><span class="sep">/</span>
+    <span class="active">BondPulse</span>
+  </div>
+  <div class="nav-badge">★ Proposed Solution</div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">★ Hexaware Proposed Solution &nbsp;·&nbsp; Fixed Income</div>
+  <div class="hero-title">Bond<span>Pulse</span></div>
+  <div style="font-size:15px;color:rgba(255,255,255,.6);letter-spacing:.02em;margin-bottom:16px;font-weight:500;">Institutional-Grade Fixed Income Intelligence. For HNIs.</div>
+  <div class="hero-sub">Three Tier-1 bank engines — liquidity scoring, yield curve modelling, and credit assessment — unified into a single intelligence platform. The same tools that portfolio managers at BlackRock use, now available to India's High Net Worth investors.</div>
+  <div class="hero-chips">
+    <div class="hero-chip gold">HNI-Only Platform</div>
+    <div class="hero-chip">Liquid-Exit Guarantee</div>
+    <div class="hero-chip">Rate Protection Score</div>
+    <div class="hero-chip">Credit Health Check</div>
+    <div class="hero-chip">Try-Before-You-Buy Simulator</div>
+  </div>
+  <div class="hni-box">
+    <div class="hni-icon">👤</div>
+    <div class="hni-text">
+      <div class="hni-label">Target Profile</div>
+      <div class="hni-title">India High Net Worth Individuals — Institutional Access, Human Scale</div>
+      <div class="hni-desc">BondPulse addresses the HNI segment specifically because bond lot sizes (typically ₹10–50 lakh minimum) make this a product for informed, high-corpus investors — not a mass-market app. The trade-off is a smaller addressable market in exchange for a far more credible product promise.</div>
+      <div class="hni-criteria">
+        <div class="hni-pill">₹50L+ investable corpus</div>
+        <div class="hni-pill">Existing bond market participants</div>
+        <div class="hni-pill">Seeking institutional-grade intelligence</div>
+        <div class="hni-pill">Currently underserved by retail platforms</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- THE PROBLEM -->
+  <div class="section-title">
+    <h2>What HNIs Currently Face</h2>
+    <div class="s-line"></div>
+    <div class="s-badge" style="background:var(--red-pale);color:var(--red);border:1px solid var(--red-border);">Four Structural Gaps</div>
+  </div>
+
+  <div class="problem-grid">
+    <div class="prob-card">
+      <div class="prob-icon">💧</div>
+      <div class="prob-title">Invisible Liquidity Risk</div>
+      <div class="prob-desc">No retail platform shows HNIs how quickly they can exit a bond position in a stressed market. They discover illiquidity at the worst possible moment.</div>
+    </div>
+    <div class="prob-card">
+      <div class="prob-icon">📰</div>
+      <div class="prob-title">Lagging Credit Ratings</div>
+      <div class="prob-desc">S&P and Moody's downgrades arrive weeks after the market has already moved. By the time an HNI reads the downgrade, the loss has already happened.</div>
+    </div>
+    <div class="prob-card">
+      <div class="prob-icon">📈</div>
+      <div class="prob-title">No Duration Management</div>
+      <div class="prob-desc">HNIs choose bonds based on headline yield without understanding that a +50bps rate rise can erase months of coupon income through principal loss.</div>
+    </div>
+    <div class="prob-card">
+      <div class="prob-icon">🔲</div>
+      <div class="prob-title">Black-Box Risk Scores</div>
+      <div class="prob-desc">When risk scores exist at all, they are opaque numbers from agency models that cannot be questioned, understood, or cross-referenced by the investor.</div>
+    </div>
+  </div>
+
+  <!-- THREE ENGINES -->
+  <div class="section-title">
+    <h2>Three Institutional Engines</h2>
+    <div class="s-line"></div>
+    <div class="s-badge teal-badge">Each built separately · Unified in BondPulse</div>
+  </div>
+
+  <div class="engines-grid">
+
+    <!-- Engine 1: Liquidity -->
+    <div class="engine-card ec-liq">
+      <div class="ec-icon">💧</div>
+      <div class="ec-engine-label">Engine 1 · Liquidity Risk Scoring</div>
+      <div class="ec-title">Liquid-Exit Guarantee</div>
+      <div class="ec-engine-name">Powered by: Dynamic Liquidity Risk Scoring</div>
+      <div class="ec-desc">The same 0–100 liquidity score used by Tier-1 portfolio managers — updated continuously using TRACE/SEBI trade data, CDS proxy signals, and volume decay detection. BondPulse surfaces the one question HNIs actually care about: <em>"Can I get my money out when I need it?"</em></div>
+      <div class="ec-output">
+        <div class="ec-output-label">BondPulse Output</div>
+        <div class="ec-output-value">Liquidity Score 88 · Exit in ~1 day at market price</div>
+      </div>
+      <button class="ec-link" onclick="window.location.href='liquidity_risk_scoring.html'">
+        View Full Use Case →
+      </button>
+    </div>
+
+    <!-- Engine 2: Yield Curve -->
+    <div class="engine-card ec-curve">
+      <div class="ec-icon">📈</div>
+      <div class="ec-engine-label">Engine 2 · Yield Curve Modelling</div>
+      <div class="ec-title">Rate Protection Score</div>
+      <div class="ec-engine-name">Powered by: Multi-Curve Neural Engine</div>
+      <div class="ec-desc">A Neural Surface predicting rate hikes before they hit the headlines — the same engine that powers institutional duration management. BondPulse converts a complex forward-rate prediction into a plain-language answer: <em>"If rates rise +50bps, your portfolio loses approximately ₹21,000 on ₹10 lakh."</em></div>
+      <div class="ec-output">
+        <div class="ec-output-label">BondPulse Output</div>
+        <div class="ec-output-value">Duration 4.2Y · Rate Sensitivity −2.1% per +50bps</div>
+      </div>
+      <button class="ec-link" onclick="window.location.href='yield_curve_modelling.html'">
+        View Full Use Case →
+      </button>
+    </div>
+
+    <!-- Engine 3: Credit -->
+    <div class="engine-card ec-credit">
+      <div class="ec-icon">🔐</div>
+      <div class="ec-engine-label">Engine 3 · Creditworthiness Assessment</div>
+      <div class="ec-title">Credit Health Check</div>
+      <div class="ec-engine-name">Powered by: Glass-Box EBM Credit Pipeline</div>
+      <div class="ec-desc">An Explainable Boosting Machine delivers a real-time credit score with a plain-language bar chart showing <em>why</em> the bond is rated the way it is. Not a black-box number — a transparent explanation that gives HNIs the confidence to assess higher-yield opportunities they would previously have avoided out of uncertainty.</div>
+      <div class="ec-output">
+        <div class="ec-output-label">BondPulse Output</div>
+        <div class="ec-output-value">Credit Score 724 · AA− Equivalent · 94% confidence</div>
+      </div>
+      <button class="ec-link" onclick="window.location.href='creditworthiness_assessment.html'">
+        View Full Use Case →
+      </button>
+    </div>
+
+  </div>
+
+  <!-- PRODUCT DASHBOARD MOCK -->
+  <div class="section-title">
+    <h2>The BondPulse Dashboard</h2>
+    <div class="s-line"></div>
+    <div class="s-badge gold-badge">Illustrative Product Mock</div>
+  </div>
+
+  <div class="dashboard-wrap">
+    <div class="dash-header">
+      <div>
+        <div class="dash-header-brand">Bond<span>Pulse</span></div>
+        <div class="dash-header-sub">Portfolio Intelligence · HNI View · Updated 3 min ago</div>
+      </div>
+      <div class="dash-header-badge">⚠ 1 Alert Active</div>
+    </div>
+    <div class="dash-body">
+
+      <!-- Portfolio stats -->
+      <div class="portfolio-row">
+        <div class="pf-stat">
+          <div class="pf-num" style="color:var(--navy);">₹48.6L</div>
+          <div class="pf-lbl">Total Bond Portfolio</div>
+        </div>
+        <div class="pf-stat">
+          <div class="pf-num" style="color:var(--exec);">7.84%</div>
+          <div class="pf-lbl">Blended Yield</div>
+        </div>
+        <div class="pf-stat">
+          <div class="pf-num" style="color:var(--amber);">3.8Y</div>
+          <div class="pf-lbl">Avg Duration</div>
+        </div>
+        <div class="pf-stat">
+          <div class="pf-num" style="color:var(--red);">72</div>
+          <div class="pf-lbl">Portfolio Liq. Score</div>
+        </div>
+      </div>
+
+      <!-- Bond table -->
+      <div class="bonds-table-wrap">
+        <div class="bt-header">
+          <span>Bond</span>
+          <span>Yield</span>
+          <span>Liq. Score</span>
+          <span>Credit</span>
+          <span>Rate Risk</span>
+        </div>
+        <div class="bt-row">
+          <span class="bt-name">HDFC Bank NCD 2027</span>
+          <span class="bt-yield" style="color:var(--exec);">7.45%</span>
+          <span><span class="score-pill sp-green">88 · 1d</span></span>
+          <span><span class="score-pill sp-green">724 · AA−</span></span>
+          <span class="rate-arrow rate-flat">▶ Low</span>
+        </div>
+        <div class="bt-row">
+          <span class="bt-name">SBI Perpetual AT1</span>
+          <span class="bt-yield" style="color:var(--exec);">8.20%</span>
+          <span><span class="score-pill sp-green">74 · 3d</span></span>
+          <span><span class="score-pill sp-green">680 · A+</span></span>
+          <span class="rate-arrow rate-up">▲ Medium</span>
+        </div>
+        <div class="bt-row">
+          <span class="bt-name">Tata Motors NCD 2025</span>
+          <span class="bt-yield" style="color:var(--amber);">9.10%</span>
+          <span><span class="score-pill sp-amber">51 · 7d</span></span>
+          <span><span class="score-pill sp-amber">542 · BB+</span></span>
+          <span class="rate-arrow rate-flat">▶ Low</span>
+        </div>
+        <div class="bt-row" style="background:#fff8f8;">
+          <span class="bt-name" style="color:var(--red);">⚠ Adani Ports 2029</span>
+          <span class="bt-yield" style="color:var(--red);">10.80%</span>
+          <span><span class="score-pill sp-red">28 · 18d</span></span>
+          <span><span class="score-pill sp-red">398 · B+</span></span>
+          <span class="rate-arrow rate-up">▲ High</span>
+        </div>
+      </div>
+
+      <!-- Active alert -->
+      <div class="dash-alert">
+        <div class="da-dot"></div>
+        <div class="da-text"><strong>Adani Ports 2029</strong> — Liquidity Score dropped from 45 to 28 in 48 hours. CDS spreads widening +85bps. AI Credit Score now 2 notches below agency rating. Time-to-exit at current market conditions: ~18 days. Consider reviewing position size.</div>
+        <button class="da-action">Review →</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- GAMIFIED SIMULATOR -->
+  <div class="section-title">
+    <h2>Try-Before-You-Buy Simulator</h2>
+    <div class="s-line"></div>
+    <div class="s-badge teal-badge">Institutional Stress Testing · For HNIs</div>
+  </div>
+
+  <div class="sim-wrap">
+    <div class="sim-header">
+      <div class="sim-header-icon">🎮</div>
+      <div class="sim-header-body">
+        <div class="sim-header-title">Portfolio Stress Simulator — How Would You Have Done?</div>
+        <div class="sim-header-sub">Select a historical or hypothetical scenario and see how your current bond portfolio would have performed. No commitment. No capital at risk. Full institutional analytics.</div>
+      </div>
+      <div class="sim-header-badge">★ BondPulse Original Feature</div>
+    </div>
+    <div class="sim-body">
+
+      <!-- Scenario selector -->
+      <div class="scenario-col">
+        <div class="scenario-label">Select Scenario</div>
+
+        <div class="scenario-btn danger active" onclick="selectScenario(this,'2020')">
+          <div class="sb-icon">🔴</div>
+          <div>
+            <div class="sb-title">March 2020 — Credit Freeze</div>
+            <div class="sb-desc">Investment-grade bonds lost 15–25% in days as investors sold everything to raise cash</div>
+            <div class="sb-tag hist">Historical</div>
+          </div>
+        </div>
+
+        <div class="scenario-btn" onclick="selectScenario(this,'2022')">
+          <div class="sb-icon">🟠</div>
+          <div>
+            <div class="sb-title">2022 Rate Shock</div>
+            <div class="sb-desc">Fastest rate hiking cycle in 40 years — long-duration bonds lost 20%+ in principal</div>
+            <div class="sb-tag hist">Historical</div>
+          </div>
+        </div>
+
+        <div class="scenario-btn" onclick="selectScenario(this,'rbi')">
+          <div class="sb-icon">🔵</div>
+          <div>
+            <div class="sb-title">RBI +100bps Surprise Hike</div>
+            <div class="sb-desc">Hypothetical: RBI raises repo rate 100bps in a single emergency meeting</div>
+            <div class="sb-tag hyp">Hypothetical</div>
+          </div>
+        </div>
+
+        <div class="scenario-btn" onclick="selectScenario(this,'default')">
+          <div class="sb-icon">⚫</div>
+          <div>
+            <div class="sb-title">Major Issuer Default</div>
+            <div class="sb-desc">Hypothetical: A BBB-rated issuer in your portfolio files for insolvency</div>
+            <div class="sb-tag hyp">Hypothetical</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result panel -->
+      <div class="result-col">
+        <div class="result-label">Simulation Result — Your Portfolio</div>
+        <div class="result-scenario-name" id="scenarioTitle">March 2020 — Credit Freeze</div>
+        <div class="result-cards" id="resultCards">
+          <div class="result-card">
+            <span class="rc-label">Portfolio Value</span>
+            <span class="rc-before">₹48.6L</span>
+            <span class="rc-after rc-neg">₹41.2L (−15.2%)</span>
+          </div>
+          <div class="result-card">
+            <span class="rc-label">Worst Position</span>
+            <span class="rc-before">Adani Ports</span>
+            <span class="rc-after rc-neg">−28% · 45+ day exit</span>
+          </div>
+          <div class="result-card">
+            <span class="rc-label">Avg Liquidity Score</span>
+            <span class="rc-before">72</span>
+            <span class="rc-after rc-neg">Score: 31 (stressed)</span>
+          </div>
+          <div class="result-card">
+            <span class="rc-label">HDFC Bank NCD</span>
+            <span class="rc-before">Score 88</span>
+            <span class="rc-after rc-pos">Held up · Score 71</span>
+          </div>
+        </div>
+        <div class="result-insight" id="resultInsight">
+          <strong>BondPulse Warning — Pre-March 2020:</strong> The liquidity model would have flagged Adani Ports 2029 as high-risk 3 weeks before the freeze, when its score dropped from 45 to 28. An HNI who acted on that signal had an 18-day exit window before liquidity collapsed entirely.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- STRATEGIC SUMMARY -->
+  <div class="section-title">
+    <h2>Strategic Summary</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <!-- Quote -->
+  <div class="quote-callout">
+    <div class="qc-label">The BondPulse Proposition</div>
+    <div class="qc-text">"We don't just give you a score. We show you a simple chart explaining <em>why</em> the bond is rated the way it is — the same Explainable Credit AI used by Tier-1 banks, now giving you the confidence to chase higher yields without the black-box fear. <em>Institutional-grade intelligence. Human-scale decisions.</em>"</div>
+  </div>
+
+  <div class="strategy-grid">
+    <div class="strat-card">
+      <div class="strat-title">The Product Strategy</div>
+      <div class="strat-rows">
+        <div class="strat-row"><span class="strat-key">Architecture</span><span class="strat-val">Product layer built on three independently validated institutional engines — not a new invention but a new integration</span></div>
+        <div class="strat-row"><span class="strat-key">Target segment</span><span class="strat-val">HNIs with ₹50L+ investable corpus, existing bond market participants seeking better tools than brokers provide</span></div>
+        <div class="strat-row"><span class="strat-key">Differentiator</span><span class="strat-val">Transparency — BondPulse explains its scores. Every other platform gives a number. BondPulse gives a number and a chart and a reason</span></div>
+        <div class="strat-row"><span class="strat-key">Lot size constraint</span><span class="strat-val">Bond minimum denominations (₹10–50L) limit this to HNIs — a smaller addressable market but a far more credible product promise and a self-selecting high-trust audience</span></div>
+      </div>
+    </div>
+    <div class="strat-card">
+      <div class="strat-title">The Engine/Car Distinction</div>
+      <div class="strat-rows">
+        <div class="strat-row"><span class="strat-key">The engines</span><span class="strat-val">Liquidity Risk Scoring, Yield Curve Modelling, and Creditworthiness Assessment are institutional backend tools — internal-facing, technically complex, regulatory-grade</span></div>
+        <div class="strat-row"><span class="strat-key">BondPulse</span><span class="strat-val">The consumer product that packages these engines for HNIs — user-facing, plain-language, actionable. The engines are the infrastructure; BondPulse is the interface</span></div>
+        <div class="strat-row"><span class="strat-key">The simulator</span><span class="strat-val">Repurposes the OTC Market Simulator — a backend bank training tool — as a retail trust-building feature. Try-Before-You-Buy converts a boring educational step into a sales engagement moment</span></div>
+        <div class="strat-row"><span class="strat-key">Matrix position</span><span class="strat-val">BondPulse sits at (5, 10) — maximum strategic impact, moderate implementation readiness. High impact because the market gap is enormous; moderate readiness because regulatory approval and data aggregation take time</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    Hexaware Financial Services &nbsp;·&nbsp; AI in Fixed Income Markets &nbsp;·&nbsp; BondPulse — Proposed Solution &nbsp;·&nbsp; Preliminary Research 2026
+  </div>
+</div>
+
+<script>
+const SCENARIOS = {
+  '2020': {
+    title: 'March 2020 — Credit Freeze',
+    cards: [
+      {label:'Portfolio Value',before:'₹48.6L',after:'₹41.2L (−15.2%)',cls:'rc-neg'},
+      {label:'Worst Position',before:'Adani Ports',after:'−28% · 45+ day exit',cls:'rc-neg'},
+      {label:'Avg Liquidity Score',before:'72',after:'Score: 31 (stressed)',cls:'rc-neg'},
+      {label:'HDFC Bank NCD',before:'Score 88',after:'Held up · Score 71',cls:'rc-pos'},
+    ],
+    insight: '<strong>BondPulse Warning — Pre-March 2020:</strong> The liquidity model would have flagged Adani Ports 2029 as high-risk 3 weeks before the freeze, when its score dropped from 45 to 28. An HNI who acted on that signal had an 18-day exit window before liquidity collapsed entirely.',
+  },
+  '2022': {
+    title: '2022 Rate Shock',
+    cards: [
+      {label:'Portfolio Value',before:'₹48.6L',after:'₹41.8L (−13.9%)',cls:'rc-neg'},
+      {label:'Duration Loss',before:'3.8Y avg duration',after:'−8.2% mark-to-market',cls:'rc-neg'},
+      {label:'Worst Position',before:'SBI AT1',after:'−18% · High duration',cls:'rc-neg'},
+      {label:'Rate Protection',before:'No score',after:'BondPulse: ▲ Reduce duration',cls:'rc-pos'},
+    ],
+    insight: '<strong>BondPulse Warning — Pre-2022 Rate Shock:</strong> The Neural Surface would have flagged rising rate risk 6 weeks before the hiking cycle began, when Fed sentiment shifted from dovish to hawkish. The Rate Protection Score would have recommended reducing portfolio duration from 3.8Y to 2.1Y.',
+  },
+  'rbi': {
+    title: 'RBI +100bps Surprise Hike',
+    cards: [
+      {label:'Immediate Impact',before:'₹48.6L',after:'₹44.1L (−9.3%) Day 1',cls:'rc-neg'},
+      {label:'Duration Sensitivity',before:'3.8Y',after:'−9.3% per +100bps',cls:'rc-neg'},
+      {label:'Liquidity Impact',before:'Avg Score 72',after:'Est. Score 52 (−28%)',cls:'rc-neg'},
+      {label:'Short-Term Bonds',before:'Tata Motors 2025',after:'Minimal impact · ✓ Safe',cls:'rc-pos'},
+    ],
+    insight: '<strong>BondPulse Recommendation — Hypothetical RBI Hike:</strong> The Rate Protection Score would recommend shortening portfolio duration before the hike. Short-dated bonds (Tata Motors 2025) would be largely protected. Long-dated high-duration positions would face the worst impact — the system would flag these specifically for review.',
+  },
+  'default': {
+    title: 'Major Issuer Default Scenario',
+    cards: [
+      {label:'Direct Loss',before:'Adani Ports position',after:'₹9.6L at risk (100%)',cls:'rc-neg'},
+      {label:'Contagion Effect',before:'Portfolio at ₹48.6L',after:'₹36.4L est. (−25.1%)',cls:'rc-neg'},
+      {label:'Credit Warning',before:'Agency: BB',after:'BondPulse: B+ (7 wks earlier)',cls:'rc-pos'},
+      {label:'Liquid Positions',before:'HDFC + SBI',after:'Exitable in 1–3 days',cls:'rc-pos'},
+    ],
+    insight: '<strong>BondPulse Credit Warning — Pre-Default:</strong> The EBM credit score would have downgraded Adani Ports to B+ approximately 7 weeks before a hypothetical formal default, when alternative data signals (job posting freeze, CDS widening, supplier litigation filings) triggered the early warning. The window to reduce was available.',
+  },
+};
+
+function selectScenario(btn, key) {
+  // Update active button
+  document.querySelectorAll('.scenario-btn').forEach(b => {
+    b.classList.remove('active');
+  });
+  btn.classList.add('active');
+
+  const s = SCENARIOS[key];
+  document.getElementById('scenarioTitle').textContent = s.title;
+
+  // Update result cards
+  const container = document.getElementById('resultCards');
+  container.innerHTML = s.cards.map(c => `
+    <div class="result-card">
+      <span class="rc-label">${c.label}</span>
+      <span class="rc-before">${c.before}</span>
+      <span class="rc-after ${c.cls}">${c.after}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('resultInsight').innerHTML = s.insight;
+}
+</script>
+</body>
+</html>

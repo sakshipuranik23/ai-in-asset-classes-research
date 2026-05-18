@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cross-Currency Basis Swap Optimiser — Forex</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+  --fx:#8B6914;--fx-pale:#fdf6e3;--fx-border:#d4b96a;
+  --navy:#1c3557;--navy-pale:#edf3fb;--navy-border:#a8c4e0;
+  --exec:#1a6b35;--exec-pale:#edf7f1;--exec-border:#a8d9bc;
+  --amber:#b86a00;--amber-pale:#fff8ed;--amber-border:#f5c882;
+  --teal:#0d7377;--teal-pale:#e6f7f7;--teal-border:#8ecece;
+  --purple:#5b3faa;--purple-pale:#f3f0fb;--purple-border:#c4b0f0;
+  --red:#c04040;--red-pale:#fdf0f0;--red-border:#f0b8b8;
+  --opp-overlay:rgba(139,105,20,0.07);--opp-overlay-border:rgba(139,105,20,0.28);
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,0.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;min-height:100vh}
+
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.nav-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--text-secondary);padding:5px 14px 5px 0;border-right:1px solid var(--border);margin-right:16px;background:none;border-top:none;border-bottom:none;border-left:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .15s}
+.nav-back:hover{color:var(--fx)}
+.nav-crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+.nav-crumb .active{color:var(--fx);font-weight:600}
+.nav-crumb .sep{color:var(--border)}
+.nav-badge{margin-left:auto;background:var(--fx-pale);color:var(--fx);border:1px solid var(--fx-border);border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;text-transform:uppercase;letter-spacing:.06em}
+
+.page{max-width:1100px;margin:0 auto;padding:28px 24px 48px}
+.uc-num{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--fx);letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+.header-sub{font-size:14px;color:var(--text-secondary);max-width:700px;line-height:1.6;margin-bottom:12px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+.chip{font-size:11.5px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary)}
+.chip.fx{background:var(--fx-pale);border-color:var(--fx-border);color:var(--fx)}
+.chip.navy{background:var(--navy-pale);border-color:var(--navy-border);color:var(--navy)}
+.chip.amber{background:var(--amber-pale);border-color:var(--amber-border);color:var(--amber)}
+.chip.teal{background:var(--teal-pale);border-color:var(--teal-border);color:var(--teal)}
+.chip.green{background:var(--exec-pale);border-color:var(--exec-border);color:var(--exec)}
+.chip.purple{background:var(--purple-pale);border-color:var(--purple-border);color:var(--purple)}
+
+.summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:3px solid transparent;box-shadow:var(--shadow-sm)}
+.sc-gap{border-left-color:#d06060}.sc-sol{border-left-color:var(--fx)}.sc-val{border-left-color:#4a7fd4}
+.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.sc-gap .sc-lbl{color:#c04040}.sc-sol .sc-lbl{color:var(--fx)}.sc-val .sc-lbl{color:#2a4faa}
+.sc-txt{font-size:13px;line-height:1.5}.sc-val .sc-txt{font-weight:600;color:var(--fx)}
+
+.strategy-banner{background:var(--fx);border-radius:10px;padding:16px 22px;margin-bottom:24px;box-shadow:var(--shadow-md);border-left:5px solid rgba(255,255,255,.3)}
+.sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.6);margin-bottom:6px}
+.sb-text{font-size:13.5px;color:rgba(255,255,255,.92);line-height:1.65}
+.sb-text strong{color:#fff}
+
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.section-title h2{font-family:'DM Serif Display',serif;font-size:18px;color:var(--fx);letter-spacing:-.01em;white-space:nowrap}
+.section-title .s-line{flex:1;height:1px;background:var(--border)}
+
+/* MATURITY LADDER */
+.ladder-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px 18px;box-shadow:var(--shadow-sm);margin-bottom:28px}
+.ladder-intro{font-size:12.5px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5}
+.ladder-intro strong{color:var(--text-primary)}
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;position:relative}
+.ladder::before{content:'';position:absolute;top:22px;left:10%;right:10%;height:3px;background:linear-gradient(to right,#d0ccc6,#c8c4bc,var(--amber-border),var(--fx-border),var(--amber-border));border-radius:2px;z-index:0}
+.ladder-step{position:relative;z-index:1;border-radius:10px;padding:12px 10px 10px;cursor:pointer;transition:box-shadow .18s,transform .18s;border:1.5px solid transparent;text-align:center}
+.ladder-step:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.ladder-step.active{box-shadow:0 0 0 3px rgba(139,105,20,.15),var(--shadow-md)}
+.ls-1,.ls-2{background:#f5f4f1;border-color:#d0ccc6}
+.ls-3{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-4{background:var(--fx-pale);border-color:var(--fx-border)}
+.ls-5{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-num{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.ls-1 .ls-num,.ls-2 .ls-num{color:var(--text-muted)}
+.ls-3 .ls-num{color:var(--amber)}.ls-4 .ls-num{color:var(--fx)}.ls-5 .ls-num{color:var(--amber)}
+.ls-icon{font-size:22px;margin-bottom:5px;line-height:1}
+.ls-name{font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:3px}
+.ls-focus{font-size:11px;color:var(--text-secondary);line-height:1.3;margin-bottom:7px}
+.ls-btn{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.ls-1 .ls-btn,.ls-2 .ls-btn{background:#ece9e3;color:var(--text-secondary)}
+.ls-3 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.ls-4 .ls-btn{background:var(--fx-pale);color:var(--fx);border:1px solid var(--fx-border)}
+.ls-5 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.std-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.emerging-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.ladder-legend{display:flex;align-items:center;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border-light)}
+.ll-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-secondary)}
+.ll-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* DIAGRAM */
+.diagram-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:visible;box-shadow:var(--shadow-md);margin-bottom:24px}
+.diag-titlebar{background:var(--fx);padding:11px 20px;display:flex;align-items:center;gap:10px;border-radius:13px 13px 0 0}
+.diag-titlebar span{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em}
+.diag-titlebar small{font-size:11.5px;color:rgba(255,255,255,.45)}
+.diagram-inner{padding:20px 20px 0;display:flex;flex-direction:column;gap:0}
+
+/* ── TREASURY COCKPIT ───────────────────────────────────────────── */
+.cockpit{background:var(--navy-pale);border:1.5px solid var(--navy-border);border-radius:12px;padding:16px 18px 14px;margin-bottom:18px;cursor:pointer;transition:box-shadow .15s}
+.cockpit:hover{box-shadow:var(--shadow-md)}
+.cockpit.active{box-shadow:0 0 0 3px rgba(139,105,20,.12)}
+.ck-toprow{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.ck-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--navy)}
+.ck-btn{margin-left:auto;font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid var(--navy-border);background:var(--surface);color:var(--navy);cursor:pointer;font-family:'DM Sans',sans-serif}
+.cockpit-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:14px}
+.ck-panel{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:12px 14px;box-shadow:var(--shadow-sm)}
+.ckp-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:10px}
+
+/* TCOH Matrix */
+.tcoh-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.tcoh-table th{background:var(--navy);color:#fff;padding:6px 8px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;text-align:left}
+.tcoh-table td{padding:7px 8px;border-bottom:1px solid var(--border-light);vertical-align:middle}
+.tcoh-table tr:last-child td{border-bottom:none}
+.tcoh-pair{font-weight:700;color:var(--text-primary);font-family:'DM Mono',monospace;font-size:12px}
+.tcoh-basis{font-family:'DM Mono',monospace;font-size:11.5px}
+.tcoh-cost{font-family:'DM Mono',monospace;font-size:11.5px;font-weight:700}
+.tcoh-hedge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px}
+.th-ok{background:#d4edda;color:#1a6b35}
+.th-warn{background:#fff3cd;color:#856404}
+.th-break{background:#fde8e8;color:#9a1f1f}
+.opt-alert{display:flex;align-items:flex-start;gap:7px;background:var(--fx-pale);border:1.5px solid var(--fx-border);border-left:4px solid var(--fx);border-radius:7px;padding:9px 11px;margin-top:8px;font-size:12px}
+.oa-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.oa-text{color:var(--text-primary);line-height:1.5}
+.oa-text strong{color:var(--fx)}
+
+/* XAI Rationale */
+.xai-rows{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.xai-row{display:flex;align-items:center;gap:7px}
+.xai-label{font-size:11px;font-weight:600;color:var(--text-secondary);width:120px;flex-shrink:0}
+.xai-track{flex:1;height:7px;background:var(--border);border-radius:3px;overflow:hidden}
+.xai-fill{height:100%;border-radius:3px}
+.xai-val{font-family:'DM Mono',monospace;font-size:10.5px;font-weight:700;width:52px;text-align:right;flex-shrink:0}
+.xai-total{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border-light);padding-top:7px;margin-top:4px}
+.xai-total-label{font-size:11.5px;font-weight:700;color:var(--text-primary)}
+.xai-total-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--exec)}
+.ifrs-ok{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--exec);margin-top:8px;padding:5px 8px;background:var(--exec-pale);border:1px solid var(--exec-border);border-radius:6px}
+
+/* IFRS9 info box */
+.ifrs-box{background:var(--teal-pale);border:1.5px solid var(--teal-border);border-left:5px solid var(--teal);border-radius:10px;padding:16px 20px;margin-bottom:18px;box-shadow:var(--shadow-sm)}
+.ifrs-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--teal);margin-bottom:6px}
+.ifrs-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--navy);margin-bottom:7px;letter-spacing:-.01em}
+.ifrs-body{font-size:13px;color:var(--text-secondary);line-height:1.65}
+.ifrs-body strong{color:var(--text-primary)}
+
+/* PIPELINE */
+.pipeline-section{border:2px dashed var(--opp-overlay-border);background:var(--opp-overlay);border-radius:12px;padding:18px 16px 16px;position:relative;margin-bottom:0}
+.prop-label{position:absolute;top:-14px;right:16px;display:flex;align-items:center;gap:5px}
+.prop-label span{font-size:10px;font-weight:700;color:var(--fx);background:var(--surface);padding:2px 9px;border-radius:20px;border:1.5px solid var(--fx-border);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
+.pipeline-row{display:flex;align-items:flex-start;gap:0}
+.pnode{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;flex:1;min-width:0;cursor:pointer;transition:box-shadow .18s,transform .18s;box-shadow:var(--shadow-sm);position:relative;z-index:2}
+.pnode:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.pnode.active{border-color:var(--fx)!important;box-shadow:0 0 0 3px rgba(139,105,20,.12)}
+.pnode.n-fx{border-top:3px solid var(--fx)}
+.pnode.n-navy{border-top:3px solid var(--navy)}
+.pnode.n-teal{border-top:3px solid var(--teal)}
+.pnode.n-purple{border-top:3px solid var(--purple)}
+.pnode.n-exec{border-top:3px solid var(--exec)}
+.pn-stage{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:2px}
+.pn-icon{font-size:17px;margin-bottom:3px;line-height:1}
+.pn-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:3px;line-height:1.3}
+.pn-desc{font-size:10.5px;color:var(--text-secondary);line-height:1.35;margin-bottom:6px}
+.pn-btn{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.n-fx .pn-btn{background:var(--fx-pale);color:var(--fx)}
+.n-navy .pn-btn{background:var(--navy-pale);color:var(--navy)}
+.n-teal .pn-btn{background:var(--teal-pale);color:var(--teal)}
+.n-purple .pn-btn{background:var(--purple-pale);color:var(--purple)}
+.n-exec .pn-btn{background:var(--exec-pale);color:var(--exec)}
+.parr{display:flex;align-items:center;flex-shrink:0;width:18px;padding-top:38px}
+.parr-line{height:2px;background:#c8c4bc;flex:1}
+.parr-head{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:7px solid #c8c4bc;flex-shrink:0}
+
+/* CROSS-ASSET STRIP */
+.xasset-strip{display:flex;align-items:center;gap:0;background:var(--navy);border-radius:0 0 13px 13px;overflow:hidden}
+.xa-item{display:flex;align-items:center;gap:10px;padding:12px 18px;flex:1}
+.xa-sep{width:1px;background:rgba(255,255,255,.15);align-self:stretch}
+.xa-icon{font-size:18px;flex-shrink:0}
+.xa-body{flex:1}
+.xa-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:2px}
+.xa-title{font-size:12px;font-weight:600;color:#fff}
+.xa-desc{font-size:10.5px;color:rgba(255,255,255,.55);line-height:1.3}
+
+/* RESEARCH */
+.research{padding-top:24px;border-top:1px solid var(--border)}
+.research h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--fx);margin-bottom:16px;letter-spacing:-.01em}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.r-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.r-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:7px}
+.r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.r-rows{display:flex;flex-direction:column;gap:7px}
+.r-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.r-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:155px}
+.r-key::after{content:':'}
+.r-val{color:var(--text-secondary)}
+.threat-callout{background:var(--red-pale);border:1.5px solid var(--red-border);border-left:5px solid var(--red);border-radius:10px;padding:18px 20px;box-shadow:var(--shadow-sm)}
+.tc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--red);margin-bottom:6px}
+.tc-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--fx);margin-bottom:7px;letter-spacing:-.01em}
+.tc-body{font-size:13px;color:var(--text-secondary);line-height:1.65}
+.tc-body strong{color:var(--text-primary)}
+.ref-list{display:flex;flex-direction:column;gap:6px}
+.ref-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.ref-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--fx-pale);color:var(--fx);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.ref-txt{color:var(--text-secondary)}.ref-txt strong{color:var(--text-primary)}
+.page-footer{text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:28px;padding-top:16px;border-top:1px solid var(--border)}
+
+.overlay{position:fixed;inset:0;background:rgba(20,18,14,.45);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(3px)}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:14px;width:540px;max-width:calc(100vw - 32px);max-height:calc(100vh - 60px);overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(12px) scale(.98);transition:transform .22s cubic-bezier(.34,1.56,.64,1)}
+.overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-hdr{padding:20px 22px 15px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2;border-radius:14px 14px 0 0}
+.m-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block}
+.m-title{font-family:'DM Serif Display',serif;font-size:19px;color:var(--fx);line-height:1.25;margin-bottom:4px;padding-right:30px}
+.m-sub{font-size:12.5px;color:var(--text-secondary);font-style:italic}
+.m-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:15px;font-family:'DM Sans',sans-serif;transition:background .12s}
+.m-close:hover{background:var(--border)}
+.m-body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:14px}
+.info-sec{display:flex;flex-direction:column;gap:7px}
+.info-sec-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);padding-bottom:5px;border-bottom:1px solid var(--border-light)}
+.info-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.info-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:165px}
+.info-key::after{content:':'}
+.info-val{color:var(--text-secondary)}
+.amber-warn{background:var(--amber-pale);border:1px solid var(--amber-border);border-left:3px solid var(--amber);border-radius:7px;padding:10px 13px;font-size:12.5px;color:var(--text-primary);line-height:1.55;margin-top:4px}
+.amber-warn strong{color:var(--amber)}
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="nav-back" onclick="window.history.back()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11L5 7l4-4"/></svg>
+    Back to Matrix
+  </button>
+  <div class="nav-crumb">
+    <span>Forex</span><span class="sep">/</span>
+    <span>Horizon 2 · Agentic</span><span class="sep">/</span>
+    <span class="active">Cross-Currency Basis Swap Optimiser</span>
+  </div>
+  <div class="nav-badge">⚡ Horizon 2 · Agentic</div>
+</nav>
+
+<div class="page">
+
+  <div class="uc-num">Use Case #9 &nbsp;·&nbsp; Corporate Treasury &nbsp;·&nbsp; Strategic Impact 7/10</div>
+  <h1>Cross-Currency Basis Swap Optimiser</h1>
+  <p class="header-sub">For a multinational managing billions in multi-currency funding, basis spreads are an unmanaged leak in corporate profitability. Quarterly structural reviews lock corporations into suboptimal funding structures while intra-quarter dislocations bypass their models entirely. The Optimiser converts hedging inertia into continuous cost minimisation — constrained by IFRS 9 accounting compliance at every step.</p>
+  <div class="chips">
+    <span class="chip fx">Constrained Reinforcement Learning</span>
+    <span class="chip teal">Multi-Curve Neural Networks</span>
+    <span class="chip navy">Gaussian Process Regression</span>
+    <span class="chip purple">XAI Cost Attribution</span>
+    <span class="chip amber">IFRS 9 Hard Constraint Layer</span>
+    <span class="chip green">Implementation Readiness: 7/10</span>
+  </div>
+
+  <div class="summary-row">
+    <div class="sc sc-gap"><div class="sc-lbl">The Gap</div><div class="sc-txt">Corporate treasury operates on quarterly review cycles. Basis spreads move daily. A corporation locked into a USD/EUR swap from three months ago may be paying 40bps more than the current market would require — a silent, continuous drain on funding costs that no one is measuring in real time.</div></div>
+    <div class="sc sc-sol"><div class="sc-lbl">AI Solution</div><div class="sc-txt">A five-stage pipeline that ingests the full corporate liability structure, monitors multi-currency basis surfaces continuously, simulates restructuring options, and surfaces IFRS 9-compliant switch recommendations with full XAI cost attribution — ready for one-click treasury committee sign-off.</div></div>
+    <div class="sc sc-val"><div class="sc-lbl">Value Created</div><div class="sc-txt">Treasury transforms from a cost centre to a profit-optimisation engine — documented funding cost reductions that justify the technology investment with directly measurable P&amp;L impact.</div></div>
+  </div>
+
+  <!-- STRATEGY BANNER -->
+  <div class="strategy-banner">
+    <div class="sb-label">Strategic Framing — Dissolving Hedging Inertia</div>
+    <div class="sb-text">"By running an adversarial, continuous AI evaluation layer over the multi-currency curve surface, corporations can safely dissolve traditional quarterly <strong>hedging inertia</strong> — transforming their underlying debt liabilities into <strong>dynamic, cost-minimising structures that instantly self-correct</strong> to changing global macroeconomic parameters."</div>
+  </div>
+
+  <!-- MATURITY LADDER -->
+  <div class="section-title">
+    <h2>AI Maturity Ladder — Basis Swap Optimisation</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="ladder-wrap">
+    <p class="ladder-intro">Most corporate treasuries operate at <strong>Level 1–2</strong>. Level 3 continuous curve monitoring is the <strong>2026 frontier</strong> at large multinationals. Level 4 is the proposed architecture. Level 5 carries IFRS 9 documentation constraints that make full autonomy legally problematic — marked amber. Click any level for detail.</p>
+    <div class="ladder">
+      <div class="ladder-step ls-1" onclick="openModal('l1')">
+        <div class="ls-num">Level 1</div><div class="ls-icon">📋</div>
+        <div class="ls-name">Static Hedging</div><div class="ls-focus">Buy-and-hold to maturity</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-2" onclick="openModal('l2')">
+        <div class="ls-num">Level 2</div><div class="ls-icon">📅</div>
+        <div class="ls-name">Periodic Rebalancing</div><div class="ls-focus">Quarterly spreadsheet review</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-3" onclick="openModal('l3')">
+        <div class="ls-num">Level 3</div>
+        <div class="ls-icon">📡</div>
+        <div class="std-badge">🏭 2026 Frontier</div>
+        <div class="ls-name">Continuous Scan</div><div class="ls-focus">Live basis monitoring + alerts</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-4" onclick="openModal('l4')">
+        <div class="ls-num">Level 4</div><div class="ls-icon">🧠</div>
+        <div class="ls-name">Scenario Tilting</div><div class="ls-focus">CB sentiment + 30-day prediction</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-5" onclick="openModal('l5')">
+        <div class="ls-num">Level 5</div><div class="ls-icon">🤖</div>
+        <div class="emerging-badge">⚠ IFRS 9 Risk</div>
+        <div class="ls-name">Autonomous Treasury</div><div class="ls-focus">Auto-execute swap modifications</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+    </div>
+    <div class="ladder-legend">
+      <div class="ll-item"><div class="ll-dot" style="background:#c8c4bc;"></div>Legacy — most corporate treasuries today</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--amber);"></div>2026 frontier / IFRS 9 risk flag</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--fx);"></div>Proposed architecture</div>
+    </div>
+  </div>
+
+  <!-- MAIN DIAGRAM -->
+  <div class="section-title">
+    <h2>The Basis Curve Real-Time Optimisation Architecture</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="diag-titlebar">
+      <span>Treasury Cockpit above · IFRS 9 constraint principle · Five-stage pipeline below · Cross-asset strip at bottom</span>
+      <small>&nbsp;·&nbsp; Click any element for detail</small>
+    </div>
+    <div class="diagram-inner">
+
+      <!-- TREASURY COCKPIT -->
+      <div class="cockpit" onclick="openModal('cockpit')">
+        <div class="ck-toprow">
+          <span style="font-size:16px;">🏦</span>
+          <span class="ck-label">Treasury Cockpit — Total Cost of Hedging Matrix &amp; XAI Rationale</span>
+          <button class="ck-btn">Details →</button>
+        </div>
+        <div class="cockpit-grid">
+
+          <!-- TCOH Matrix -->
+          <div class="ck-panel">
+            <div class="ckp-title">Total Cost of Hedging (TCOH) — Global Enterprise View</div>
+            <table class="tcoh-table">
+              <thead><tr><th>Pair</th><th>Basis Spread</th><th>Ann. Cost</th><th>IFRS 9</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td class="tcoh-pair">USD/EUR</td>
+                  <td class="tcoh-basis" style="color:var(--exec);">−18bps</td>
+                  <td class="tcoh-cost" style="color:var(--exec);">$1.2M</td>
+                  <td><span class="tcoh-hedge th-ok">✓ Effective</span></td>
+                </tr>
+                <tr style="background:#fffdf0;">
+                  <td class="tcoh-pair" style="color:var(--amber);">USD/JPY ⚡</td>
+                  <td class="tcoh-basis" style="color:var(--amber);">−52bps</td>
+                  <td class="tcoh-cost" style="color:var(--amber);">$4.8M</td>
+                  <td><span class="tcoh-hedge th-warn">⚠ Monitor</span></td>
+                </tr>
+                <tr>
+                  <td class="tcoh-pair">USD/GBP</td>
+                  <td class="tcoh-basis" style="color:var(--exec);">−11bps</td>
+                  <td class="tcoh-cost" style="color:var(--exec);">$0.9M</td>
+                  <td><span class="tcoh-hedge th-ok">✓ Effective</span></td>
+                </tr>
+                <tr style="background:#fff8f8;">
+                  <td class="tcoh-pair" style="color:var(--red);">USD/INR ⚠</td>
+                  <td class="tcoh-basis" style="color:var(--red);">−89bps</td>
+                  <td class="tcoh-cost" style="color:var(--red);">$7.1M</td>
+                  <td><span class="tcoh-hedge th-break">✗ Review</span></td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="opt-alert">
+              <div class="oa-icon">💡</div>
+              <div class="oa-text"><strong>Optimisation Alert:</strong> Rolling 3M USD/JPY basis into synthetic USD/CHF combination saves <strong>$240,000 annualised</strong> with zero change to net currency risk. IFRS 9 status: ✓ Compliant. Awaiting treasury sign-off.</div>
+            </div>
+          </div>
+
+          <!-- XAI Rationale -->
+          <div class="ck-panel">
+            <div class="ckp-title">XAI Cost Attribution — USD/JPY Switch Rationale</div>
+            <div class="xai-rows">
+              <div class="xai-row">
+                <span class="xai-label" style="color:var(--teal);">BOJ Policy Shift</span>
+                <div class="xai-track"><div class="xai-fill" style="width:62%;background:var(--teal);"></div></div>
+                <span class="xai-val" style="color:var(--teal);">+$142k</span>
+              </div>
+              <div class="xai-row">
+                <span class="xai-label" style="color:var(--exec);">Basis Curve Inversion</span>
+                <div class="xai-track"><div class="xai-fill" style="width:40%;background:var(--exec);"></div></div>
+                <span class="xai-val" style="color:var(--exec);">+$91k</span>
+              </div>
+              <div class="xai-row">
+                <span class="xai-label" style="color:var(--exec);">Dollar Scarcity Signal</span>
+                <div class="xai-track"><div class="xai-fill" style="width:18%;background:var(--exec);"></div></div>
+                <span class="xai-val" style="color:var(--exec);">+$42k</span>
+              </div>
+              <div class="xai-row">
+                <span class="xai-label" style="color:var(--red);">Transaction Cost</span>
+                <div class="xai-track"><div class="xai-fill" style="width:14%;background:var(--red);"></div></div>
+                <span class="xai-val" style="color:var(--red);">−$35k</span>
+              </div>
+            </div>
+            <div class="xai-total">
+              <span class="xai-total-label">Net annual saving</span>
+              <span class="xai-total-val">+$240,000</span>
+            </div>
+            <div class="ifrs-ok">
+              <span>✓</span>
+              <span>IFRS 9 hedge effectiveness maintained — no income statement volatility triggered</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- IFRS 9 INFO BOX -->
+      <div class="ifrs-box">
+        <div class="ifrs-label">⚖ Regulatory Design Principle — The Hard Compliance Layer</div>
+        <div class="ifrs-title">IFRS 9 / ASC 815: Why the Optimiser Cannot Simply Minimise Cost</div>
+        <div class="ifrs-body">Under IFRS 9 (international) and US GAAP ASC 815 (domestic), corporate hedges must maintain <strong>hedge effectiveness</strong> — a documented, ongoing relationship between the hedging instrument and the hedged item. Constantly modifying or restructuring swap contracts can inadvertently break this effectiveness designation. When a hedge is deemed ineffective, <strong>volatility must be recognised immediately on the corporate income statement</strong> — potentially creating earnings volatility far larger than the basis spread savings being pursued. The AI optimisation agent is therefore constrained by a Hard Regulatory Compliance Layer that computes the exact impact on hedge accounting status <em>before</em> proposing any trade. Every switch option shown to the treasury committee has already been filtered: if a cost saving would trigger an IFRS 9 break, it is silently removed from the recommendation set. The CFO sees only compliant options.</div>
+      </div>
+
+      <!-- PIPELINE -->
+      <div class="pipeline-section">
+        <div class="prop-label">
+          <svg width="28" height="22" viewBox="0 0 28 22" fill="none" style="position:relative;top:2px;">
+            <path d="M24 2 C24 12, 8 8, 4 18" stroke="#8B6914" stroke-width="1.8" stroke-dasharray="3,2" fill="none" stroke-linecap="round"/>
+            <polygon points="4,18 2,12 8,14" fill="#8B6914"/>
+          </svg>
+          <span>Proposed Architecture — Level 4 · Generative Scenario Tilting</span>
+        </div>
+        <div class="pipeline-row">
+
+          <div class="pnode n-fx" onclick="openModal('ingestion')">
+            <div class="pn-stage">Stage 1</div><div class="pn-icon">🏗️</div>
+            <div class="pn-title">Asset/Liability Ingestion</div>
+            <div class="pn-desc">Knowledge Graph maps global subsidiary exposures, debt obligations, and existing swap matrices continuously</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <div class="pnode n-teal" onclick="openModal('curves')">
+            <div class="pn-stage">Stage 2</div><div class="pn-icon">📈</div>
+            <div class="pn-title">Basis Curve Monitoring</div>
+            <div class="pn-desc">Multi-Curve Neural Networks fit multi-currency interest rate surfaces — GP regression fills opaque long-tenor gaps</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <div class="pnode n-navy" onclick="openModal('optimisation')">
+            <div class="pn-stage">Stage 3</div><div class="pn-icon">⚙️</div>
+            <div class="pn-title">Optimisation Scan</div>
+            <div class="pn-desc">Constrained RL evaluates the full currency-tenor matrix — IFRS 9 layer filters non-compliant options before surfacing</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <div class="pnode n-purple" onclick="openModal('recommendation')">
+            <div class="pn-stage">Stage 4</div><div class="pn-icon">💡</div>
+            <div class="pn-title">Recommendation Engine</div>
+            <div class="pn-desc">XAI breaks down every cost saving into its drivers — treasury committee sees exactly what is moving the needle and why</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <div class="pnode n-exec" onclick="openModal('staging')">
+            <div class="pn-stage">Stage 5</div><div class="pn-icon">🔒</div>
+            <div class="pn-title">Staging &amp; Human Commit</div>
+            <div class="pn-desc">Data Sentry Protocol validates multi-bank quotes in quarantine — treasury dashboard presents for one-click sign-off</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CROSS-ASSET STRIP -->
+      <div class="xasset-strip">
+        <div class="xa-item">
+          <div class="xa-icon">📊</div>
+          <div class="xa-body">
+            <div class="xa-label">Shared Architecture — Fixed Income</div>
+            <div class="xa-title">AI Yield Curve Modelling — Use Case #5</div>
+            <div class="xa-desc">Multi-Curve Neural Networks used here are the same architecture as the Fixed Income yield curve engine — cross-asset infrastructure shared</div>
+          </div>
+        </div>
+        <div class="xa-sep"></div>
+        <div class="xa-item">
+          <div class="xa-icon">🛡️</div>
+          <div class="xa-body">
+            <div class="xa-label">Shared Architecture — Fixed Income</div>
+            <div class="xa-title">AI Data Sentry — Use Case #1</div>
+            <div class="xa-desc">The Staging &amp; Human Commit layer uses the same quarantine-before-commit protocol as the Fixed Income Data Sentry</div>
+          </div>
+        </div>
+        <div class="xa-sep"></div>
+        <div class="xa-item">
+          <div class="xa-icon">⚖️</div>
+          <div class="xa-body">
+            <div class="xa-label">Shared Principle — Fixed Income</div>
+            <div class="xa-title">Creditworthiness Assessment — Use Case #7</div>
+            <div class="xa-desc">The IFRS 9 Hard Compliance Layer applies the same monotonicity-constraint-by-design philosophy as the EBM credit model</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RESEARCH -->
+  <div class="research">
+    <h2>Research Notes</h2>
+    <div class="r-grid">
+
+      <div class="threat-callout">
+        <div class="tc-label">⚠ Model Risk — RL in a Constrained Multi-Objective Environment</div>
+        <div class="tc-title">Constrained Reinforcement Learning Is a Research Frontier for This Application</div>
+        <div class="tc-body">The optimisation objective here is multi-dimensional: minimise basis cost, maintain IFRS 9 effectiveness, respect counterparty credit limits, stay within corporate treasury policy, and preserve subsidiary legal framework compliance. Reinforcement Learning with this many simultaneous hard constraints is <strong>genuinely difficult to train</strong>. The reward function must encode all constraints simultaneously, and RL is notoriously unstable when constraint violations carry asymmetric penalties — an IFRS 9 hedge accounting break is catastrophic to the income statement; a 5bps suboptimal basis spread is merely disappointing. The white paper should position constrained multi-objective RL as the right algorithmic direction while acknowledging it is still a research frontier for this specific constraint profile. <strong>In production deployments today, the optimisation layer is more likely to be a constrained integer programme or a rules-based Monte Carlo simulation</strong> with RL as the forward-looking research direction rather than the current implementation.</div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--teal);"></div>The OTC Data Opacity Problem</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">The problem</span><span class="r-val">Cross-currency basis swap data for longer tenors — 5-year to 10-year USD/INR or USD/BRL — is highly opaque. Outside major market makers, these tenors are infrequently quoted, making it impossible to observe a fair market price for the corporation's existing hedge.</span></div>
+          <div class="r-row"><span class="r-key">GP interpolation</span><span class="r-val">Gaussian Process regression uses liquid short-term FX forward points and Cross-Currency Triparty Repo volumes as anchor inputs — fitting a smooth curve through observable data points and interpolating implied longer-tenor basis spreads with calibrated uncertainty bounds.</span></div>
+          <div class="r-row"><span class="r-key">Why GP specifically</span><span class="r-val">Gaussian Processes produce not just a point estimate but a full probability distribution at each interpolated point — the same uncertainty quantification property that makes them valuable in the Yield Curve Modelling use case. A corporation can see not just the implied 5-year USD/INR basis but how confident the model is in that estimate.</span></div>
+          <div class="r-row"><span class="r-key">Dollar scarcity signal</span><span class="r-val">Basis spread widening — particularly USD becoming scarce relative to other currencies — is a leading indicator of global liquidity stress. The Basis Swap Optimiser is therefore also a macro stress early warning signal, not just a cost reduction tool.</span></div>
+        </div>
+      </div>
+
+      <div class="r-card" style="grid-column:1/-1;">
+        <div class="r-title"><div class="r-dot" style="background:var(--navy);"></div>Competitor Landscape — Treasury Management Systems</div>
+        <div class="ref-list">
+          <div class="ref-item"><div class="ref-num">1</div><div class="ref-txt"><strong>Murex (MX.3)</strong> — enterprise gold standard for capital markets; multi-curve architecture with Adjoint Algorithmic Differentiation (AAD) for near-instantaneous structural basis risk calculations across the full yield surface. The institutional benchmark any new system must match.</div></div>
+          <div class="ref-item"><div class="ref-num">2</div><div class="ref-txt"><strong>Calypso (Adenza Group)</strong> — dominant in treasury risk management; integrates collateral optimisation with multi-currency financing and runs algorithmic simulations to optimise balance sheet usage across global entities. The closest existing analogue to the proposed architecture.</div></div>
+          <div class="ref-item"><div class="ref-num">3</div><div class="ref-txt"><strong>Kyriba</strong> — cloud-native treasury leader using ML to predict cash-flow shortfalls across subsidiaries; helps corporate treasurers optimise where and when to execute cross-currency forwards. Moving into AI-driven basis optimisation from the cash management direction.</div></div>
+          <div class="ref-item"><div class="ref-num">4</div><div class="ref-txt"><strong>Quantifi</strong> — specialised in OTC derivatives analytics; integrates ML with traditional data feeds for deep valuation and stress testing on complex cross-currency basis adjustments. Strongest on the analytics and modelling layer.</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-footer">
+    Hexaware Financial Services &nbsp;·&nbsp; AI in Foreign Exchange Markets &nbsp;·&nbsp; Horizon 2 · Agentic &nbsp;·&nbsp; Preliminary Research 2026
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="m-tag" id="mTag"></div>
+      <div class="m-title" id="mTitle"></div>
+      <div class="m-sub" id="mSub"></div>
+      <button class="m-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="m-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+const NODES={
+  l1:{tag:'Level 1 · Static Hedging',ts:'background:#ece9e3;color:#6b6760;',title:'Static Hedging',sub:'Buy-and-hold swaps to maturity — the default position for most corporate treasuries globally',sections:[
+    {t:'How It Works',rows:[{k:'Process',v:'The corporation enters a cross-currency basis swap at inception to hedge a foreign currency debt obligation and holds it to maturity. The swap terms are fixed at inception and never reviewed unless a catastrophic macro event forces it.'},{k:'Why it persists',v:'Operational simplicity — no ongoing monitoring required. Treasury teams are small and focused on cash management; maintaining a dynamic swap optimisation programme requires quantitative capability that most corporate treasuries do not have.'},{k:'The cost',v:'A 3-year USD/JPY basis swap entered when the basis was −20bps that has since moved to −52bps represents a 32bps annual overpayment on the full notional — potentially millions of dollars per year in pure funding inefficiency that nobody is measuring.'}]}
+  ]},
+  l2:{tag:'Level 2 · Periodic Rebalancing',ts:'background:#ece9e3;color:#6b6760;',title:'Periodic Rebalancing',sub:'Scheduled quarterly or bi-annual spreadsheet-based audits of funding costs',sections:[
+    {t:'How It Works',rows:[{k:'Process',v:'The treasury team pulls Bloomberg or Refinitiv data quarterly, compares current basis spreads against their existing swap terms, and assesses whether restructuring makes sense. The analysis is manual, point-in-time, and limited to the currency pairs the team has bandwidth to review.'},{k:'Improvement',v:'At least the corporation is looking at its basis costs regularly and can identify when the market has moved significantly against its existing hedges.'},{k:'The hedging inertia problem',v:'Quarterly cadence means the corporation is perpetually 45–90 days behind the market. Intra-quarter dislocations — which are increasingly common in a volatile multi-central-bank world — are invisible to a quarterly review process and never acted on.'}]}
+  ]},
+  l3:{tag:'Level 3 · 2026 Frontier',ts:'background:#fff8ed;color:#b86a00;',title:'Continuous Curve Monitoring',sub:'Real-time multi-currency basis monitoring with automated alerting for manual treasury review',sections:[
+    {t:'What Level 3 Does',rows:[{k:'Technology',v:'Automated data pipelines ingest real-time basis swap quotes from Bloomberg or direct bank feeds and compare current spreads against existing hedge terms continuously. Alerts fire when the spread differential exceeds a configurable threshold.'},{k:'Improvement',v:'The corporation is always aware of how its existing hedges compare to current market levels. A 30bps adverse move in USD/INR basis triggers an alert within hours, not quarters.'},{k:'What it still lacks',v:'Level 3 systems alert but do not recommend. The treasury officer receives a notification but must manually evaluate whether restructuring makes sense — calculating the IFRS 9 impact, modelling the cost-benefit of the switch, and assessing the full curve context — before deciding. The analytical burden has not been reduced, only the detection latency.'}]}
+  ]},
+  l4:{tag:'Level 4 · Proposed Architecture',ts:'background:#fdf6e3;color:#8B6914;',title:'Generative Scenario Tilting',sub:'AI cross-references basis curves with central bank macro sentiment to predict curve widening 30 days in advance',sections:[
+    {t:'What Level 4 Adds',rows:[{k:'Predictive layer',v:'The multi-curve neural network incorporates central bank sentiment signals — the same NLP-parsed BOJ, ECB, and Fed communications used in the Yield Curve Modelling use case — to predict where basis spreads are likely to move over the next 30 days.'},{k:'IFRS 9 pre-filter',v:'Every structuring option the model evaluates is pre-checked against the hedge effectiveness requirements before it is presented. The treasury committee only sees options that are both cost-saving and accounting-compliant.'},{k:'XAI attribution',v:'Each recommendation comes with a complete cost decomposition — which portion of the saving comes from the BOJ policy shift, which from the dollar scarcity signal, which from the basis curve inversion — allowing the treasury committee to assess whether they agree with the underlying macro assumptions before approving.'}]}
+  ]},
+  l5:{tag:'Level 5 · ⚠ IFRS 9 Risk',ts:'background:#fff8ed;color:#b86a00;',title:'Autonomous Treasury',sub:'AI agents auto-execute basis swap modifications — marked amber because IFRS 9 requires contemporaneous human documentation of hedge designations',sections:[
+    {t:'The Accounting Constraint',rows:[{k:'IFRS 9 requirement',v:'Hedge accounting under IFRS 9 requires contemporaneous documentation — the hedge relationship must be formally designated and documented at the time it is entered into, not retrospectively. An autonomous agent that executes a swap modification without human sign-off cannot provide the documentation that the accounting standard requires.'},{k:'ASC 815 (US GAAP)',v:'The US equivalent imposes similar requirements. Automatic execution of swap modifications without explicit CFO authorisation and documentation would almost certainly fail the effectiveness test under ASC 815.'},{k:'Viable deployment',v:'Autonomous execution is viable for small hedges below materiality thresholds where hedge accounting is not applied — plain vanilla FX forwards for operational cash flows rather than balance sheet hedges. For the large, multi-year cross-currency basis swaps that are the target of this use case, human sign-off is legally required.'}]}
+  ]},
+  cockpit:{tag:'Treasury Cockpit · Output Layer',ts:'background:#edf3fb;color:#1c3557;',title:'Treasury Cockpit',sub:'Two panels: Total Cost of Hedging matrix with live optimisation alert, and XAI cost attribution breakdown',sections:[
+    {t:'TCOH Matrix',rows:[{k:'What it shows',v:'The current annualised funding cost for each active currency pair hedge — the basis spread paid multiplied by the notional. USD/INR at −89bps on a large notional is the corporation\'s most expensive hedge and the primary optimisation target.'},{k:'IFRS 9 status column',v:'Each hedge shows its current effectiveness designation — Green (✓ Effective), Amber (⚠ Monitor), Red (✗ Review). The USD/INR hedge is flagged for review because its economic relationship has drifted sufficiently to warrant formal re-assessment.'},{k:'Optimisation alert',v:'The active alert — rolling 3M USD/JPY into USD/CHF saves $240k annually with zero net currency risk change and full IFRS 9 compliance — is the system\'s primary output. It is actionable immediately: one-click approval routes it to execution.'}]},
+    {t:'XAI Rationale',rows:[{k:'Why XAI matters here',v:'A treasury committee approving a $240k structural change to the corporate hedge book needs to understand what is driving the saving. If the primary driver is a BOJ policy shift prediction that the committee disagrees with, they may choose not to act. XAI makes the macro assumptions visible and contestable.'},{k:'Attribution breakdown',v:'BOJ Policy Shift (+$142k), Basis Curve Inversion (+$91k), Dollar Scarcity Signal (+$42k), Transaction Cost (−$35k) = Net $240k. The committee can see exactly which assumptions to scrutinise.'}]}
+  ]},
+  ingestion:{tag:'Stage 1 · Asset/Liability Ingestion',ts:'background:#fdf6e3;color:#8B6914;',title:'Asset/Liability Ingestion',sub:'Mapping the full corporate liability structure into a live knowledge graph',sections:[
+    {t:'What Gets Mapped',rows:[{k:'Debt obligations',v:'All foreign currency debt instruments — bonds, loans, commercial paper — across every subsidiary, with currency denomination, maturity, coupon structure, and legal entity'},{k:'Existing swap matrices',v:'Every active cross-currency basis swap, interest rate swap, and FX forward — their terms, effective dates, maturity dates, and current mark-to-market values'},{k:'Subsidiary cash flows',v:'Localised operating cash flows for each international subsidiary — the functional currency revenues and costs that the hedges are designed to protect against exchange rate movements'},{k:'Neo4j knowledge graph',v:'The same graph database architecture as the entity resolution use case in Fixed Income — mapping parent-subsidiary relationships and ensuring swap adjustments at one entity do not inadvertently affect the legal hedge documentation of a related entity'}]}
+  ]},
+  curves:{tag:'Stage 2 · Basis Curve Monitoring',ts:'background:#e6f7f7;color:#0d7377;',title:'Basis Curve Monitoring',sub:'Multi-Curve Neural Networks fitting the full cross-currency basis surface — with GP interpolation for opaque long-tenor gaps',sections:[
+    {t:'What Gets Monitored',rows:[{k:'OIS curves',v:'Overnight Indexed Swap rates for all major currencies — the foundation of the multi-curve framework post-LIBOR. SOFR, €STR, SONIA, MIBOR monitored simultaneously.'},{k:'Cross-currency basis spreads',v:'The premium paid to exchange one currency\'s floating rate for another — the direct measure of relative dollar demand globally. Widening USD/JPY basis signals dollar shortage in Japan.'},{k:'Forward points',v:'Short-term FX forward points provide the most liquid and frequently quoted reference data — used as the anchor inputs for the GP interpolation of longer-tenor basis curves'},{k:'GP interpolation',v:'Where long-tenor USD/INR or USD/BRL basis data is missing or stale, Gaussian Process regression infers implied spreads from the observable curve with calibrated uncertainty bounds — the same methodology as the Yield Curve Modelling use case applied to the cross-currency surface'}]}
+  ]},
+  optimisation:{tag:'Stage 3 · Optimisation Scan',ts:'background:#edf3fb;color:#1c3557;',title:'Optimisation Scan',sub:'Systematic evaluation of every viable restructuring option — with the IFRS 9 compliance layer silently filtering before surfacing',sections:[
+    {t:'The Optimisation Process',rows:[{k:'Search space',v:'The full matrix of viable restructuring options: all active hedges × available tenors × eligible base currencies × permitted counterparties. Bounded by the corporation\'s active currency set — typically 5–15 pairs — and available tenors, the search space is large but not computationally intractable.'},{k:'Constrained RL',v:'Reinforcement Learning evaluates restructuring options against a reward function that includes basis cost saving, transaction cost, residual currency risk, and IFRS 9 compliance status simultaneously. Options that violate hard constraints are removed from the solution set.'},{k:'Pre-filtering',v:'The IFRS 9 compliance layer runs before options are presented — computing the hedge effectiveness ratio for each proposed restructuring. Non-compliant options are silently discarded. The treasury committee never sees an option that would break their accounting.'}]},
+    {t:'RL Caveat',warn:true}
+  ]},
+  recommendation:{tag:'Stage 4 · Recommendation Engine',ts:'background:#f3f0fb;color:#5b3faa;',title:'Recommendation Engine — XAI Attribution',sub:'Every recommendation comes with a complete cost decomposition — the committee can see and contest the assumptions',sections:[
+    {t:'What Gets Produced',rows:[{k:'Switch options',v:'Ranked list of viable restructuring options with: estimated annual saving, transaction cost, net benefit, IFRS 9 status, and confidence interval on the basis spread prediction'},{k:'Attribution breakdown',v:'For each option, a bar chart showing which macro factors are driving the saving: central bank policy trajectory, dollar scarcity metrics, basis curve shape, and cross-currency repo dynamics'},{k:'Scenario sensitivity',v:'How sensitive is the saving to the underlying macro assumptions? If the BOJ policy prediction is wrong and rates stay flat, does the USD/JPY restructuring still save money? The sensitivity table shows the saving under alternative scenarios, allowing the committee to stress-test the recommendation before approving.'}]}
+  ]},
+  staging:{tag:'Stage 5 · Staging & Human Commit',ts:'background:#edf7f1;color:#1a6b35;',title:'Staging & Human Commit',sub:'Data Sentry Protocol validates quotes before they reach the treasury dashboard — human sign-off closes the loop',sections:[
+    {t:'How It Works',rows:[{k:'Quote validation',v:'Before the recommended restructuring is presented for approval, the system collects live executable quotes from multiple bank counterparties and stages them in a quarantine layer. The treasury committee is not presented with a theoretical saving — they see the actual executable saving based on real, current bank quotes.'},{k:'Sentry Protocol',v:'The same quarantine-before-commit architecture as the Fixed Income Data Sentry: quotes that are stale, suspiciously wide, or inconsistent with the market are flagged before they reach the dashboard. No hallucinated basis spreads can influence the recommendation.'},{k:'One-click commit',v:'Once the committee approves, the execution instruction is transmitted simultaneously to the selected counterparty. The approval, timestamp, approving officer, and the full XAI rationale are logged to the Compliance Vault — the contemporaneous documentation that IFRS 9 requires.'}]}
+  ]}
+};
+
+function openModal(key){
+  const d=NODES[key];if(!d)return;
+  document.querySelectorAll('.ladder-step,.pnode,.cockpit').forEach(n=>n.classList.remove('active'));
+  if(event&&event.currentTarget)event.currentTarget.classList.add('active');
+  document.getElementById('mTag').textContent=d.tag;
+  document.getElementById('mTag').style.cssText=d.ts+'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block;';
+  document.getElementById('mTitle').textContent=d.title;
+  document.getElementById('mSub').textContent=d.sub;
+  const body=document.getElementById('mBody');body.innerHTML='';
+  d.sections.forEach(sec=>{
+    const sd=document.createElement('div');sd.className='info-sec';
+    const st=document.createElement('div');st.className='info-sec-title';st.textContent=sec.t;sd.appendChild(st);
+    if(sec.warn){
+      const w=document.createElement('div');w.className='amber-warn';
+      w.innerHTML='<strong>⚠ Model Risk — Constrained RL:</strong> Multi-objective RL with hard accounting constraints (IFRS 9 breaks, counterparty credit limits, subsidiary legal frameworks) is genuinely difficult to train stably. The reward function must encode asymmetric penalties — a hedge accounting break is catastrophic; a 5bps suboptimal spread is minor. In production today, the optimisation is more likely implemented as a constrained integer programme or Monte Carlo simulation, with RL as the forward-looking research direction. Position as the right algorithmic approach, not a currently deployable solution.';
+      sd.appendChild(w);
+    }
+    if(sec.rows)sec.rows.forEach(r=>{const row=document.createElement('div');row.className='info-row';row.innerHTML=`<span class="info-key">${r.k}</span><span class="info-val">${r.v}</span>`;sd.appendChild(row);});
+    body.appendChild(sd);
+  });
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  document.querySelectorAll('.ladder-step,.pnode,.cockpit').forEach(n=>n.classList.remove('active'));
+}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target===document.getElementById('overlay'))closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+</script>
+</body>
+</html>

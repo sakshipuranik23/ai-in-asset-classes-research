@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TerraPulse — Geospatial Commodity Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+  --cm:#2d6a2d;--cm-pale:#edf7ed;--cm-border:#90c890;
+  --navy:#1c3557;--navy-pale:#edf3fb;--navy-border:#a8c4e0;
+  --exec:#1a6b35;--exec-pale:#edf7f1;--exec-border:#a8d9bc;
+  --amber:#b86a00;--amber-pale:#fff8ed;--amber-border:#f5c882;
+  --teal:#0d7377;--teal-pale:#e6f7f7;--teal-border:#8ecece;
+  --purple:#5b3faa;--purple-pale:#f3f0fb;--purple-border:#c4b0f0;
+  --red:#c04040;--red-pale:#fdf0f0;--red-border:#f0b8b8;
+  --gold:#c9a227;--gold-pale:#fef9ec;--gold-border:#e8d47a;
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,0.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.nav-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--text-secondary);padding:5px 14px 5px 0;border-right:1px solid var(--border);margin-right:16px;background:none;border-top:none;border-bottom:none;border-left:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .15s}
+.nav-back:hover{color:var(--cm)}
+.nav-crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+.nav-crumb .active{color:var(--cm);font-weight:600}
+.nav-crumb .sep{color:var(--border)}
+.nav-badge{margin-left:auto;background:var(--cm-pale);color:var(--cm);border:1px solid var(--cm-border);border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;text-transform:uppercase;letter-spacing:.06em}
+
+/* PAGE */
+.page{max-width:1100px;margin:0 auto;padding:0 24px 48px}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,var(--navy) 0%,#1a3f2a 50%,var(--cm) 100%);border-radius:0 0 20px 20px;padding:40px 36px 36px;margin:0 0 28px;position:relative;overflow:hidden;box-shadow:var(--shadow-lg)}
+.hero::before{content:'TERRAPULSE';position:absolute;right:-20px;top:-20px;font-family:'DM Serif Display',serif;font-size:120px;color:rgba(255,255,255,.04);line-height:1;pointer-events:none;letter-spacing:-.04em}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.2);border-radius:20px;font-size:11px;font-weight:700;padding:3px 12px;text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px}
+.hero-title{font-family:'DM Serif Display',serif;font-size:38px;color:#fff;letter-spacing:-.03em;line-height:1.1;margin-bottom:6px}
+.hero-title span{color:#7dcc7d}
+.hero-sub{font-size:15px;color:rgba(255,255,255,.7);max-width:600px;line-height:1.6;margin-bottom:24px}
+.hero-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.hero-chip{font-size:12px;font-weight:500;padding:4px 12px;border-radius:20px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.2)}
+
+/* Buyer profiles */
+.buyer-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.buyer-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:9px;padding:11px 13px}
+.bc-icon{font-size:18px;margin-bottom:5px}
+.bc-title{font-size:12px;font-weight:700;color:#fff;margin-bottom:3px}
+.bc-desc{font-size:11px;color:rgba(255,255,255,.6);line-height:1.4}
+.bc-need{font-size:10px;font-weight:600;color:rgba(255,255,255,.45);margin-top:5px;text-transform:uppercase;letter-spacing:.06em}
+
+/* PAGE BODY */
+.page-body{padding-top:0}
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:16px;margin-top:24px}
+.section-title h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--cm);letter-spacing:-.01em;white-space:nowrap}
+.section-title .s-line{flex:1;height:1px;background:var(--border)}
+.s-badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px;flex-shrink:0;text-transform:uppercase;letter-spacing:.07em}
+
+/* PROBLEM CARDS */
+.problem-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:0}
+.prob-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 13px;box-shadow:var(--shadow-sm);border-top:3px solid var(--red)}
+.prob-icon{font-size:20px;margin-bottom:7px}
+.prob-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:4px}
+.prob-desc{font-size:11.5px;color:var(--text-secondary);line-height:1.4}
+
+/* ENGINE CARDS */
+.engines-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:0}
+.engine-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 17px 14px;box-shadow:var(--shadow-md);position:relative;overflow:hidden}
+.engine-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0}
+.ec-1::after{background:var(--cm)}
+.ec-2::after{background:var(--navy)}
+.ec-3::after{background:var(--amber)}
+.ec-4::after{background:var(--red)}
+.ec-5::after{background:var(--purple)}
+.ec-icon{font-size:24px;margin-bottom:7px}
+.ec-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.ec-1 .ec-label{color:var(--cm)}.ec-2 .ec-label{color:var(--navy)}.ec-3 .ec-label{color:var(--amber)}.ec-4 .ec-label{color:var(--red)}.ec-5 .ec-label{color:var(--purple)}
+.ec-title{font-family:'DM Serif Display',serif;font-size:15px;color:var(--navy);margin-bottom:4px;letter-spacing:-.01em}
+.ec-engine{font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid var(--border-light)}
+.ec-desc{font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:10px}
+.ec-output{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 9px;margin-bottom:9px;font-size:12.5px;font-weight:600}
+.ec-1 .ec-output{color:var(--cm)}.ec-2 .ec-output{color:var(--navy)}.ec-3 .ec-output{color:var(--amber)}.ec-4 .ec-output{color:var(--red)}.ec-5 .ec-output{color:var(--purple)}
+.ec-link{font-size:11px;font-weight:600;padding:4px 0;display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .12s}
+.ec-1 .ec-link{color:var(--cm)}.ec-2 .ec-link{color:var(--navy)}.ec-3 .ec-link{color:var(--amber)}.ec-4 .ec-link{color:var(--red)}.ec-5 .ec-link{color:var(--purple)}
+
+/* PRODUCT DASHBOARD MOCK */
+.dash-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-lg);margin-bottom:0}
+.dash-header{background:linear-gradient(to right,var(--navy),#1e4a2a);padding:13px 20px;display:flex;align-items:center;gap:12px}
+.dh-brand{font-family:'DM Serif Display',serif;font-size:17px;color:#fff;letter-spacing:-.01em}
+.dh-brand span{color:#7dcc7d}
+.dh-sub{font-size:12px;color:rgba(255,255,255,.5)}
+.dh-badge{margin-left:auto;background:rgba(125,204,125,.2);color:#7dcc7d;border:1px solid rgba(125,204,125,.35);border-radius:20px;font-size:10.5px;font-weight:600;padding:3px 10px}
+.dash-body{padding:16px 20px 18px;display:flex;flex-direction:column;gap:14px}
+
+/* Commodity filter bar */
+.comm-filter{display:flex;gap:8px;flex-wrap:wrap}
+.cf-btn{font-size:11.5px;font-weight:600;padding:4px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .12s}
+.cf-btn.active{background:var(--cm);color:#fff;border-color:var(--cm)}
+.cf-btn:not(.active):hover{border-color:var(--cm);color:var(--cm)}
+
+/* Dash grid */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.dash-panel{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:12px 14px}
+.dp-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:10px}
+
+/* Map panel */
+.map-detail{background:var(--surface);border-radius:7px;overflow:hidden;border:1px solid var(--border)}
+
+/* Signal table */
+.signal-rows{display:flex;flex-direction:column;gap:6px}
+.sig-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;background:var(--surface);border:1px solid var(--border-light)}
+.sig-icon{font-size:14px;flex-shrink:0}
+.sig-label{font-size:11.5px;font-weight:600;color:var(--text-primary);flex:1}
+.sig-val{font-family:'DM Mono',monospace;font-size:11px;font-weight:700}
+.sig-corr{font-size:10px;color:var(--text-muted);flex-shrink:0}
+
+/* Scenario simulator */
+.scenario-sliders{display:flex;flex-direction:column;gap:9px}
+.sl-row{display:flex;flex-direction:column;gap:4px}
+.sl-label-row{display:flex;justify-content:space-between;font-size:11px;font-weight:600}
+.sl-track{height:6px;background:var(--border);border-radius:3px;position:relative}
+.sl-fill{height:100%;border-radius:3px;background:var(--cm)}
+.sl-thumb{position:absolute;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;background:var(--cm);border:2px solid #fff;box-shadow:var(--shadow-sm)}
+.scenario-result{margin-top:8px;background:var(--cm-pale);border:1px solid var(--cm-border);border-left:3px solid var(--cm);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--text-primary);line-height:1.5}
+.scenario-result strong{color:var(--cm)}
+
+/* Alert row */
+.dash-alert{display:flex;align-items:center;gap:10px;background:var(--red-pale);border:1px solid var(--red-border);border-radius:8px;padding:10px 14px;font-size:12.5px}
+.da-dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse 1.4s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.da-text{flex:1;color:var(--text-primary)}
+.da-action{font-size:11px;font-weight:600;padding:4px 11px;border-radius:6px;background:var(--red);color:#fff;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+/* STRATEGIC SUMMARY */
+.strat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0}
+.strat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.strat-title{font-family:'DM Serif Display',serif;font-size:15px;color:var(--navy);letter-spacing:-.01em;margin-bottom:8px}
+.strat-rows{display:flex;flex-direction:column;gap:7px}
+.strat-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.strat-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:145px}
+.strat-key::after{content:':'}
+.strat-val{color:var(--text-secondary)}
+
+.quote-callout{background:var(--navy);border-radius:12px;padding:22px 26px;margin-bottom:0;box-shadow:var(--shadow-md);border-left:5px solid #7dcc7d}
+.qc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#7dcc7d;margin-bottom:8px}
+.qc-text{font-family:'DM Serif Display',serif;font-size:17px;color:#fff;line-height:1.5;letter-spacing:-.01em}
+.qc-text em{color:rgba(255,255,255,.6);font-style:normal}
+
+.page-footer{text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:28px;padding-top:16px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="nav-back" onclick="window.history.back()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11L5 7l4-4"/></svg>
+    Back to Matrix
+  </button>
+  <div class="nav-crumb">
+    <span>Commodities</span><span class="sep">/</span>
+    <span>Platform</span><span class="sep">/</span>
+    <span class="active">TerraPulse</span>
+  </div>
+  <div class="nav-badge">★ Proposed · Immediate Priority</div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">★ Hexaware Proposed Solution &nbsp;·&nbsp; Commodities Platform</div>
+  <div class="hero-title">Terra<span>Pulse</span></div>
+  <div style="font-size:15px;color:rgba(255,255,255,.55);letter-spacing:.02em;margin-bottom:14px;font-weight:500;">The Physical World. Mapped onto Financial Capital.</div>
+  <div class="hero-sub">Five Earth Sentry engines — weather inference, satellite inventory, maritime telemetry, geopolitical NLP, and carbon tracking — unified into a single B2B GIS platform. TerraPulse is where physical reality becomes financial intelligence.</div>
+  <div class="hero-chips">
+    <div class="hero-chip">GIS Platform</div>
+    <div class="hero-chip">Commodity Filter Layer</div>
+    <div class="hero-chip">Geography-Specific Signals</div>
+    <div class="hero-chip">Scenario Simulation Engine</div>
+    <div class="hero-chip">★ No Regulatory Constraint</div>
+  </div>
+  <div class="buyer-grid">
+    <div class="buyer-card">
+      <div class="bc-icon">🏭</div>
+      <div class="bc-title">Commodity Trading Desks</div>
+      <div class="bc-desc">Trafigura, Vitol, Glencore-scale physical traders who need sub-daily physical signals for immediate position management</div>
+      <div class="bc-need">Need: Real-time + Actionable</div>
+    </div>
+    <div class="buyer-card">
+      <div class="bc-icon">🏗️</div>
+      <div class="bc-title">Industrial Procurement Teams</div>
+      <div class="bc-desc">Steel manufacturers, food conglomerates, energy companies needing 3–6 month supply forecasts for contract negotiation</div>
+      <div class="bc-need">Need: Forward-Looking + Scenario</div>
+    </div>
+    <div class="buyer-card">
+      <div class="bc-icon">📊</div>
+      <div class="bc-title">Macro Hedge Funds</div>
+      <div class="bc-desc">Global macro funds building cross-commodity correlation matrices and supply shock positioning across energy, agriculture, and metals</div>
+      <div class="bc-need">Need: Cross-Commodity + Portfolio</div>
+    </div>
+  </div>
+</div>
+
+<div class="page page-body">
+
+  <!-- THE PROBLEM -->
+  <div class="section-title">
+    <h2>What The Market Currently Lacks</h2>
+    <div class="s-line"></div>
+    <div class="s-badge" style="background:var(--red-pale);color:var(--red);border:1px solid var(--red-border);">Four Structural Gaps</div>
+  </div>
+  <div class="problem-grid">
+    <div class="prob-card">
+      <div class="prob-icon">🔌</div>
+      <div class="prob-title">Fragmented Data Sources</div>
+      <div class="prob-desc">Satellite data, shipping trackers, weather services, and policy databases each require separate subscriptions and custom integration. No unified interface connects physical signals to financial pricing.</div>
+    </div>
+    <div class="prob-card">
+      <div class="prob-icon">⏱️</div>
+      <div class="prob-title">Lagging Official Data</div>
+      <div class="prob-desc">USDA crop reports, EIA inventory data, and official trade statistics are published days to weeks after the physical reality they describe. Price-sensitive decisions cannot wait for official confirmation.</div>
+    </div>
+    <div class="prob-card">
+      <div class="prob-icon">🗺️</div>
+      <div class="prob-title">No Geographic Interface</div>
+      <div class="prob-desc">Commodity market intelligence is delivered as data tables and charts — not as a geographic layer that shows physical signals where they physically occur. Traders think in geography; platforms think in tickers.</div>
+    </div>
+    <div class="prob-card">
+      <div class="prob-icon">🔮</div>
+      <div class="prob-title">No Scenario Simulation</div>
+      <div class="prob-desc">No platform allows a trader to ask "what happens to copper prices if the Atacama Desert gets 30% less precipitation this quarter?" and receive an immediate, AI-generated curve shift forecast.</div>
+    </div>
+  </div>
+
+  <!-- FIVE ENGINES -->
+  <div class="section-title">
+    <h2>Five Earth Sentry Engines</h2>
+    <div class="s-line"></div>
+    <div class="s-badge" style="background:var(--cm-pale);color:var(--cm);border:1px solid var(--cm-border);">Each validated independently · Unified in TerraPulse</div>
+  </div>
+  <div class="engines-grid" style="grid-template-columns:1fr 1fr 1fr;">
+
+    <div class="engine-card ec-1">
+      <div class="ec-icon">🌦️</div>
+      <div class="ec-label">Engine 1</div>
+      <div class="ec-title">Weather-to-Price Inference</div>
+      <div class="ec-engine">Use Case #1 · Earth Sentry Layer</div>
+      <div class="ec-desc">Deep learning weather simulation combined with price elasticity curves — translating soil moisture, temperature stress, and precipitation anomalies into near-month futures price impacts at field level.</div>
+      <div class="ec-output">Output: "−15% soil moisture → +8.2% near-month arabica futures"</div>
+    </div>
+
+    <div class="engine-card ec-2">
+      <div class="ec-icon">🛢️</div>
+      <div class="ec-label">Engine 2</div>
+      <div class="ec-title">Floating Roof Radar Analytics</div>
+      <div class="ec-engine">Use Case #2 · Earth Sentry Layer</div>
+      <div class="ec-desc">SAR satellite computer vision measuring floating roof shadows to infer crude oil volumes — including politically opaque reserves in non-reporting jurisdictions that official data cannot see.</div>
+      <div class="ec-output">Output: Live global crude inventory including Iran, Venezuela, China SPR</div>
+    </div>
+
+    <div class="engine-card ec-3">
+      <div class="ec-icon">🛳️</div>
+      <div class="ec-label">Engine 3</div>
+      <div class="ec-title">Maritime Telemetry Nowcaster</div>
+      <div class="ec-engine">Use Case #3 · Earth Sentry Layer</div>
+      <div class="ec-desc">AIS transponder data processed with RL routing logic — predicting vessel-specific demurrage penalties and transit delays 14 days before a ship reaches its bottleneck.</div>
+      <div class="ec-output">Output: 14-day demurrage forecast per vessel with rerouting alternatives</div>
+      <button class="ec-link" onclick="window.location.href='maritime_telemetry.html'">View Full Use Case →</button>
+    </div>
+
+  </div>
+  <div class="engines-grid" style="grid-template-columns:1fr 1fr 1fr;margin-top:14px;">
+
+    <div class="engine-card ec-4">
+      <div class="ec-icon">🌐</div>
+      <div class="ec-label">Engine 4</div>
+      <div class="ec-title">Geopolitical Export NLP</div>
+      <div class="ec-engine">Use Case #5 · Derivative & Risk</div>
+      <div class="ec-desc">LLMs scanning legislative drafts and local news in native languages — flagging upcoming export restrictions with probability scores 24–48 hours before English-language terminals pick them up.</div>
+      <div class="ec-output">Output: Export restriction probability scores across 40+ commodities</div>
+    </div>
+
+    <div class="engine-card ec-5">
+      <div class="ec-icon">🌿</div>
+      <div class="ec-label">Engine 5</div>
+      <div class="ec-title">Carbon & Deforestation Signal</div>
+      <div class="ec-engine">Use Cases #8, #10 · Policy & ESG</div>
+      <div class="ec-desc">Carbon intensity differentials across supply chains mapped to green premium pricing, plus satellite deforestation detection for 12–18 month agricultural supply forecasting and ESG compliance screening.</div>
+      <div class="ec-output">Output: Green premium arbitrage signals + multi-season supply forecasts</div>
+    </div>
+
+    <div class="engine-card" style="background:var(--navy);border-color:var(--navy);">
+      <div class="ec-icon" style="font-size:28px;margin-bottom:10px;">🌍</div>
+      <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.5);margin-bottom:4px;">The Integration Layer</div>
+      <div style="font-family:'DM Serif Display',serif;font-size:16px;color:#fff;margin-bottom:6px;letter-spacing:-.01em;">TerraPulse GIS Platform</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.65);line-height:1.5;margin-bottom:10px;">Five independent engines, one geographic interface. Physical signals mapped where they physically occur. Financial implications surfaced where decisions are made.</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.45);font-style:italic;">The platform that makes all five engines commercially accessible without custom integration.</div>
+    </div>
+
+  </div>
+
+  <!-- PRODUCT DASHBOARD MOCK -->
+  <div class="section-title">
+    <h2>The TerraPulse Interface</h2>
+    <div class="s-line"></div>
+    <div class="s-badge" style="background:var(--gold-pale);color:var(--gold);border:1px solid var(--gold-border);">Illustrative Product Mock</div>
+  </div>
+
+  <div class="dash-wrap">
+    <div class="dash-header">
+      <div>
+        <div class="dh-brand">Terra<span>Pulse</span></div>
+        <div class="dh-sub">Geospatial Commodity Intelligence · B2B Platform · Updated 4 min ago</div>
+      </div>
+      <div class="dh-badge">⚠ 2 Active Alerts</div>
+    </div>
+    <div class="dash-body">
+
+      <!-- Commodity filter -->
+      <div class="comm-filter">
+        <span style="font-size:11px;font-weight:600;color:var(--text-muted);padding-top:4px;">Commodity:</span>
+        <button class="cf-btn active">🌾 Wheat</button>
+        <button class="cf-btn">🛢️ Crude Oil</button>
+        <button class="cf-btn">☕ Coffee</button>
+        <button class="cf-btn">🪨 Copper</button>
+        <button class="cf-btn">🌽 Corn</button>
+        <button class="cf-btn">⚡ LNG</button>
+      </div>
+
+      <!-- Three panel grid -->
+      <div class="dash-grid">
+
+        <!-- Panel 1: Map with signals -->
+        <div class="dash-panel">
+          <div class="dp-title">Interactive Map — Wheat Production Zones</div>
+          <div class="map-detail">
+            <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
+              <rect x="0" y="0" width="320" height="200" fill="#dbeeff"/>
+              <!-- Europe -->
+              <ellipse cx="155" cy="58" rx="38" ry="24" fill="#d4e8c4"/>
+              <!-- Russia / Ukraine -->
+              <ellipse cx="210" cy="50" rx="65" ry="28" fill="#d4e8c4"/>
+              <!-- North America wheat belt -->
+              <ellipse cx="65" cy="65" rx="42" ry="28" fill="#d4e8c4"/>
+              <!-- India -->
+              <ellipse cx="230" cy="100" rx="22" ry="26" fill="#d4e8c4"/>
+              <!-- Australia -->
+              <ellipse cx="268" cy="155" rx="30" ry="18" fill="#d4e8c4"/>
+              <!-- Africa -->
+              <ellipse cx="155" cy="130" rx="30" ry="42" fill="#d4e8c4"/>
+
+              <!-- Ukraine — stress signal -->
+              <circle cx="190" cy="52" r="14" fill="rgba(192,64,64,0.25)" stroke="#c04040" stroke-width="1.5" stroke-dasharray="3,2"/>
+              <text x="190" y="72" text-anchor="middle" font-family="DM Sans" font-size="8" font-weight="700" fill="#c04040">Ukraine</text>
+              <text x="190" y="82" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#c04040">Drought −22%</text>
+
+              <!-- US Great Plains — amber -->
+              <circle cx="62" cy="60" r="11" fill="rgba(184,106,0,0.2)" stroke="#b86a00" stroke-width="1.5"/>
+              <text x="62" y="78" text-anchor="middle" font-family="DM Sans" font-size="7.5" font-weight="700" fill="#b86a00">US Plains</text>
+              <text x="62" y="87" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#b86a00">Watch</text>
+
+              <!-- India — green -->
+              <circle cx="230" cy="100" r="9" fill="rgba(26,107,53,0.2)" stroke="#1a6b35" stroke-width="1.5"/>
+              <text x="230" y="116" text-anchor="middle" font-family="DM Sans" font-size="7.5" font-weight="700" fill="#1a6b35">India</text>
+              <text x="230" y="125" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#1a6b35">Normal</text>
+
+              <!-- Australia — green -->
+              <circle cx="268" cy="155" r="8" fill="rgba(26,107,53,0.2)" stroke="#1a6b35" stroke-width="1.5"/>
+              <text x="268" y="170" text-anchor="middle" font-family="DM Sans" font-size="7" font-weight="700" fill="#1a6b35">Australia</text>
+
+              <!-- Legend -->
+              <circle cx="10" cy="190" r="4" fill="#c04040"/>
+              <text x="17" y="194" font-family="DM Sans" font-size="7" fill="#6b6760">Supply Stress</text>
+              <circle cx="80" cy="190" r="4" fill="#b86a00"/>
+              <text x="87" y="194" font-family="DM Sans" font-size="7" fill="#6b6760">Watch Zone</text>
+              <circle cx="145" cy="190" r="4" fill="#1a6b35"/>
+              <text x="152" y="194" font-family="DM Sans" font-size="7" fill="#6b6760">Normal</text>
+              <text x="220" y="194" font-family="DM Sans" font-size="7" fill="#9e9b96" font-style="italic">Click region for detailed signal</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Panel 2: Region signals -->
+        <div class="dash-panel">
+          <div class="dp-title">Ukraine Wheat Belt — Active Signals</div>
+          <div class="signal-rows">
+            <div class="sig-row" style="background:var(--red-pale);border-color:var(--red-border);">
+              <span class="sig-icon">💧</span>
+              <span class="sig-label" style="color:var(--red);">Soil Moisture Deficit</span>
+              <span class="sig-val" style="color:var(--red);">−22%</span>
+              <span class="sig-corr">↑+6.8% futures</span>
+            </div>
+            <div class="sig-row" style="background:var(--amber-pale);border-color:var(--amber-border);">
+              <span class="sig-icon">🌡️</span>
+              <span class="sig-label" style="color:var(--amber);">Heat Stress Index</span>
+              <span class="sig-val" style="color:var(--amber);">+14°C</span>
+              <span class="sig-corr">↑+2.1% futures</span>
+            </div>
+            <div class="sig-row">
+              <span class="sig-icon">📋</span>
+              <span class="sig-label">Export Policy Risk</span>
+              <span class="sig-val" style="color:var(--amber);">34%</span>
+              <span class="sig-corr">Prob. restriction</span>
+            </div>
+            <div class="sig-row">
+              <span class="sig-icon">🛳️</span>
+              <span class="sig-label">Odesa Port Congestion</span>
+              <span class="sig-val" style="color:var(--amber);">+4d</span>
+              <span class="sig-corr">Demurrage risk</span>
+            </div>
+            <div class="sig-row" style="background:var(--exec-pale);border-color:var(--exec-border);">
+              <span class="sig-icon">📈</span>
+              <span class="sig-label" style="color:var(--exec);font-weight:700;">Combined Signal Score</span>
+              <span class="sig-val" style="color:var(--exec);">+9.4%</span>
+              <span class="sig-corr" style="color:var(--exec);">Price impact</span>
+            </div>
+          </div>
+          <div style="font-size:9.5px;color:var(--text-muted);font-style:italic;margin-top:8px;">Combined signal: 94% probability of upward price pressure on near-month CBOT wheat over next 30 days.</div>
+        </div>
+
+        <!-- Panel 3: Scenario simulation -->
+        <div class="dash-panel">
+          <div class="dp-title">Scenario Simulator — Drag to Model Curve Shift</div>
+          <div class="scenario-sliders">
+            <div class="sl-row">
+              <div class="sl-label-row">
+                <span>Ukraine Drought Severity</span>
+                <span style="color:var(--red);font-family:'DM Mono',monospace;">−22%</span>
+              </div>
+              <div class="sl-track">
+                <div class="sl-fill" style="width:68%;"></div>
+                <div class="sl-thumb" style="left:68%;"></div>
+              </div>
+            </div>
+            <div class="sl-row">
+              <div class="sl-label-row">
+                <span>Black Sea Export Policy</span>
+                <span style="color:var(--amber);font-family:'DM Mono',monospace;">34%</span>
+              </div>
+              <div class="sl-track">
+                <div class="sl-fill" style="width:34%;background:var(--amber);"></div>
+                <div class="sl-thumb" style="left:34%;background:var(--amber);"></div>
+              </div>
+            </div>
+            <div class="sl-row">
+              <div class="sl-label-row">
+                <span>US Plains Condition</span>
+                <span style="color:var(--exec);font-family:'DM Mono',monospace;">Normal</span>
+              </div>
+              <div class="sl-track">
+                <div class="sl-fill" style="width:52%;background:var(--exec);"></div>
+                <div class="sl-thumb" style="left:52%;background:var(--exec);"></div>
+              </div>
+            </div>
+          </div>
+          <div class="scenario-result">
+            <strong>AI Forecast — CBOT Wheat Dec 2026:</strong> Current scenario implies <strong>+9.4% near-month price pressure</strong>. If drought severity extends to −30% and export restrictions materialise, model projects <strong>+17–22% curve shift</strong> over 45-day horizon. Confidence: 78%.
+          </div>
+        </div>
+      </div>
+
+      <!-- Active alert -->
+      <div class="dash-alert">
+        <div class="da-dot"></div>
+        <div class="da-text"><strong>Ukraine Wheat Belt — Drought Alert:</strong> Soil moisture deficit reached −22% in Kherson and Zaporizhzhia oblasts. Weather model projects no significant precipitation in next 21 days. Combined price signal: +9.4% impact on near-month CBOT wheat. Export policy risk at 34% — monitor Kyiv agricultural ministry communications.</div>
+        <button class="da-action">Full Analysis →</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- STRATEGIC SUMMARY -->
+  <div class="section-title" style="margin-top:28px;">
+    <h2>Strategic Summary</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="quote-callout" style="margin-bottom:20px;">
+    <div class="qc-label">The TerraPulse Proposition</div>
+    <div class="qc-text">"The commodity market's defining edge is reading the physical world <em>faster than the financial world can price it.</em> TerraPulse is the first platform to <em>systematically connect earth observation to derivatives pricing</em> — turning satellite imagery, AIS data, and geopolitical NLP into actionable financial intelligence, unified in a single geographic interface."</div>
+  </div>
+
+  <div class="strat-grid">
+    <div class="strat-card">
+      <div class="strat-title">The Product Strategy</div>
+      <div class="strat-rows">
+        <div class="strat-row"><span class="strat-key">Architecture</span><span class="strat-val">A platform layer built on five independently validated Earth Sentry engines — not a new invention but a new integration, the same Engine/Car logic as BondPulse in Fixed Income</span></div>
+        <div class="strat-row"><span class="strat-key">Three buyer views</span><span class="strat-val">Trading desks (sub-daily signals), procurement teams (3–6 month forecasts), macro funds (cross-commodity correlations) — configurable views for each persona, not a single interface</span></div>
+        <div class="strat-row"><span class="strat-key">No regulatory constraint</span><span class="strat-val">Unlike BondPulse (SEBI lot sizes) or the Forex tools (MiFID II, market abuse), TerraPulse uses entirely public data — satellite imagery, AIS transponders, government filings — with no regulatory barrier to deployment</span></div>
+        <div class="strat-row"><span class="strat-key">Data availability</span><span class="strat-val">Commercial satellite data (Planet Labs, Maxar, Spire), AIS feeds, and weather model outputs are all commercially available today — unlike BondPulse which required aggregating private bond pricing data</span></div>
+      </div>
+    </div>
+    <div class="strat-card">
+      <div class="strat-title">Why Immediate Priority</div>
+      <div class="strat-rows">
+        <div class="strat-row"><span class="strat-key">Commercial validation</span><span class="strat-val">Kpler, Kayrros, Orbital Insight, and Vortexa have each built billion-dollar businesses on individual components of what TerraPulse integrates — the demand is proven, the integration is the gap</span></div>
+        <div class="strat-row"><span class="strat-key">The integration gap</span><span class="strat-val">No single platform currently combines maritime telemetry + satellite inventory + weather inference + geopolitical NLP in one GIS interface. The competitive moat is the integration, not any individual engine</span></div>
+        <div class="strat-row"><span class="strat-key">Enterprise buyer</span><span class="strat-val">Physical trading houses, industrial conglomerates, and macro funds are accustomed to paying $500k–$2M annually for data products — the price point for enterprise commodity intelligence is established</span></div>
+        <div class="strat-row"><span class="strat-key">Matrix position</span><span class="strat-val">Placed at (7, 9.5) — high strategic impact, high implementation readiness. Data is available, technology is mature, buyers are identified. The only constraint is build time.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    Hexaware Financial Services &nbsp;·&nbsp; AI in Commodities Markets &nbsp;·&nbsp; Platform &nbsp;·&nbsp; Preliminary Research 2026
+  </div>
+</div>
+
+</body>
+</html>

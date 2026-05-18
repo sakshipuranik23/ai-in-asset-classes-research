@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maritime Telemetry Bottleneck Nowcaster — Commodities</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+  --cm:#2d6a2d;--cm-pale:#edf7ed;--cm-border:#90c890;
+  --navy:#1c3557;--navy-pale:#edf3fb;--navy-border:#a8c4e0;
+  --exec:#1a6b35;--exec-pale:#edf7f1;--exec-border:#a8d9bc;
+  --amber:#b86a00;--amber-pale:#fff8ed;--amber-border:#f5c882;
+  --teal:#0d7377;--teal-pale:#e6f7f7;--teal-border:#8ecece;
+  --purple:#5b3faa;--purple-pale:#f3f0fb;--purple-border:#c4b0f0;
+  --red:#c04040;--red-pale:#fdf0f0;--red-border:#f0b8b8;
+  --opp-overlay:rgba(45,106,45,0.07);--opp-overlay-border:rgba(45,106,45,0.28);
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,0.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;min-height:100vh}
+
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.nav-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--text-secondary);padding:5px 14px 5px 0;border-right:1px solid var(--border);margin-right:16px;background:none;border-top:none;border-bottom:none;border-left:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .15s}
+.nav-back:hover{color:var(--cm)}
+.nav-crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+.nav-crumb .active{color:var(--cm);font-weight:600}
+.nav-crumb .sep{color:var(--border)}
+.nav-badge{margin-left:auto;background:var(--cm-pale);color:var(--cm);border:1px solid var(--cm-border);border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;text-transform:uppercase;letter-spacing:.06em}
+
+.page{max-width:1100px;margin:0 auto;padding:28px 24px 48px}
+.uc-num{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--cm);letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+.header-sub{font-size:14px;color:var(--text-secondary);max-width:700px;line-height:1.6;margin-bottom:12px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+.chip{font-size:11.5px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary)}
+.chip.cm{background:var(--cm-pale);border-color:var(--cm-border);color:var(--cm)}
+.chip.navy{background:var(--navy-pale);border-color:var(--navy-border);color:var(--navy)}
+.chip.amber{background:var(--amber-pale);border-color:var(--amber-border);color:var(--amber)}
+.chip.teal{background:var(--teal-pale);border-color:var(--teal-border);color:var(--teal)}
+.chip.red{background:var(--red-pale);border-color:var(--red-border);color:var(--red)}
+
+.summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:3px solid transparent;box-shadow:var(--shadow-sm)}
+.sc-gap{border-left-color:#d06060}.sc-sol{border-left-color:var(--cm)}.sc-val{border-left-color:#4a7fd4}
+.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.sc-gap .sc-lbl{color:#c04040}.sc-sol .sc-lbl{color:var(--cm)}.sc-val .sc-lbl{color:#2a4faa}
+.sc-txt{font-size:13px;line-height:1.5}.sc-val .sc-txt{font-weight:600;color:var(--cm)}
+
+.strategy-banner{background:var(--cm);border-radius:10px;padding:16px 22px;margin-bottom:24px;box-shadow:var(--shadow-md);border-left:5px solid rgba(255,255,255,.3)}
+.sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.6);margin-bottom:6px}
+.sb-text{font-size:13.5px;color:rgba(255,255,255,.92);line-height:1.65}
+.sb-text strong{color:#fff}
+
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.section-title h2{font-family:'DM Serif Display',serif;font-size:18px;color:var(--cm);letter-spacing:-.01em;white-space:nowrap}
+.section-title .s-line{flex:1;height:1px;background:var(--border)}
+
+/* MATURITY LADDER */
+.ladder-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px 18px;box-shadow:var(--shadow-sm);margin-bottom:28px}
+.ladder-intro{font-size:12.5px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5}
+.ladder-intro strong{color:var(--text-primary)}
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;position:relative}
+.ladder::before{content:'';position:absolute;top:22px;left:10%;right:10%;height:3px;background:linear-gradient(to right,#d0ccc6,#c8c4bc,var(--amber-border),var(--cm-border),var(--amber-border));border-radius:2px;z-index:0}
+.ladder-step{position:relative;z-index:1;border-radius:10px;padding:12px 10px 10px;cursor:pointer;transition:box-shadow .18s,transform .18s;border:1.5px solid transparent;text-align:center}
+.ladder-step:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.ladder-step.active{box-shadow:0 0 0 3px rgba(45,106,45,.15),var(--shadow-md)}
+.ls-1,.ls-2{background:#f5f4f1;border-color:#d0ccc6}
+.ls-3{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-4{background:var(--cm-pale);border-color:var(--cm-border)}
+.ls-5{background:var(--amber-pale);border-color:var(--amber-border)}
+.ls-num{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.ls-1 .ls-num,.ls-2 .ls-num{color:var(--text-muted)}
+.ls-3 .ls-num{color:var(--amber)}.ls-4 .ls-num{color:var(--cm)}.ls-5 .ls-num{color:var(--amber)}
+.ls-icon{font-size:22px;margin-bottom:5px;line-height:1}
+.ls-name{font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:3px}
+.ls-focus{font-size:11px;color:var(--text-secondary);line-height:1.3;margin-bottom:7px}
+.ls-btn{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.ls-1 .ls-btn,.ls-2 .ls-btn{background:#ece9e3;color:var(--text-secondary)}
+.ls-3 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.ls-4 .ls-btn{background:var(--cm-pale);color:var(--cm);border:1px solid var(--cm-border)}
+.ls-5 .ls-btn{background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border)}
+.std-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.emerging-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--amber-pale);color:var(--amber);border:1px solid var(--amber-border);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.ladder-legend{display:flex;align-items:center;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border-light)}
+.ll-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-secondary)}
+.ll-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* DIAGRAM */
+.diagram-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:visible;box-shadow:var(--shadow-md);margin-bottom:28px}
+.diag-titlebar{background:var(--cm);padding:11px 20px;display:flex;align-items:center;gap:10px;border-radius:13px 13px 0 0}
+.diag-titlebar span{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em}
+.diag-titlebar small{font-size:11.5px;color:rgba(255,255,255,.45)}
+.diagram-inner{padding:20px 20px 0;display:flex;flex-direction:column;gap:0}
+
+/* VESSEL TRACKING DASHBOARD */
+.vessel-dash{background:var(--navy-pale);border:1.5px solid var(--navy-border);border-radius:12px;padding:16px 18px 14px;margin-bottom:18px;cursor:pointer;transition:box-shadow .15s}
+.vessel-dash:hover{box-shadow:var(--shadow-md)}
+.vessel-dash.active{box-shadow:0 0 0 3px rgba(45,106,45,.12)}
+.vd-toprow{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.vd-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--navy)}
+.vd-live{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--exec);font-weight:600}
+.vd-pulse{width:7px;height:7px;border-radius:50%;background:var(--exec);animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.vd-btn{margin-left:auto;font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid var(--navy-border);background:var(--surface);color:var(--navy);cursor:pointer;font-family:'DM Sans',sans-serif}
+.dash-body{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.dash-panel{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:12px 14px;box-shadow:var(--shadow-sm)}
+.dp-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:10px}
+
+/* World map SVG panel */
+/* Vessel risk table */
+.vessel-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.vessel-table th{background:var(--navy);color:#fff;padding:6px 8px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;text-align:left}
+.vessel-table td{padding:7px 8px;border-bottom:1px solid var(--border-light);vertical-align:middle}
+.vessel-table tr:last-child td{border-bottom:none}
+.vessel-table tr:nth-child(even) td{background:rgba(45,106,45,.03)}
+.vessel-name{font-weight:700;color:var(--text-primary);font-size:12px}
+.bottleneck-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px}
+.bt-high{background:#fde8e8;color:#9a1f1f}
+.bt-med{background:#fff3cd;color:#856404}
+.bt-low{background:#d4edda;color:#1a6b35}
+.delay-val{font-family:'DM Mono',monospace;font-size:11.5px;font-weight:700}
+.dem-val{font-family:'DM Mono',monospace;font-size:11.5px;font-weight:700;color:var(--red)}
+
+/* PIPELINE */
+.pipeline-section{border:2px dashed var(--opp-overlay-border);background:var(--opp-overlay);border-radius:12px;padding:18px 16px 16px;position:relative;margin-bottom:0}
+.prop-label{position:absolute;top:-14px;right:16px;display:flex;align-items:center;gap:5px}
+.prop-label span{font-size:10px;font-weight:700;color:var(--cm);background:var(--surface);padding:2px 9px;border-radius:20px;border:1.5px solid var(--cm-border);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
+.pipeline-row{display:flex;align-items:flex-start;gap:0}
+.pnode{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;flex:1;min-width:0;cursor:pointer;transition:box-shadow .18s,transform .18s;box-shadow:var(--shadow-sm);position:relative;z-index:2}
+.pnode:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.pnode.active{border-color:var(--cm)!important;box-shadow:0 0 0 3px rgba(45,106,45,.12)}
+.pnode.n-cm{border-top:3px solid var(--cm)}
+.pnode.n-navy{border-top:3px solid var(--navy)}
+.pnode.n-teal{border-top:3px solid var(--teal)}
+.pnode.n-amber{border-top:3px solid var(--amber)}
+.pn-stage{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:2px}
+.pn-icon{font-size:17px;margin-bottom:3px;line-height:1}
+.pn-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:3px;line-height:1.3}
+.pn-desc{font-size:10.5px;color:var(--text-secondary);line-height:1.35;margin-bottom:6px}
+.pn-btn{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.n-cm .pn-btn{background:var(--cm-pale);color:var(--cm)}
+.n-navy .pn-btn{background:var(--navy-pale);color:var(--navy)}
+.n-teal .pn-btn{background:var(--teal-pale);color:var(--teal)}
+.n-amber .pn-btn{background:var(--amber-pale);color:var(--amber)}
+.parr{display:flex;align-items:center;flex-shrink:0;width:18px;padding-top:38px}
+.parr-line{height:2px;background:#c8c4bc;flex:1}
+.parr-head{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:7px solid #c8c4bc;flex-shrink:0}
+
+/* TerraPulse bridge */
+.tp-bridge{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,var(--cm-pale),#d4f0d4);border:1.5px solid var(--cm-border);border-radius:10px;padding:12px 18px;margin-top:14px;cursor:pointer;transition:box-shadow .15s}
+.tp-bridge:hover{box-shadow:var(--shadow-md)}
+.tp-icon{font-size:22px;flex-shrink:0}
+.tp-body{flex:1}
+.tp-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--cm);margin-bottom:3px}
+.tp-title{font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:2px;font-family:'DM Serif Display',serif;letter-spacing:-.01em}
+.tp-desc{font-size:12px;color:var(--text-secondary);line-height:1.45}
+.tp-btn{font-size:11px;font-weight:600;padding:5px 13px;border-radius:7px;border:1.5px solid var(--cm);background:var(--cm);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0}
+
+/* RESEARCH */
+.research{padding-top:24px;border-top:1px solid var(--border)}
+.research h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--cm);margin-bottom:16px;letter-spacing:-.01em}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.r-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.r-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:7px}
+.r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.r-rows{display:flex;flex-direction:column;gap:7px}
+.r-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.r-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:155px}
+.r-key::after{content:':'}
+.r-val{color:var(--text-secondary)}
+.threat-callout{background:var(--red-pale);border:1.5px solid var(--red-border);border-left:5px solid var(--red);border-radius:10px;padding:18px 20px;box-shadow:var(--shadow-sm)}
+.tc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--red);margin-bottom:6px}
+.tc-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--cm);margin-bottom:7px;letter-spacing:-.01em}
+.tc-body{font-size:13px;color:var(--text-secondary);line-height:1.65}
+.tc-body strong{color:var(--text-primary)}
+.ref-list{display:flex;flex-direction:column;gap:6px}
+.ref-item{display:flex;gap:9px;font-size:13px;line-height:1.5}
+.ref-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--cm-pale);color:var(--cm);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.ref-txt{color:var(--text-secondary)}.ref-txt strong{color:var(--text-primary)}
+.page-footer{text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:28px;padding-top:16px;border-top:1px solid var(--border)}
+
+.overlay{position:fixed;inset:0;background:rgba(20,18,14,.45);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(3px)}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:14px;width:540px;max-width:calc(100vw - 32px);max-height:calc(100vh - 60px);overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(12px) scale(.98);transition:transform .22s cubic-bezier(.34,1.56,.64,1)}
+.overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-hdr{padding:20px 22px 15px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2;border-radius:14px 14px 0 0}
+.m-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block}
+.m-title{font-family:'DM Serif Display',serif;font-size:19px;color:var(--cm);line-height:1.25;margin-bottom:4px;padding-right:30px}
+.m-sub{font-size:12.5px;color:var(--text-secondary);font-style:italic}
+.m-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:15px;font-family:'DM Sans',sans-serif;transition:background .12s}
+.m-close:hover{background:var(--border)}
+.m-body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:14px}
+.info-sec{display:flex;flex-direction:column;gap:7px}
+.info-sec-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);padding-bottom:5px;border-bottom:1px solid var(--border-light)}
+.info-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.info-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:165px}
+.info-key::after{content:':'}
+.info-val{color:var(--text-secondary)}
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="nav-back" onclick="window.history.back()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11L5 7l4-4"/></svg>
+    Back to Matrix
+  </button>
+  <div class="nav-crumb">
+    <span>Commodities</span><span class="sep">/</span>
+    <span>Earth Sentry Layer</span><span class="sep">/</span>
+    <span class="active">Maritime Telemetry Bottleneck Nowcaster</span>
+  </div>
+  <div class="nav-badge">🌍 Earth Sentry Layer</div>
+</nav>
+
+<div class="page">
+
+  <div class="uc-num">Use Case #3 &nbsp;·&nbsp; Physical Logistics Intelligence &nbsp;·&nbsp; Strategic Impact 9/10</div>
+  <h1>Maritime Telemetry Bottleneck Nowcaster</h1>
+  <p class="header-sub">Demurrage penalties — the fee charged when a vessel waits beyond its contracted unloading window — cost the global commodities industry billions annually. Congestion at the Panama Canal, Suez, and major grain ports builds 10–14 days in advance in AIS transponder data that the market is not systematically reading. The Nowcaster reads it.</p>
+  <div class="chips">
+    <span class="chip cm">AIS Transponder Data</span>
+    <span class="chip navy">Port Congestion Modelling</span>
+    <span class="chip teal">RL Routing Logic</span>
+    <span class="chip amber">14-Day Demurrage Prediction</span>
+    <span class="chip red">⚠ AIS Spoofing Risk</span>
+  </div>
+
+  <div class="summary-row">
+    <div class="sc sc-gap"><div class="sc-lbl">The Gap</div><div class="sc-txt">Physical trading houses manage demurrage as a cost of doing business — unpredictable, absorbed after the fact. No systematic model reads the 14-day window of advance signal that exists in AIS data, port congestion metrics, and canal throughput records before a vessel reaches its bottleneck.</div></div>
+    <div class="sc sc-sol"><div class="sc-lbl">AI Solution</div><div class="sc-txt">Processes AIS shipping transponder data alongside historical port congestion, canal throughput, and weather vectors using RL routing logic — predicting demurrage penalties and transit delays up to 14 days before a vessel reaches its destination bottleneck.</div></div>
+    <div class="sc sc-val"><div class="sc-lbl">Value Created</div><div class="sc-txt">14-day advance warning converts demurrage from an unavoidable cost into a manageable, quantified risk — enabling rerouting, contract renegotiation, or financial hedging before the penalty accrues.</div></div>
+  </div>
+
+  <!-- STRATEGY BANNER -->
+  <div class="strategy-banner">
+    <div class="sb-label">Strategic Framing — The Physical Signal Before the Financial Cost</div>
+    <div class="sb-text">"Ships slow before demurrage accrues. The <strong>14-day window between congestion forming and a vessel arriving</strong> is the longest advance warning period of any commodity market signal — longer than most weather forecasts, longer than most crop reports. The Nowcaster is the system that finally reads that window <strong>systematically</strong>."</div>
+  </div>
+
+  <!-- MATURITY LADDER -->
+  <div class="section-title">
+    <h2>AI Maturity Ladder — Maritime Congestion Intelligence</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="ladder-wrap">
+    <p class="ladder-intro">Most trading houses operate at <strong>Level 1–2</strong>. Level 3 real-time AIS monitoring is the <strong>current frontier</strong> at large physical traders. Level 4 is the proposed architecture. Level 5 carries systemic risk — autonomous rerouting decisions above certain cargo values require human approval in most charter party contracts. Click any level for detail.</p>
+    <div class="ladder">
+      <div class="ladder-step ls-1" onclick="openModal('l1')">
+        <div class="ls-num">Level 1</div><div class="ls-icon">📞</div>
+        <div class="ls-name">Broker Calls</div><div class="ls-focus">Manual port agent reports</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-2" onclick="openModal('l2')">
+        <div class="ls-num">Level 2</div><div class="ls-icon">📊</div>
+        <div class="ls-name">Layman AIS Tracking</div><div class="ls-focus">Manual vessel position checks</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-3" onclick="openModal('l3')">
+        <div class="ls-num">Level 3</div>
+        <div class="ls-icon">📡</div>
+        <div class="std-badge">🏭 Current Frontier</div>
+        <div class="ls-name">Real-Time AIS Analytics</div><div class="ls-focus">Live congestion dashboards</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-4" onclick="openModal('l4')">
+        <div class="ls-num">Level 4</div><div class="ls-icon">🔮</div>
+        <div class="ls-name">14-Day Demurrage Prediction</div><div class="ls-focus">RL + multimodal forecasting</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+      <div class="ladder-step ls-5" onclick="openModal('l5')">
+        <div class="ls-num">Level 5</div><div class="ls-icon">🤖</div>
+        <div class="emerging-badge">⚠ Contract Risk</div>
+        <div class="ls-name">Autonomous Rerouting</div><div class="ls-focus">Auto-execute route changes</div>
+        <button class="ls-btn">Details →</button>
+      </div>
+    </div>
+    <div class="ladder-legend">
+      <div class="ll-item"><div class="ll-dot" style="background:#c8c4bc;"></div>Legacy — most trading houses today</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--amber);"></div>Current frontier / contract risk flag</div>
+      <div class="ll-item"><div class="ll-dot" style="background:var(--cm);"></div>Proposed architecture</div>
+    </div>
+  </div>
+
+  <!-- MAIN DIAGRAM -->
+  <div class="section-title">
+    <h2>The AIS-to-Demurrage Prediction Architecture</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="diag-titlebar">
+      <span>Vessel Tracking Dashboard above · Four-stage pipeline below · TerraPulse powers the interface layer</span>
+      <small>&nbsp;·&nbsp; Click any element for detail</small>
+    </div>
+    <div class="diagram-inner">
+
+      <!-- VESSEL TRACKING DASHBOARD -->
+      <div class="vessel-dash" onclick="openModal('dashboard')">
+        <div class="vd-toprow">
+          <span style="font-size:16px;">🛳️</span>
+          <span class="vd-label">Vessel Tracking Dashboard — Global Congestion Map &amp; Demurrage Risk Table</span>
+          <div class="vd-live"><div class="vd-pulse"></div>Live AIS</div>
+          <button class="vd-btn">Details →</button>
+        </div>
+        <div class="dash-body">
+
+          <!-- World map SVG -->
+          <div class="dash-panel">
+            <div class="dp-title">Global Congestion Zones — Live AIS Position Layer</div>
+            <svg viewBox="0 0 460 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
+              <!-- Ocean background -->
+              <rect x="0" y="0" width="460" height="220" rx="6" fill="#dbeeff"/>
+              <!-- Simplified continent blobs -->
+              <!-- North America -->
+              <ellipse cx="95" cy="75" rx="60" ry="45" fill="#d4e8c4"/>
+              <!-- South America -->
+              <ellipse cx="115" cy="155" rx="35" ry="48" fill="#d4e8c4"/>
+              <!-- Europe -->
+              <ellipse cx="228" cy="62" rx="32" ry="26" fill="#d4e8c4"/>
+              <!-- Africa -->
+              <ellipse cx="235" cy="138" rx="38" ry="52" fill="#d4e8c4"/>
+              <!-- Asia -->
+              <ellipse cx="340" cy="72" rx="72" ry="40" fill="#d4e8c4"/>
+              <!-- Australia -->
+              <ellipse cx="378" cy="158" rx="35" ry="22" fill="#d4e8c4"/>
+
+              <!-- Bottleneck zones -->
+              <!-- Panama Canal -->
+              <circle cx="118" cy="118" r="12" fill="rgba(192,64,64,0.25)" stroke="#c04040" stroke-width="1.5"/>
+              <circle cx="118" cy="118" r="7" fill="rgba(192,64,64,0.5)"/>
+              <text x="118" y="136" text-anchor="middle" font-family="DM Sans" font-size="7.5" font-weight="700" fill="#c04040">Panama</text>
+
+              <!-- Suez Canal -->
+              <circle cx="262" cy="98" r="10" fill="rgba(184,106,0,0.25)" stroke="#b86a00" stroke-width="1.5"/>
+              <circle cx="262" cy="98" r="6" fill="rgba(184,106,0,0.5)"/>
+              <text x="262" y="114" text-anchor="middle" font-family="DM Sans" font-size="7.5" font-weight="700" fill="#b86a00">Suez</text>
+
+              <!-- Strait of Malacca -->
+              <circle cx="348" cy="128" r="9" fill="rgba(26,107,53,0.2)" stroke="#1a6b35" stroke-width="1.5"/>
+              <circle cx="348" cy="128" r="5" fill="rgba(26,107,53,0.4)"/>
+              <text x="348" y="143" text-anchor="middle" font-family="DM Sans" font-size="7" font-weight="700" fill="#1a6b35">Malacca</text>
+
+              <!-- Cape of Good Hope -->
+              <circle cx="240" cy="188" r="8" fill="rgba(26,107,53,0.2)" stroke="#1a6b35" stroke-width="1.5"/>
+              <circle cx="240" cy="188" r="4" fill="rgba(26,107,53,0.4)"/>
+              <text x="240" y="202" text-anchor="middle" font-family="DM Sans" font-size="7" font-weight="700" fill="#1a6b35">Cape</text>
+
+              <!-- Vessel dots -->
+              <!-- High risk vessel near Panama -->
+              <circle cx="100" cy="105" r="4" fill="#c04040" stroke="#fff" stroke-width="1.5"/>
+              <line x1="100" y1="101" x2="112" y2="112" stroke="#c04040" stroke-width="1" stroke-dasharray="2,1"/>
+              <!-- Med risk vessel near Suez -->
+              <circle cx="245" cy="86" r="3.5" fill="#b86a00" stroke="#fff" stroke-width="1.5"/>
+              <line x1="248" y1="88" x2="256" y2="94" stroke="#b86a00" stroke-width="1" stroke-dasharray="2,1"/>
+              <!-- Safe vessel Atlantic -->
+              <circle cx="165" cy="100" r="3.5" fill="#1a6b35" stroke="#fff" stroke-width="1.5"/>
+              <!-- Safe vessel Indian Ocean -->
+              <circle cx="295" cy="138" r="3" fill="#1a6b35" stroke="#fff" stroke-width="1.5"/>
+              <!-- Med risk near Malacca -->
+              <circle cx="335" cy="118" r="3.5" fill="#b86a00" stroke="#fff" stroke-width="1.5"/>
+
+              <!-- Legend -->
+              <circle cx="12" cy="208" r="4" fill="#c04040"/>
+              <text x="19" y="212" font-family="DM Sans" font-size="7.5" fill="#6b6760">High Risk</text>
+              <circle cx="65" cy="208" r="4" fill="#b86a00"/>
+              <text x="72" y="212" font-family="DM Sans" font-size="7.5" fill="#6b6760">Watch</text>
+              <circle cx="108" cy="208" r="4" fill="#1a6b35"/>
+              <text x="115" y="212" font-family="DM Sans" font-size="7.5" fill="#6b6760">On Track</text>
+              <text x="250" y="212" font-family="DM Sans" font-size="7.5" fill="#9e9b96" font-style="italic">🔴 Panama congestion active — drought-reduced draft restrictions</text>
+            </svg>
+          </div>
+
+          <!-- Demurrage risk table -->
+          <div class="dash-panel">
+            <div class="dp-title">Demurrage Risk Table — 14-Day Prediction</div>
+            <table class="vessel-table">
+              <thead><tr><th>Vessel</th><th>Bottleneck</th><th>Delay</th><th>Est. Demurrage</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div class="vessel-name" style="color:var(--red);">⚠ MV Pacifico</div><div style="font-size:10px;color:var(--text-muted);">Soybean · Brazil→China</div></td>
+                  <td><span class="bottleneck-tag bt-high">Panama</span></td>
+                  <td><span class="delay-val" style="color:var(--red);">+11d</span></td>
+                  <td><span class="dem-val">$847k</span></td>
+                </tr>
+                <tr>
+                  <td><div class="vessel-name" style="color:var(--amber);">⚡ Baltic Star</div><div style="font-size:10px;color:var(--text-muted);">Crude · Saudi→Rotterdam</div></td>
+                  <td><span class="bottleneck-tag bt-med">Suez</span></td>
+                  <td><span class="delay-val" style="color:var(--amber);">+4d</span></td>
+                  <td><span class="dem-val" style="color:var(--amber);">$290k</span></td>
+                </tr>
+                <tr>
+                  <td><div class="vessel-name">Cape Endeavour</div><div style="font-size:10px;color:var(--text-muted);">Iron Ore · Australia→China</div></td>
+                  <td><span class="bottleneck-tag bt-low">Malacca</span></td>
+                  <td><span class="delay-val" style="color:var(--exec);">On schedule</span></td>
+                  <td><span class="dem-val" style="color:var(--exec);">$0</span></td>
+                </tr>
+                <tr>
+                  <td><div class="vessel-name" style="color:var(--amber);">⚡ Grain Master</div><div style="font-size:10px;color:var(--text-muted);">Wheat · Ukraine→Egypt</div></td>
+                  <td><span class="bottleneck-tag bt-med">Bosporus</span></td>
+                  <td><span class="delay-val" style="color:var(--amber);">+6d</span></td>
+                  <td><span class="dem-val" style="color:var(--amber);">$412k</span></td>
+                </tr>
+                <tr>
+                  <td><div class="vessel-name">LNG Horizon</div><div style="font-size:10px;color:var(--text-muted);">LNG · Qatar→Japan</div></td>
+                  <td><span class="bottleneck-tag bt-low">Hormuz</span></td>
+                  <td><span class="delay-val" style="color:var(--exec);">+1d</span></td>
+                  <td><span class="dem-val" style="color:var(--exec);">$65k</span></td>
+                </tr>
+              </tbody>
+            </table>
+            <div style="font-size:9.5px;color:var(--text-muted);font-style:italic;margin-top:7px;padding-top:6px;border-top:1px solid var(--border-light);">MV Pacifico: Panama Canal draft restriction in effect due to El Niño drought — vessel queuing predicted to extend 11 days beyond charter party window. Action recommended: reroute via Cape Horn (+8 days transit) saves $440k net vs demurrage.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PIPELINE -->
+      <div class="pipeline-section">
+        <div class="prop-label">
+          <svg width="28" height="22" viewBox="0 0 28 22" fill="none" style="position:relative;top:2px;">
+            <path d="M24 2 C24 12, 8 8, 4 18" stroke="#2d6a2d" stroke-width="1.8" stroke-dasharray="3,2" fill="none" stroke-linecap="round"/>
+            <polygon points="4,18 2,12 8,14" fill="#2d6a2d"/>
+          </svg>
+          <span>Proposed Architecture — Level 4 · 14-Day Demurrage Prediction</span>
+        </div>
+        <div class="pipeline-row">
+
+          <div class="pnode n-cm" onclick="openModal('ais')">
+            <div class="pn-stage">Stage 1</div><div class="pn-icon">📡</div>
+            <div class="pn-title">AIS Ingestion</div>
+            <div class="pn-desc">Global AIS transponder feeds — vessel positions, speeds, headings, ETAs standardised in real time</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <div class="pnode n-navy" onclick="openModal('congestion')">
+            <div class="pn-stage">Stage 2</div><div class="pn-icon">🌊</div>
+            <div class="pn-title">Congestion Modelling</div>
+            <div class="pn-desc">Port queue depth, canal throughput, weather vectors and draft restriction forecasts fused per bottleneck</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <div class="pnode n-teal" onclick="openModal('delay')">
+            <div class="pn-stage">Stage 3</div><div class="pn-icon">⏱️</div>
+            <div class="pn-title">Delay Prediction</div>
+            <div class="pn-desc">RL model predicts vessel-specific transit delay — incorporating vessel draft, cargo type, and charter party terms</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+          <div class="parr"><div class="parr-line"></div><div class="parr-head"></div></div>
+
+          <div class="pnode n-amber" onclick="openModal('alert')">
+            <div class="pn-stage">Stage 4</div><div class="pn-icon">🔔</div>
+            <div class="pn-title">Demurrage Alert &amp; Options</div>
+            <div class="pn-desc">Demurrage penalty estimated, rerouting options costed, financial hedge recommendation generated</div>
+            <button class="pn-btn">Details →</button>
+          </div>
+
+        </div>
+
+        <!-- TerraPulse bridge -->
+        <div class="tp-bridge" onclick="window.location.href='terrapulse.html'">
+          <div class="tp-icon">🌍</div>
+          <div class="tp-body">
+            <div class="tp-label">→ Powers Platform Interface</div>
+            <div class="tp-title">TerraPulse — Geospatial Commodity Dashboard</div>
+            <div class="tp-desc">The Maritime Nowcaster is one of TerraPulse's core data engines. The vessel tracking map, demurrage table, and rerouting recommendations are all surfaced through TerraPulse's GIS interface — making this institutional-grade shipping intelligence accessible to commodity trading desks and procurement teams without custom integration.</div>
+          </div>
+          <button class="tp-btn">View TerraPulse →</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- RESEARCH -->
+  <div class="research">
+    <h2>Research Notes</h2>
+    <div class="r-grid">
+
+      <!-- Combined callout: Panama Drought + AIS Spoofing -->
+      <div class="threat-callout" style="grid-column:1/-1;">
+        <div class="tc-label">⚠ Two Critical Failure Modes</div>
+        <div class="tc-title">The Panama Drought Trap &amp; The AIS Spoofing Problem</div>
+        <div class="tc-body">
+          <strong>The Panama Drought Trap:</strong> The 2023–2024 Panama Canal crisis demonstrated the core risk of this system — a low-water event caused by El Niño drought reduced the canal's maximum draft from 15.2m to 13.4m, forcing dozens of vessels to reduce cargo loads or wait weeks for water levels to recover. No official advance warning was issued. The AIS data showed the congestion forming over 14 days before vessels reached the canal, but no systematic model was reading it. The trap for the Nowcaster is <strong>structural events that have no historical precedent in training data</strong> — a first-time drought of this severity sits outside the model's learned congestion patterns. The fix is a <strong>physical hydrology model</strong> that independently forecasts canal water levels from precipitation data, feeding into the congestion model as a hard constraint rather than a learned feature. If the hydrology model predicts draft restrictions below a threshold, the congestion model switches to a crisis regime regardless of historical AIS patterns.
+          <br><br>
+          <strong>The AIS Spoofing Problem:</strong> AIS transponders can be manipulated — vessels transmitting false position data is well-documented, particularly for sanctioned cargo carrying Iranian crude, Russian oil, and North Korean coal. A tanker that appears in the AIS feed to be anchored off Singapore may actually be transferring cargo in international waters off Malaysia. The Nowcaster trained on AIS data will produce incorrect predictions for any vessel whose transponder data is unreliable. The mitigation is <strong>multi-source position verification</strong> — cross-referencing AIS data against optical satellite imagery (clear weather) and SAR imagery (cloud cover) to detect position anomalies. Vessels where AIS position is inconsistent with satellite-observed position are flagged with a "Low Confidence — Verify" tag and their predictions are marked unreliable rather than propagated into the demurrage model.
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--cm);"></div>Technical Architecture</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">AIS data sources</span><span class="r-val">Spire Maritime, exactEarth, and MarineTraffic provide global AIS feeds. Satellite AIS (S-AIS) from low-earth orbit satellites closes coverage gaps in remote ocean areas where terrestrial receivers cannot reach.</span></div>
+          <div class="r-row"><span class="r-key">Port congestion data</span><span class="r-val">Port authority vessel queuing records, berth occupancy data, and agent reports from major ports. Supplemented by satellite imagery of anchorage areas to count waiting vessels when official queue data is unavailable.</span></div>
+          <div class="r-row"><span class="r-key">RL routing model</span><span class="r-val">Trained on historical transit data across major bottlenecks — learning how vessel characteristics (draft, beam, cargo weight), port state (queue depth, berth availability), and macro conditions (weather, seasonal traffic) interact to determine actual vs scheduled arrival time.</span></div>
+          <div class="r-row"><span class="r-key">Charter party terms</span><span class="r-val">The demurrage calculation requires the specific terms of each vessel's charter party — the contracted laytime (free waiting days) and the daily demurrage rate. These are private contracts; the system requires integration with the trading house's contract management system.</span></div>
+        </div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--navy);"></div>Competitor Landscape</div>
+        <div class="ref-list">
+          <div class="ref-item"><div class="ref-num">1</div><div class="ref-txt"><strong>Kpler</strong> — the leading commodity flow analytics platform; provides vessel tracking and port analytics with commodity-specific context. The market benchmark for physical commodity shipping intelligence.</div></div>
+          <div class="ref-item"><div class="ref-num">2</div><div class="ref-txt"><strong>Vortexa</strong> — real-time oil market analytics using AIS data to track crude and product flows; particularly strong on floating storage detection and port congestion for energy commodities.</div></div>
+          <div class="ref-item"><div class="ref-num">3</div><div class="ref-txt"><strong>Windward</strong> — AI-powered maritime intelligence platform; strong on vessel behaviour anomaly detection and dark vessel identification — the commercial operator most directly addressing the AIS spoofing problem.</div></div>
+          <div class="ref-item"><div class="ref-num">4</div><div class="ref-txt"><strong>Spire Maritime</strong> — satellite AIS data provider with analytical tools; the infrastructure layer that many competing analytics platforms are built on top of.</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-footer">
+    Hexaware Financial Services &nbsp;·&nbsp; AI in Commodities Markets &nbsp;·&nbsp; Earth Sentry Layer &nbsp;·&nbsp; Preliminary Research 2026
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="m-tag" id="mTag"></div>
+      <div class="m-title" id="mTitle"></div>
+      <div class="m-sub" id="mSub"></div>
+      <button class="m-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="m-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+const NODES={
+  l1:{tag:'Level 1',ts:'background:#ece9e3;color:#6b6760;',title:'Broker Calls & Port Agent Reports',sub:'Manual intelligence gathering — a phone call to a port agent to ask how long the queue is',sections:[
+    {t:'How It Works',rows:[{k:'Process',v:'The shipping desk calls their port agent or broker contact at the destination port and asks about current congestion conditions. The agent provides an anecdotal estimate based on what they can see from the dock.'},{k:'Limitations',v:'Agent reports are point-in-time, subjective, limited to their field of vision, and available only during business hours at the port timezone. A vessel 10 days away from the Panama Canal has no systematic source of advance congestion intelligence.'}]}
+  ]},
+  l2:{tag:'Level 2',ts:'background:#ece9e3;color:#6b6760;',title:'Manual AIS Position Tracking',sub:'Traders manually check vessel positions on MarineTraffic or Kpler — useful but not systematic',sections:[
+    {t:'How It Works',rows:[{k:'Technology',v:'Freely available AIS tracking platforms (MarineTraffic, VesselFinder) allow anyone to see a vessel\'s current position, speed, and reported ETA.'},{k:'Improvement',v:'At least the trading desk can see if a vessel is unusually slow or has deviated from its planned route.'},{k:'Limitation',v:'Manual spot-checking cannot systematically process hundreds of vessels simultaneously, cannot model the interaction between multiple vessels approaching the same bottleneck, and produces no demurrage estimate.'}]}
+  ]},
+  l3:{tag:'Level 3 · Current Frontier',ts:'background:#fff8ed;color:#b86a00;',title:'Real-Time AIS Analytics',sub:'Live congestion dashboards — what Kpler and Vortexa provide today',sections:[
+    {t:'What Level 3 Does',rows:[{k:'Technology',v:'Professional maritime analytics platforms ingest global AIS data and provide real-time dashboards showing vessel queues at major ports, estimated wait times, and commodity flow analysis.'},{k:'Improvement',v:'Trading desks can see current congestion conditions at all major ports simultaneously — a significant upgrade from manual spot-checking.'},{k:'Remaining gap',v:'Current-state dashboards do not produce vessel-specific 14-day demurrage predictions. They show what is happening now, not what will happen to each specific vessel given the current trajectory of congestion development.'}]}
+  ]},
+  l4:{tag:'Level 4 · Proposed Architecture',ts:'background:#edf7ed;color:#2d6a2d;',title:'14-Day Demurrage Prediction',sub:'Vessel-specific demurrage penalty prediction with rerouting cost-benefit analysis',sections:[
+    {t:'What Level 4 Adds',rows:[{k:'Vessel-specific prediction',v:'Rather than showing "Panama is congested," the system predicts: "MV Pacifico, carrying 65,000 tonnes of Brazilian soy, will experience an 11-day delay at Panama, incurring $847k in demurrage under its current charter party terms."'},{k:'RL model',v:'Reinforcement Learning trained on historical transit data captures how vessel-specific characteristics (draft, beam, cargo weight) interact with bottleneck conditions — a laden Capesize bulk carrier responds differently to Panama draft restrictions than a lighter Panamax vessel.'},{k:'Rerouting cost-benefit',v:'For each vessel at high demurrage risk, the system automatically calculates alternative routes — Cape Horn, Suez, wayport transshipment — and presents the net cost comparison: rerouting transit cost vs. predicted demurrage penalty.'}]}
+  ]},
+  l5:{tag:'Level 5 · ⚠ Contract Risk',ts:'background:#fff8ed;color:#b86a00;',title:'Autonomous Rerouting',sub:'AI automatically executes route changes — marked amber because charter party contracts typically require human authorisation for significant course deviations',sections:[
+    {t:'The Contract Constraint',rows:[{k:'Charter party terms',v:'Most voyage charter parties include deviation clauses that require the charterer\'s consent for any significant route change. An autonomous system that reroutes a vessel via Cape Horn without human approval may technically breach the charter party, exposing the firm to legal liability.'},{k:'Viable use cases',v:'Autonomous rerouting is viable for vessels operating under time charter (where the charterer has more operational control) and for small course adjustments within the permitted deviation range. Major route changes require human sign-off in almost all charter structures.'},{k:'The direction of travel',v:'As smart contract infrastructure develops in shipping — BIMCO (Baltic and International Maritime Council) is actively developing digital charter party standards — the contract constraint will diminish. Level 5 is the right long-term architecture.'}]}
+  ]},
+  dashboard:{tag:'Vessel Tracking Dashboard',ts:'background:#edf3fb;color:#1c3557;',title:'Vessel Tracking Dashboard',sub:'The combined world map and demurrage risk table — the primary operational view for a physical trading desk',sections:[
+    {t:'Two Panels',rows:[{k:'World map',v:'Live AIS positions of all tracked vessels overlaid on major bottleneck zones (Panama, Suez, Malacca, Cape of Good Hope, Bosporus, Hormuz). Colour-coded by risk: red = high demurrage risk, amber = watch, green = on schedule.'},{k:'Demurrage table',v:'Vessel-by-vessel breakdown of: cargo type, origin-destination, bottleneck at risk, predicted delay in days, and estimated demurrage penalty in dollars. Sorted by financial exposure so the highest-cost risks surface first.'},{k:'Action recommendation',v:'For vessels above a configurable risk threshold, the system presents the net cost comparison for alternatives — so the trader sees not just the problem but the cheapest solution in the same view.'}]}
+  ]},
+  ais:{tag:'Stage 1 · AIS Ingestion',ts:'background:#edf7ed;color:#2d6a2d;',title:'AIS Ingestion',sub:'Collecting and normalising global vessel transponder data from satellite and terrestrial receivers',sections:[
+    {t:'AIS Data Sources',rows:[{k:'Satellite AIS',v:'S-AIS from low-earth orbit constellations (Spire, exactEarth) covers the open ocean where terrestrial receivers cannot reach — essential for vessels in transit between ports.'},{k:'Terrestrial AIS',v:'Shore-based receivers cover ports, straits, and coastal waters — higher update frequency than satellite, providing millisecond-level position accuracy near bottlenecks.'},{k:'Coverage gaps',v:'Remote ocean areas still have coverage gaps even with S-AIS. The system flags vessels that have not reported for more than the expected inter-report interval as "Signal Lost" — their predictions are marked low-confidence until contact is re-established.'},{k:'Data normalisation',v:'AIS messages arrive in multiple formats (NMEA, proprietary extensions) from different providers with different timestamp conventions. The ingestion layer normalises all feeds into a unified vessel state object: position, speed over ground, course over ground, draught, destination, ETA.'}]}
+  ]},
+  congestion:{tag:'Stage 2 · Congestion Modelling',ts:'background:#edf3fb;color:#1c3557;',title:'Congestion Modelling',sub:'Fusing port queue data, canal throughput metrics, and weather forecasts into a bottleneck state estimate',sections:[
+    {t:'What Gets Modelled',rows:[{k:'Queue depth',v:'The number of vessels currently waiting at or approaching each major bottleneck — the primary leading indicator of delay for the next vessel in line.'},{k:'Canal throughput rate',v:'For managed passages (Panama, Suez, Kiel), the number of transits per day is controlled by the canal authority. Changes to slot availability, lockage scheduling, or draft restrictions directly affect wait time.'},{k:'Draft restrictions',v:'Panama Canal water levels are determined by rainfall in the Gatun Lake catchment. The hydrology model independently forecasts water levels from precipitation data — when forecast levels trigger draft restrictions, the congestion model switches to crisis parameters regardless of current AIS queue depth.'},{k:'Weather vectors',v:'Seasonal weather patterns, tropical storm tracks, and ice conditions affect routing availability and port operations — a storm forcing port closure creates a sudden queue for vessels that arrive during the closure window.'}]}
+  ]},
+  delay:{tag:'Stage 3 · Delay Prediction',ts:'background:#e6f7f7;color:#0d7377;',title:'Delay Prediction — Reinforcement Learning',sub:'Vessel-specific transit delay prediction incorporating cargo, vessel class, and bottleneck state',sections:[
+    {t:'How RL Predicts Delay',rows:[{k:'Training data',v:'Historical transit records for thousands of vessel-bottleneck combinations — the actual delay experienced vs the AIS-predicted ETA, with full context of queue depth, vessel characteristics, and conditions at time of transit.'},{k:'Vessel-specific inputs',v:'Draft (determines Panama eligibility), beam (determines lock chamber fit), DWT (determines berth assignment), cargo type (determines priority at grain vs. energy terminals), flag state (affects priority treatment at some ports).'},{k:'Output',v:'A probability distribution of delay outcomes: "MV Pacifico has 78% probability of delay exceeding 7 days, 45% probability of delay exceeding 10 days, expected delay 11.2 days." The distribution is more useful than a point estimate because it quantifies uncertainty for the demurrage calculation.'},{k:'Demurrage calculation',v:'Expected delay × daily demurrage rate from the charter party = expected penalty exposure. The system reads charter party terms from the trading house\'s contract management system to apply the correct rate for each vessel.'}]}
+  ]},
+  alert:{tag:'Stage 4 · Demurrage Alert & Options',ts:'background:#fff8ed;color:#b86a00;',title:'Demurrage Alert & Rerouting Options',sub:'Converting the delay prediction into a financial exposure estimate and presenting actionable alternatives',sections:[
+    {t:'The Alert',rows:[{k:'Alert trigger',v:'When expected demurrage exposure exceeds a configurable threshold (e.g. $200k), an alert is pushed to the relevant trading desk with the vessel details, bottleneck, predicted delay, and estimated penalty.'},{k:'Timing',v:'The 14-day prediction horizon allows the alert to fire before the vessel is committed to the bottleneck — while rerouting is still economically viable.'},{k:'Escalation',v:'For exposures above $500k, the alert escalates to the fleet manager and chief risk officer simultaneously — ensuring high-value decisions receive appropriate attention.'}]},
+    {t:'Rerouting Cost-Benefit',rows:[{k:'Alternative routes costed',v:'Each viable alternative route is calculated: Cape Horn (for Panama-bound vessels), Cape of Good Hope (for Suez-bound vessels), wayport transshipment (offloading at an intermediate hub for onward transit).'},{k:'Net comparison',v:'Additional transit time × vessel daily hire rate + fuel cost for the longer route = rerouting cost. Compared against predicted demurrage: net saving = demurrage − rerouting cost.'},{k:'Hedging alternative',v:'If rerouting is not viable (vessel too far along the route, cargo too time-sensitive), the system calculates the financial hedge — a freight derivatives position (Baltic Exchange FFA) that would offset the demurrage exposure — and presents this as the alternative action.'}]}
+  ]}
+};
+
+function openModal(key){
+  const d=NODES[key];if(!d)return;
+  document.querySelectorAll('.ladder-step,.pnode,.vessel-dash').forEach(n=>n.classList.remove('active'));
+  if(event&&event.currentTarget)event.currentTarget.classList.add('active');
+  document.getElementById('mTag').textContent=d.tag;
+  document.getElementById('mTag').style.cssText=d.ts+'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px;display:inline-block;';
+  document.getElementById('mTitle').textContent=d.title;
+  document.getElementById('mSub').textContent=d.sub;
+  const body=document.getElementById('mBody');body.innerHTML='';
+  d.sections.forEach(sec=>{
+    const sd=document.createElement('div');sd.className='info-sec';
+    const st=document.createElement('div');st.className='info-sec-title';st.textContent=sec.t;sd.appendChild(st);
+    if(sec.rows)sec.rows.forEach(r=>{const row=document.createElement('div');row.className='info-row';row.innerHTML=`<span class="info-key">${r.k}</span><span class="info-val">${r.v}</span>`;sd.appendChild(row);});
+    body.appendChild(sd);
+  });
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  document.querySelectorAll('.ladder-step,.pnode,.vessel-dash').forEach(n=>n.classList.remove('active'));
+}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target===document.getElementById('overlay'))closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+</script>
+</body>
+</html>

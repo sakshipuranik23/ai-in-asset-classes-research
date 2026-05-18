@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESG / Green Bond Verification — Fixed Income</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+  --teal:#0d7377;--teal-pale:#e6f7f7;--teal-border:#8ecece;
+  --navy:#1c3557;--navy-pale:#edf3fb;--navy-border:#a8c4e0;
+  --exec:#1a6b35;--exec-pale:#edf7f1;--exec-border:#a8d9bc;
+  --amber:#b86a00;--amber-pale:#fff8ed;--amber-border:#f5c882;
+  --purple:#5b3faa;--purple-pale:#f3f0fb;--purple-border:#c4b0f0;
+  --red:#c04040;--red-pale:#fdf0f0;--red-border:#f0b8b8;
+  --gold:#c9a227;--gold-pale:#fef9ec;--gold-border:#e8d47a;
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,0.14);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.nav-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--text-secondary);padding:5px 14px 5px 0;border-right:1px solid var(--border);margin-right:16px;background:none;border-top:none;border-bottom:none;border-left:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .15s}
+.nav-back:hover{color:var(--teal)}
+.nav-crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+.nav-crumb .active{color:var(--teal);font-weight:600}
+.nav-crumb .sep{color:var(--border)}
+.nav-badge{margin-left:auto;background:var(--teal-pale);color:var(--teal);border:1px solid var(--teal-border);border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;text-transform:uppercase;letter-spacing:.06em}
+
+/* PAGE */
+.page{max-width:1060px;margin:0 auto;padding:28px 24px 48px}
+.uc-num{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+h1{font-family:'DM Serif Display',serif;font-size:26px;color:var(--teal);letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+.header-sub{font-size:14px;color:var(--text-secondary);max-width:700px;line-height:1.6;margin-bottom:12px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+.chip{font-size:11.5px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary)}
+.chip.teal{background:var(--teal-pale);border-color:var(--teal-border);color:var(--teal)}
+.chip.navy{background:var(--navy-pale);border-color:var(--navy-border);color:var(--navy)}
+.chip.amber{background:var(--amber-pale);border-color:var(--amber-border);color:var(--amber)}
+.chip.green{background:var(--exec-pale);border-color:var(--exec-border);color:var(--exec)}
+.chip.gold{background:var(--gold-pale);border-color:var(--gold-border);color:var(--gold)}
+
+/* SUMMARY */
+.summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:3px solid transparent;box-shadow:var(--shadow-sm)}
+.sc-gap{border-left-color:#d06060}.sc-sol{border-left-color:var(--teal)}.sc-val{border-left-color:#4a7fd4}
+.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.sc-gap .sc-lbl{color:#c04040}.sc-sol .sc-lbl{color:var(--teal)}.sc-val .sc-lbl{color:#2a4faa}
+.sc-txt{font-size:13px;line-height:1.5}.sc-val .sc-txt{font-weight:600;color:var(--teal)}
+
+/* STRATEGY BANNER */
+.strategy-banner{background:var(--exec);border-radius:10px;padding:16px 22px;margin-bottom:24px;box-shadow:var(--shadow-md);border-left:5px solid #f5c882}
+.sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#f5c882;margin-bottom:6px}
+.sb-text{font-size:13.5px;color:rgba(255,255,255,.88);line-height:1.65}
+.sb-text strong{color:#fff}
+
+/* REGULATORY BANNER */
+.reg-banner{
+  display:flex;align-items:center;gap:14px;
+  background:var(--navy-pale);border:1.5px solid var(--navy-border);
+  border-radius:10px;padding:12px 18px;margin-bottom:24px;
+}
+.rb-icon{font-size:22px;flex-shrink:0}
+.rb-body{flex:1}
+.rb-title{font-size:12.5px;font-weight:700;color:var(--navy);margin-bottom:3px}
+.rb-desc{font-size:12px;color:var(--text-secondary);line-height:1.45}
+.rb-pills{display:flex;gap:8px;margin-top:7px;flex-wrap:wrap}
+.rb-pill{font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--surface);border:1px solid var(--navy-border);color:var(--navy)}
+
+/* SECTION TITLES */
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.section-title h2{font-family:'DM Serif Display',serif;font-size:18px;color:var(--teal);letter-spacing:-.01em;white-space:nowrap}
+.section-title .s-line{flex:1;height:1px;background:var(--border)}
+
+/* ═══ DIAGRAM ═══ */
+.diagram-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:visible;box-shadow:var(--shadow-md);margin-bottom:24px}
+.diag-titlebar{background:var(--exec);padding:11px 20px;display:flex;align-items:center;gap:10px;border-radius:13px 13px 0 0}
+.diag-titlebar span{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em}
+.diag-titlebar small{font-size:11.5px;color:rgba(255,255,255,.45)}
+.diag-body{padding:20px;display:flex;flex-direction:column;gap:18px}
+
+/* ── GREEN BOND SCORECARD ──────────────────────────────────────────── */
+.scorecard{
+  background:var(--exec-pale);border:1.5px solid var(--exec-border);
+  border-radius:12px;padding:16px 18px 14px;
+}
+.sc-toprow{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.sc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--exec)}
+.sc-status{margin-left:auto;display:flex;align-items:center;gap:6px}
+.verified-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--exec);color:#fff}
+.scorecard-grid{display:grid;grid-template-columns:200px 1fr 1fr;gap:14px}
+.sc-panel{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:12px 14px;box-shadow:var(--shadow-sm)}
+.scp-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:10px}
+
+/* Alignment score gauge */
+.align-score-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+.align-num{font-family:'DM Serif Display',serif;font-size:48px;line-height:1;color:var(--exec)}
+.align-label{font-size:12px;font-weight:700;color:var(--exec);margin-bottom:2px}
+.align-sub{font-size:11px;color:var(--text-muted);text-align:center}
+.align-bar-wrap{width:100%;margin-top:8px}
+.align-bar-track{height:8px;background:linear-gradient(to right,var(--red),var(--amber),var(--exec));border-radius:4px;position:relative;margin-bottom:4px}
+.align-needle{position:absolute;top:-4px;width:3px;height:16px;background:var(--navy);border-radius:2px;transform:translateX(-50%)}
+.align-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--text-muted)}
+
+/* Taxonomy match panel */
+.tax-rows{display:flex;flex-direction:column;gap:7px}
+.tax-row{display:flex;align-items:center;gap:8px;font-size:12px}
+.tax-name{flex:1;font-weight:600;color:var(--text-primary)}
+.tax-bar-track{width:80px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;flex-shrink:0}
+.tax-bar-fill{height:100%;border-radius:3px}
+.tax-pct{font-family:'DM Mono',monospace;font-size:11px;font-weight:700;width:34px;text-align:right;flex-shrink:0}
+
+/* Flag list */
+.flag-list{display:flex;flex-direction:column;gap:6px}
+.flag-row{display:flex;align-items:flex-start;gap:7px;font-size:11.5px;padding:5px 7px;border-radius:6px;border:1px solid var(--border)}
+.flag-ok{background:var(--exec-pale);border-color:var(--exec-border)}
+.flag-warn{background:var(--amber-pale);border-color:var(--amber-border)}
+.flag-fail{background:var(--red-pale);border-color:var(--red-border)}
+.flag-icon{font-size:12px;flex-shrink:0;margin-top:1px}
+.flag-text{line-height:1.35}
+.flag-ok .flag-text{color:var(--exec)}
+.flag-warn .flag-text{color:var(--amber)}
+.flag-fail .flag-text{color:var(--red)}
+
+/* ── TAXONOMY SVG SECTION ──────────────────────────────────────────── */
+.tax-svg-wrap{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:14px 16px;box-shadow:var(--shadow-sm);
+}
+.tax-svg-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text-muted);margin-bottom:10px}
+
+/* ── TWO DIMENSION ZONES ───────────────────────────────────────────── */
+.dimensions-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.dim-zone{border-radius:12px;padding:16px 16px 14px;border:1.5px solid transparent;position:relative}
+.dim-zone.d1{background:rgba(13,115,119,.06);border-color:var(--teal-border)}
+.dim-zone.d2{background:rgba(26,107,53,.06);border-color:var(--exec-border)}
+.dim-num{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:2px 9px;border-radius:10px;margin-bottom:8px}
+.d1 .dim-num{background:var(--teal-pale);color:var(--teal);border:1px solid var(--teal-border)}
+.d2 .dim-num{background:var(--exec-pale);color:var(--exec);border:1px solid var(--exec-border)}
+.dim-icon{font-size:20px;margin-bottom:5px}
+.dim-title{font-family:'DM Serif Display',serif;font-size:15px;color:var(--navy);margin-bottom:5px;letter-spacing:-.01em}
+.dim-desc{font-size:12.5px;color:var(--text-secondary);line-height:1.55;margin-bottom:10px}
+.dim-items{display:flex;flex-direction:column;gap:6px}
+.dim-item{display:flex;align-items:flex-start;gap:7px;font-size:12px}
+.di-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.d1 .di-dot{background:var(--teal)}
+.d2 .di-dot{background:var(--exec)}
+.di-text{color:var(--text-secondary);line-height:1.4}
+.di-text strong{color:var(--text-primary)}
+
+/* RESEARCH */
+.research{padding-top:20px;border-top:1px solid var(--border);margin-bottom:20px}
+.research h2{font-family:'DM Serif Display',serif;font-size:18px;color:var(--teal);margin-bottom:12px;letter-spacing:-.01em}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.r-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:15px 17px;box-shadow:var(--shadow-sm)}
+.r-title{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:9px;padding-bottom:6px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:7px}
+.r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.r-rows{display:flex;flex-direction:column;gap:7px}
+.r-row{display:flex;gap:0;font-size:13px;line-height:1.55}
+.r-key{font-weight:600;color:var(--text-primary);flex-shrink:0;min-width:148px}
+.r-key::after{content:':'}
+.r-val{color:var(--text-secondary)}
+
+/* BONDPULSE BRIDGE simple */
+.bp-simple{
+  display:flex;align-items:center;gap:12px;
+  background:var(--gold-pale);border:1.5px solid var(--gold-border);border-left:4px solid var(--gold);
+  border-radius:10px;padding:12px 16px;margin-bottom:20px;
+}
+.bps-icon{font-size:20px;flex-shrink:0}
+.bps-body{flex:1}
+.bps-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);margin-bottom:2px}
+.bps-text{font-size:13px;color:var(--text-primary);line-height:1.5}
+.bps-text strong{color:var(--navy)}
+.bps-link{font-size:11.5px;font-weight:600;color:var(--teal);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0;text-decoration:underline;text-underline-offset:2px;flex-shrink:0}
+
+.page-footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:14px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="nav-back" onclick="window.history.back()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11L5 7l4-4"/></svg>
+    Back to Matrix
+  </button>
+  <div class="nav-crumb">
+    <span>Fixed Income</span><span class="sep">/</span>
+    <span>Opacity &amp; Info Asymmetry</span><span class="sep">/</span>
+    <span class="active">ESG / Green Bond Verification</span>
+  </div>
+  <div class="nav-badge">★ Proposed Solution</div>
+</nav>
+
+<div class="page">
+
+  <div class="uc-num">Use Case #6 &nbsp;·&nbsp; ESG Risk &nbsp;·&nbsp; Strategic Impact 8/10 &nbsp;·&nbsp; ★ Proposed</div>
+  <h1>ESG / Green Bond Verification</h1>
+  <p class="header-sub">The green bond market is the fastest-growing segment of fixed income — and its most trust-deficient. Issuers label bonds "green" with minimal scrutiny. AI verification addresses both dimensions of the problem: whether the bond's declared use-of-proceeds actually aligns with recognised taxonomies, and whether the issuer is deploying the capital as promised after issuance.</p>
+  <div class="chips">
+    <span class="chip green">NLP / Taxonomy Matching</span>
+    <span class="chip teal">Alternative Data Monitoring</span>
+    <span class="chip navy">Satellite Imagery Analysis</span>
+    <span class="chip amber">Post-Issuance Tracking</span>
+    <span class="chip gold">★ Hexaware Proposed</span>
+  </div>
+
+  <div class="summary-row">
+    <div class="sc sc-gap"><div class="sc-lbl">The Gap</div><div class="sc-txt">Greenwashing — issuers labelling bonds "green" without meaningful underlying project alignment — is structurally unchecked. Manual verification of use-of-proceeds documents at scale is impossible, and no system tracks post-issuance capital deployment against original commitments.</div></div>
+    <div class="sc sc-sol"><div class="sc-lbl">AI Solution</div><div class="sc-txt">NLP verifies alignment of declared projects against the EU Green Bond Standard, ICMA principles, and SEBI framework at issuance. Alternative data then monitors actual capital deployment post-issuance — satellite imagery, contractor records, and environmental filings confirming the project is real and progressing.</div></div>
+    <div class="sc sc-val"><div class="sc-lbl">Value Created</div><div class="sc-txt">A defensible, independently verified ESG score for every green bond — enabling genuine sustainable investing rather than label-dependent allocation that exposes investors to regulatory and reputational risk from greenwashing.</div></div>
+  </div>
+
+  <!-- STRATEGY BANNER -->
+  <div class="strategy-banner">
+    <div class="sb-label">Strategic Framing — Trust in the Green Market</div>
+    <div class="sb-text">"A 'green' label without verification is not ESG investing — it is <strong>ESG theatre</strong>. The only way to build genuine trust in the green bond market is to move from self-attestation to <strong>independent, machine-verified alignment</strong> — checking not just what the issuer promised, but what they actually did with the money."</div>
+  </div>
+
+  <!-- REGULATORY BANNER -->
+  <div class="reg-banner">
+    <div class="rb-icon">⚖️</div>
+    <div class="rb-body">
+      <div class="rb-title">Live Regulatory Mandates — This Is Not Aspirational</div>
+      <div class="rb-desc">Green bond verification is a compliance obligation in 2026, not a nice-to-have. Regulated funds must demonstrate ESG alignment under SFDR (EU), MiFID II sustainability preferences, and SEBI's Green Bond Disclosure Framework. Non-compliant classification exposes fund managers to regulatory sanction and investor litigation.</div>
+      <div class="rb-pills">
+        <div class="rb-pill">EU Green Bond Standard (2024)</div>
+        <div class="rb-pill">ICMA Green Bond Principles</div>
+        <div class="rb-pill">SEBI Green Bond Framework (2023)</div>
+        <div class="rb-pill">SFDR Article 9 Disclosure</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN DIAGRAM -->
+  <div class="section-title">
+    <h2>The Green Bond Verification Architecture</h2>
+    <div class="s-line"></div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="diag-titlebar">
+      <span>Green Bond Scorecard above · Two-Dimension Verification below</span>
+      <small>&nbsp;·&nbsp; Issuance verification + post-issuance monitoring · Both dimensions addressed</small>
+    </div>
+
+    <div class="diag-body">
+
+      <!-- GREEN BOND SCORECARD -->
+      <div class="scorecard">
+        <div class="sc-toprow">
+          <span style="font-size:16px;">🌿</span>
+          <span class="sc-label">Green Bond Scorecard — AI Verification Output</span>
+          <div class="sc-status">
+            <span style="font-size:10.5px;color:var(--text-muted);">NTPC Green Bond 2028 &nbsp;·&nbsp; ₹2,500 Cr &nbsp;·&nbsp; Verified 14 min ago</span>
+            <span class="verified-badge">✓ Conditionally Verified</span>
+          </div>
+        </div>
+        <div class="scorecard-grid">
+
+          <!-- Alignment Score -->
+          <div class="sc-panel">
+            <div class="scp-title">Overall Alignment Score</div>
+            <div class="align-score-wrap">
+              <div class="align-num">78</div>
+              <div class="align-label">Conditionally Aligned</div>
+              <div class="align-sub">out of 100 · 1 flag requires review</div>
+              <div class="align-bar-wrap">
+                <div class="align-bar-track">
+                  <div class="align-needle" style="left:78%;"></div>
+                </div>
+                <div class="align-labels"><span>0 — No alignment</span><span>100</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Taxonomy Match -->
+          <div class="sc-panel">
+            <div class="scp-title">Taxonomy Match — Three Frameworks</div>
+            <div class="tax-rows">
+              <div class="tax-row">
+                <span class="tax-name">EU Green Bond Std</span>
+                <div class="tax-bar-track"><div class="tax-bar-fill" style="width:84%;background:var(--exec);"></div></div>
+                <span class="tax-pct" style="color:var(--exec);">84%</span>
+              </div>
+              <div class="tax-row">
+                <span class="tax-name">ICMA Principles</span>
+                <div class="tax-bar-track"><div class="tax-bar-fill" style="width:91%;background:var(--exec);"></div></div>
+                <span class="tax-pct" style="color:var(--exec);">91%</span>
+              </div>
+              <div class="tax-row">
+                <span class="tax-name">SEBI Framework</span>
+                <div class="tax-bar-track"><div class="tax-bar-fill" style="width:76%;background:var(--amber);"></div></div>
+                <span class="tax-pct" style="color:var(--amber);">76%</span>
+              </div>
+              <div style="font-size:9.5px;color:var(--text-muted);margin-top:4px;font-style:italic;">SEBI lower: mixed-use project partially outside eligible category definition</div>
+            </div>
+          </div>
+
+          <!-- Flags -->
+          <div class="sc-panel">
+            <div class="scp-title">Verification Flags</div>
+            <div class="flag-list">
+              <div class="flag-row flag-ok">
+                <span class="flag-icon">✓</span>
+                <span class="flag-text">Solar generation component — full EU taxonomy alignment confirmed</span>
+              </div>
+              <div class="flag-row flag-ok">
+                <span class="flag-icon">✓</span>
+                <span class="flag-text">Proceeds segregation — dedicated account structure verified via XBRL</span>
+              </div>
+              <div class="flag-row flag-warn">
+                <span class="flag-icon">⚠</span>
+                <span class="flag-text">Mixed-use land component — partial alignment only under SEBI definition; requires issuer clarification</span>
+              </div>
+              <div class="flag-row flag-fail">
+                <span class="flag-icon">✗</span>
+                <span class="flag-text">Post-issuance reporting: last impact report overdue by 47 days</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAXONOMY COMPARISON SVG -->
+      <div class="tax-svg-wrap">
+        <div class="tax-svg-label">Taxonomy Divergence — How the Same Project Maps Across Three Frameworks</div>
+        <svg viewBox="0 0 980 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
+          <defs>
+            <linearGradient id="eu-grad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#1a6b35" stop-opacity="0.15"/>
+              <stop offset="100%" stop-color="#1a6b35" stop-opacity="0.05"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Header -->
+          <rect x="0" y="0" width="980" height="24" rx="4" fill="#1c3557"/>
+          <text x="12" y="16" font-family="DM Mono" font-size="9.5" fill="white" font-weight="500">PROJECT: "NTPC Mixed-Use Urban Development — Solar + Grid Infrastructure + Ancillary Commercial Build"</text>
+
+          <!-- Column headers -->
+          <text x="10" y="42" font-family="DM Sans" font-size="10" font-weight="700" fill="#9e9b96" text-anchor="start">COMPONENT</text>
+          <text x="240" y="42" font-family="DM Sans" font-size="10" font-weight="700" fill="#1a6b35" text-anchor="middle">EU GREEN BOND STD</text>
+          <text x="480" y="42" font-family="DM Sans" font-size="10" font-weight="700" fill="#0d7377" text-anchor="middle">ICMA PRINCIPLES</text>
+          <text x="720" y="42" font-family="DM Sans" font-size="10" font-weight="700" fill="#b86a00" text-anchor="middle">SEBI FRAMEWORK</text>
+          <text x="900" y="42" font-family="DM Sans" font-size="10" font-weight="700" fill="#6b6760" text-anchor="middle">AI VERDICT</text>
+
+          <line x1="0" y1="48" x2="980" y2="48" stroke="#e4e1da" stroke-width="1"/>
+
+          <!-- Row 1: Solar -->
+          <rect x="0" y="50" width="980" height="34" fill="#f9f8f6"/>
+          <text x="10" y="72" font-family="DM Sans" font-size="10.5" font-weight="600" fill="#1a1814">Solar Generation</text>
+          <rect x="145" y="54" width="190" height="22" rx="4" fill="#d4edda"/><text x="240" y="69" text-anchor="middle" font-family="DM Sans" font-size="10" font-weight="700" fill="#1a6b35">✓ Fully Eligible</text>
+          <rect x="385" y="54" width="190" height="22" rx="4" fill="#d4edda"/><text x="480" y="69" text-anchor="middle" font-family="DM Sans" font-size="10" font-weight="700" fill="#1a6b35">✓ Fully Eligible</text>
+          <rect x="625" y="54" width="190" height="22" rx="4" fill="#d4edda"/><text x="720" y="69" text-anchor="middle" font-family="DM Sans" font-size="10" font-weight="700" fill="#1a6b35">✓ Fully Eligible</text>
+          <rect x="835" y="54" width="130" height="22" rx="4" fill="#d4edda"/><text x="900" y="69" text-anchor="middle" font-family="DM Sans" font-size="10" font-weight="700" fill="#1a6b35">PASS</text>
+
+          <!-- Row 2: Grid -->
+          <rect x="0" y="84" width="980" height="34" fill="white"/>
+          <text x="10" y="106" font-family="DM Sans" font-size="10.5" font-weight="600" fill="#1a1814">Grid Infrastructure</text>
+          <rect x="145" y="88" width="190" height="22" rx="4" fill="#d4edda"/><text x="240" y="103" text-anchor="middle" font-family="DM Sans" font-size="10" font-weight="700" fill="#1a6b35">✓ Eligible (enabling)</text>
+          <rect x="385" y="88" width="190" height="22" rx="4" fill="#d4edda"/><text x="480" y="103" text-anchor="middle" font-family="DM Sans" font-size="10" font-weight="700" fill="#1a6b35">✓ Eligible</text>
+          <rect x="625" y="88" width="190" height="22" rx="4" fill="#fff3cd"/><text x="720" y="103" text-anchor="middle" font-family="DM Sans" font-size="10" font-weight="700" fill="#856404">⚠ Conditional</text>
+          <rect x="835" y="88" width="130" height="22" rx="4" fill="#fff3cd"/><text x="900" y="103" text-anchor="middle" font-family="DM Sans" font-size="10" font-weight="700" fill="#856404">PARTIAL</text>
+
+          <!-- Row 3: Commercial -->
+          <rect x="0" y="118" width="980" height="34" fill="#f9f8f6"/>
+          <text x="10" y="140" font-family="DM Sans" font-size="10.5" font-weight="600" fill="#1a1814">Ancillary Commercial</text>
+          <rect x="145" y="122" width="190" height="22" rx="4" fill="#fde8e8"/><text x="240" y="137" text-anchor="middle" font-family="DM Sans" font-size="10" font-weight="700" fill="#9c0006">✗ Ineligible</text>
+          <rect x="385" y="122" width="190" height="22" rx="4" fill="#fff3cd"/><text x="480" y="137" text-anchor="middle" font-family="DM Sans" font-size="10" font-weight="700" fill="#856404">⚠ Ancillary only</text>
+          <rect x="625" y="122" width="190" height="22" rx="4" fill="#fde8e8"/><text x="720" y="137" text-anchor="middle" font-family="DM Sans" font-size="10" font-weight="700" fill="#9c0006">✗ Ineligible</text>
+          <rect x="835" y="122" width="130" height="22" rx="4" fill="#fde8e8"/><text x="900" y="137" text-anchor="middle" font-family="DM Sans" font-size="10" font-weight="700" fill="#9c0006">FAIL</text>
+
+          <!-- Legend -->
+          <rect x="10" y="165" width="10" height="8" rx="2" fill="#d4edda" stroke="#a8d9bc"/>
+          <text x="24" y="173" font-family="DM Sans" font-size="9" fill="#6b6760">Fully eligible</text>
+          <rect x="120" y="165" width="10" height="8" rx="2" fill="#fff3cd" stroke="#f5c882"/>
+          <text x="134" y="173" font-family="DM Sans" font-size="9" fill="#6b6760">Conditional / partial</text>
+          <rect x="260" y="165" width="10" height="8" rx="2" fill="#fde8e8" stroke="#f0b8b8"/>
+          <text x="274" y="173" font-family="DM Sans" font-size="9" fill="#6b6760">Ineligible</text>
+          <text x="380" y="173" font-family="DM Sans" font-size="9" fill="#9e9b96" font-style="italic">Key insight: ICMA is the most permissive framework. EU GBS is the most stringent. SEBI sits between them for most project types. The same project can pass ICMA and fail EU GBS simultaneously.</text>
+        </svg>
+      </div>
+
+      <!-- TWO DIMENSION ZONES -->
+      <div class="dimensions-grid">
+
+        <!-- Dimension 1: Issuance Verification -->
+        <div class="dim-zone d1">
+          <div class="dim-num">Dimension 1 · At Issuance</div>
+          <div class="dim-icon">📋</div>
+          <div class="dim-title">Use-of-Proceeds Verification</div>
+          <div class="dim-desc">NLP reads the full use-of-proceeds framework and project descriptions at bond issuance — matching declared projects against three taxonomy definitions simultaneously to produce a multi-framework alignment score.</div>
+          <div class="dim-items">
+            <div class="dim-item">
+              <div class="di-dot"></div>
+              <div class="di-text"><strong>Document ingestion</strong> — full use-of-proceeds prospectus section parsed, project categories extracted and classified</div>
+            </div>
+            <div class="dim-item">
+              <div class="di-dot"></div>
+              <div class="di-text"><strong>Three-framework matching</strong> — EU Green Bond Standard, ICMA Green Bond Principles, and SEBI framework applied simultaneously; divergences flagged explicitly</div>
+            </div>
+            <div class="dim-item">
+              <div class="di-dot"></div>
+              <div class="di-text"><strong>Proceeds segregation check</strong> — XBRL data confirms dedicated account structure exists before labelling can be accepted</div>
+            </div>
+            <div class="dim-item">
+              <div class="di-dot"></div>
+              <div class="di-text"><strong>Alignment score</strong> — 0–100 score with framework-specific breakdown and a plain-language flag list for the analyst</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dimension 2: Post-Issuance Monitoring -->
+        <div class="dim-zone d2">
+          <div class="dim-num">Dimension 2 · Post-Issuance</div>
+          <div class="dim-icon">🛰️</div>
+          <div class="dim-title">Capital Deployment Monitoring</div>
+          <div class="dim-desc">Continuous tracking of whether the issuer is actually deploying capital as promised — using alternative data to verify project reality on the ground, not just on paper. A bond issued to fund solar infrastructure should show actual solar infrastructure being built.</div>
+          <div class="dim-items">
+            <div class="dim-item">
+              <div class="di-dot"></div>
+              <div class="di-text"><strong>Satellite imagery</strong> — project site activity monitored via satellite; construction progress compared against declared timeline and capital disbursement schedule</div>
+            </div>
+            <div class="dim-item">
+              <div class="di-dot"></div>
+              <div class="di-text"><strong>Contractor and permit filings</strong> — publicly available construction permits, environmental clearances, and contractor registrations cross-referenced against project location and scope</div>
+            </div>
+            <div class="dim-item">
+              <div class="di-dot"></div>
+              <div class="di-text"><strong>Impact report monitoring</strong> — annual impact report publication dates tracked; overdue reports flagged immediately as a governance concern</div>
+            </div>
+            <div class="dim-item">
+              <div class="di-dot"></div>
+              <div class="di-text"><strong>Deployment score decay</strong> — if no verifiable project activity within 12 months of issuance, the bond's alignment score is automatically downgraded and the investor alerted</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RESEARCH NOTES -->
+  <div class="research">
+    <h2>Research Notes</h2>
+    <div class="r-grid">
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--exec);"></div>The Scale of the Problem</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">Market size</span><span class="r-val">The global green bond market exceeded $2 trillion in cumulative issuance by 2026. India's green bond market alone is projected to reach ₹5 lakh crore by 2030 under SEBI's green finance framework.</span></div>
+          <div class="r-row"><span class="r-key">Greenwashing evidence</span><span class="r-val">A 2024 analysis by Carbon Tracker found that 23% of self-labelled green bonds in emerging markets could not demonstrate measurable environmental outcomes two years post-issuance — a systemic failure of the self-attestation model.</span></div>
+          <div class="r-row"><span class="r-key">Regulatory direction</span><span class="r-val">The EU Green Bond Standard (effective December 2024) introduced mandatory external review requirements and post-issuance reporting obligations — creating a compliance driver that makes AI verification economically necessary at scale.</span></div>
+          <div class="r-row"><span class="r-key">The Dimension 2 gap</span><span class="r-val">No current product systematically monitors post-issuance capital deployment using alternative data at scale. This is the genuine white space — issuance verification tools exist (Clarity AI, MSCI), post-issuance monitoring does not.</span></div>
+        </div>
+      </div>
+      <div class="r-card">
+        <div class="r-title"><div class="r-dot" style="background:var(--teal);"></div>Technical Architecture &amp; Competitors</div>
+        <div class="r-rows">
+          <div class="r-row"><span class="r-key">NLP model</span><span class="r-val">Domain-specific NLP fine-tuned on green bond frameworks — must understand that "climate-aligned infrastructure" means different things under EU taxonomy vs ICMA principles vs SEBI, and classify the same project description accordingly.</span></div>
+          <div class="r-row"><span class="r-key">Satellite data</span><span class="r-val">Commercial satellite providers (Planet Labs, Maxar) provide sub-weekly imagery of project sites. Change detection algorithms identify construction activity, vegetation changes, and infrastructure installation consistent with declared project type.</span></div>
+          <div class="r-row"><span class="r-key">Clarity AI</span><span class="r-val">The closest existing competitor — provides ESG data and taxonomy alignment scores at issuance. Does not perform post-issuance capital deployment monitoring. The proposed Dimension 2 goes meaningfully beyond what Clarity AI offers.</span></div>
+          <div class="r-row"><span class="r-key">MSCI ESG</span><span class="r-val">Broad ESG screening tools; green bond specific scoring is a subset of a larger data product. Less granular than a dedicated green bond verification system and does not address the post-issuance monitoring gap.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BONDPULSE BRIDGE -->
+  <div class="bp-simple">
+    <div class="bps-icon">🌿</div>
+    <div class="bps-body">
+      <div class="bps-label">BondPulse Connection</div>
+      <div class="bps-text">ESG alignment scores and post-issuance monitoring flags feed into <strong>BondPulse</strong> — HNI investors see a verified "Green Score" for every labelled bond in their portfolio, with a clear flag when post-issuance monitoring detects a deployment concern or an overdue impact report.</div>
+    </div>
+    <button class="bps-link" onclick="window.location.href='bondpulse.html'">View BondPulse →</button>
+  </div>
+
+  <div class="page-footer">
+    Hexaware Financial Services &nbsp;·&nbsp; AI in Fixed Income Markets &nbsp;·&nbsp; Opacity &amp; Information Asymmetry &nbsp;·&nbsp; Preliminary Research 2026
+  </div>
+</div>
+
+</body>
+</html>

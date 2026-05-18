@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI in Financial Markets — Forex Use Case Matrix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--surface:#fff;--border:#e4e1da;--border-light:#eeeae3;
+  --text-primary:#1a1814;--text-secondary:#6b6760;--text-muted:#9e9b96;
+
+  /* Forex amber-gold accent */
+  --fx:#8B6914;--fx-light:#a67c1a;--fx-pale:#fdf6e3;--fx-border:#d4b96a;
+
+  /* Quadrant colours — warm amber tones */
+  --stars-fill:#fff8e6;--stars-border:#e8b84b;--stars-dot:#c9890a;
+  --priority-fill:#fdf3d8;--priority-border:#d4a830;--priority-dot:#8B6914;
+  --stakes-fill:#eef7f0;--stakes-border:#6dba80;--stakes-dot:#3a8c52;
+  --monitor-fill:#faf5f5;--monitor-border:#d49090;--monitor-dot:#a04040;
+
+  /* Horizon colours */
+  --h1:#0d7377;--h1-pale:#e6f7f7;--h1-border:#8ecece;
+  --h2:#8B6914;--h2-pale:#fdf6e3;--h2-border:#d4b96a;
+  --h3:#5b3faa;--h3-pale:#f3f0fb;--h3-border:#c4b0f0;
+
+  /* Legal caution */
+  --legal:#c04040;--legal-pale:#fdf0f0;--legal-border:#f0b8b8;
+
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg:0 12px 40px rgba(0,0,0,0.12);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text-primary);min-height:100vh;font-size:14px;line-height:1.5}
+
+/* ── NAV ─────────────────────────────────────────────────────── */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-sm)}
+.nav-brand{font-family:'DM Serif Display',serif;font-size:15px;color:var(--fx);margin-right:36px;white-space:nowrap;letter-spacing:-.01em}
+.nav-brand span{color:var(--text-muted);font-style:italic}
+.nav-tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tab{padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;color:var(--text-secondary);transition:all .15s;border:none;background:none;font-family:'DM Sans',sans-serif}
+.nav-tab:hover{background:var(--bg);color:var(--text-primary)}
+.nav-tab.active{background:var(--fx);color:#fff}
+.nav-tab.soon{color:var(--text-muted);cursor:default}
+
+/* ── PAGE ─────────────────────────────────────────────────────── */
+.page{max-width:1240px;margin:0 auto;padding:24px 24px 32px}
+
+/* Asset class banner */
+.asset-banner{background:var(--fx);border-radius:10px 10px 0 0;padding:10px 18px;display:flex;align-items:center;gap:12px}
+.ab-icon{font-size:18px}
+.ab-label{font-family:'DM Serif Display',serif;font-size:13px;color:#fff;letter-spacing:-.01em}
+.ab-sub{font-size:11.5px;color:rgba(255,255,255,.55)}
+.ab-constraint{margin-left:auto;font-size:11px;font-weight:600;color:rgba(255,255,255,.8);background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:3px 10px}
+
+/* Header */
+.header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:24px;background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.header-left h1{font-family:'DM Serif Display',serif;font-size:24px;color:var(--fx);letter-spacing:-.02em;line-height:1.2;margin-bottom:4px}
+.header-left p{color:var(--text-secondary);font-size:13px}
+.header-stats{display:flex;gap:12px;flex-shrink:0}
+.stat-chip{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 14px;text-align:center;box-shadow:var(--shadow-sm)}
+.stat-chip .num{font-family:'DM Serif Display',serif;font-size:22px;color:var(--fx);line-height:1}
+.stat-chip .lbl{font-size:11px;color:var(--text-muted);font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+
+/* Saturation callout */
+.saturation-bar{background:var(--fx);border-radius:10px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow-md)}
+.sb-quote{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;letter-spacing:-.01em;flex:1}
+.sb-quote em{color:rgba(255,255,255,.6);font-style:normal}
+.sb-stat{text-align:center;flex-shrink:0;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:8px;padding:8px 16px}
+.sb-stat .sn{font-family:'DM Serif Display',serif;font-size:24px;color:#fff;line-height:1}
+.sb-stat .sl{font-size:10px;color:rgba(255,255,255,.65);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+
+/* Filter */
+.filter-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.filter-label{font-size:12px;color:var(--text-muted);font-weight:500}
+.filter-btn{padding:4px 11px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:12px;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:all .12s;font-family:'DM Sans',sans-serif}
+.filter-btn:hover{border-color:var(--fx);color:var(--fx)}
+.filter-btn.active{background:var(--fx);color:#fff;border-color:var(--fx)}
+.filter-btn.h1{border-color:var(--h1-border);color:var(--h1)}
+.filter-btn.h1.active{background:var(--h1);color:#fff;border-color:var(--h1)}
+.filter-btn.h2{border-color:var(--h2-border);color:var(--h2)}
+.filter-btn.h2.active{background:var(--h2);color:#fff;border-color:var(--h2)}
+.filter-btn.h3{border-color:var(--h3-border);color:var(--h3)}
+.filter-btn.h3.active{background:var(--h3);color:#fff;border-color:var(--h3)}
+
+/* Legend */
+.legend{display:flex;align-items:center;gap:20px;margin-bottom:16px;flex-wrap:wrap}
+.legend-label{font-size:12px;color:var(--text-muted);font-weight:500}
+.legend-items{display:flex;gap:16px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-secondary);font-weight:500}
+.legend-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.legend-badges{display:flex;gap:10px;margin-left:8px;padding-left:20px;border-left:1px solid var(--border);flex-wrap:wrap}
+.leg-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px}
+.lb-legal{background:var(--legal-pale);color:var(--legal);border:1px solid var(--legal-border)}
+.lb-proposed{background:var(--fx-pale);color:var(--fx);border:1px solid var(--fx-border)}
+
+/* Matrix */
+.matrix-wrapper{display:flex;gap:16px;align-items:flex-start}
+.y-axis-label{writing-mode:vertical-rl;transform:rotate(180deg);font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;padding:8px 0;flex-shrink:0;display:flex;align-items:center;gap:6px}
+.matrix-col{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.x-axis-label{text-align:center;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.08em;padding:8px 0 0}
+.matrix-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:6px;background:var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-md)}
+.quadrant{position:relative;min-height:320px;padding:14px;overflow:visible;cursor:default}
+.quadrant.stars{background:var(--stars-fill)}
+.quadrant.priority{background:var(--priority-fill)}
+.quadrant.stakes{background:var(--stakes-fill)}
+.quadrant.monitor{background:var(--monitor-fill)}
+.q-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;opacity:.7;margin-bottom:2px}
+.q-desc{font-size:11px;opacity:.55;font-weight:400;margin-bottom:10px;line-height:1.3}
+.stars .q-label{color:#7a5000}.priority .q-label{color:#6b4f00}
+.stakes .q-label{color:#1f5c35}.monitor .q-label{color:#7a2020}
+
+/* Dots */
+.dots-area{position:absolute;inset:46px 10px 10px 10px;min-height:240px;overflow:visible}
+.dot-wrapper{position:absolute;transform:translate(-50%,-50%);cursor:pointer;z-index:10}
+.dot{border-radius:50%;border:2.5px solid rgba(255,255,255,.9);transition:transform .18s,box-shadow .18s;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:rgba(255,255,255,.95);box-shadow:0 2px 8px rgba(0,0,0,.18);position:relative}
+.dot-wrapper:hover .dot{transform:scale(1.18);box-shadow:0 4px 16px rgba(0,0,0,.28);z-index:20}
+.dot-wrapper:hover .dot-tip{opacity:1;pointer-events:none;transform:translateX(-50%) translateY(0)}
+.dot-tip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);background:var(--fx);color:#fff;font-size:11px;font-weight:500;padding:5px 9px;border-radius:6px;white-space:normal;text-align:center;line-height:1.3;opacity:0;transition:opacity .15s,transform .15s;pointer-events:none;z-index:9999;max-width:200px;box-shadow:var(--shadow-md)}
+.dot-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--fx)}
+.dot-tip.tip-below{bottom:auto;top:calc(100% + 8px);transform:translateX(-50%) translateY(-4px)}
+.dot-wrapper:hover .dot-tip.tip-below{transform:translateX(-50%) translateY(0)}
+.dot-tip.tip-below::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:var(--fx)}
+.stars .dot{background:var(--stars-dot)}
+.priority .dot{background:var(--priority-dot)}
+.stakes .dot{background:var(--stakes-dot)}
+.monitor .dot{background:var(--monitor-dot)}
+
+/* Horizon ring on dot */
+.horizon-ring{position:absolute;inset:-4px;border-radius:50%;border:2px solid transparent;pointer-events:none}
+.hr-h1{border-color:var(--h1)}
+.hr-h2{border-color:var(--h2)}
+.hr-h3{border-color:var(--h3)}
+
+/* Legal badge on dot */
+.legal-badge-dot{position:absolute;top:-5px;right:-5px;width:13px;height:13px;border-radius:50%;background:var(--legal);border:1.5px solid #fff;color:#fff;font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center;z-index:5}
+.proposed-badge-dot{position:absolute;top:-4px;right:-4px;width:13px;height:13px;border-radius:50%;background:#fff;border:1.5px solid var(--fx);color:var(--fx);font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center;z-index:5}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(20,18,14,.45);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(3px)}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:14px;width:500px;max-width:calc(100vw - 32px);max-height:calc(100vh - 60px);overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(12px) scale(.98);transition:transform .22s cubic-bezier(.34,1.56,.64,1)}
+.modal-overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-header{padding:20px 22px 16px;border-bottom:1px solid var(--border);position:relative}
+.modal-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;margin-bottom:8px}
+.modal-title{font-family:'DM Serif Display',serif;font-size:18px;color:var(--fx);line-height:1.25;letter-spacing:-.01em;margin-bottom:6px;padding-right:28px}
+.modal-meta{display:flex;gap:8px;flex-wrap:wrap}
+.meta-tag{font-size:11px;color:var(--text-secondary);background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-weight:500}
+.meta-tag.h1{background:var(--h1-pale);border-color:var(--h1-border);color:var(--h1)}
+.meta-tag.h2{background:var(--h2-pale);border-color:var(--h2-border);color:var(--h2)}
+.meta-tag.h3{background:var(--h3-pale);border-color:var(--h3-border);color:var(--h3)}
+.meta-tag.legal{background:var(--legal-pale);border-color:var(--legal-border);color:var(--legal)}
+.modal-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:16px;transition:background .12s;font-family:'DM Sans',sans-serif}
+.modal-close:hover{background:var(--border)}
+.modal-body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:12px}
+.info-block{border-radius:8px;padding:12px 14px;border-left:3px solid transparent}
+.info-block .block-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.info-block .block-text{font-size:13.5px;line-height:1.55;color:var(--text-primary)}
+.block-gap{background:#fff5f5;border-left-color:#d06060}
+.block-gap .block-label{color:#c04040}
+.block-sol{background:var(--fx-pale);border-left-color:var(--fx-border)}
+.block-sol .block-label{color:var(--fx)}
+.block-val{background:#f0f5ff;border-left-color:#4a7fd4}
+.block-val .block-label{color:#2a4faa}
+.block-val .block-text{font-weight:600;color:var(--fx)}
+.legal-warn{background:var(--legal-pale);border:1.5px solid var(--legal-border);border-left:4px solid var(--legal);border-radius:7px;padding:10px 13px;font-size:12.5px;color:var(--text-primary);line-height:1.55}
+.legal-warn strong{color:var(--legal)}
+.modal-scores{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:2px}
+.score-cell{background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;text-align:center}
+.score-cell .sc-val{font-family:'DM Serif Display',serif;font-size:20px;color:var(--fx);line-height:1}
+.score-cell .sc-lbl{font-size:10px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.badge-stars{background:#fff3cc;color:#7a5000}
+.badge-priority{background:var(--fx-pale);color:var(--fx)}
+.badge-stakes{background:#ddf3e6;color:#1f5c35}
+.view-more-btn{display:block;width:100%;margin-top:4px;padding:9px;background:var(--fx-pale);color:var(--fx);border:1px solid var(--fx-border);border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s;text-align:center}
+.view-more-btn:hover{background:#f5e8c0}
+
+/* ── 10-YEAR VISION TIMELINE ──────────────────────────────────── */
+.vision-section{margin-top:20px}
+.vision-header{background:var(--fx);border-radius:10px 10px 0 0;padding:14px 22px;display:flex;align-items:center;gap:14px}
+.vh-icon{font-size:22px}
+.vh-title{font-family:'DM Serif Display',serif;font-size:17px;color:#fff;letter-spacing:-.01em}
+.vh-sub{font-size:12px;color:rgba(255,255,255,.55)}
+.vision-body{background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:22px 22px 20px;box-shadow:var(--shadow-md)}
+
+/* Timeline track */
+.timeline-track{position:relative;margin-bottom:28px}
+.tl-spine{height:4px;background:linear-gradient(to right,var(--h1),var(--h2),var(--h3));border-radius:2px;margin:0 20px;position:relative}
+.tl-horizons{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;margin-top:0;position:relative}
+.tl-h{display:flex;flex-direction:column;align-items:center;padding:0 8px}
+.tl-dot{width:16px;height:16px;border-radius:50%;border:3px solid #fff;margin-top:-10px;box-shadow:0 2px 8px rgba(0,0,0,.15);flex-shrink:0;z-index:2;position:relative}
+.tl-years{font-size:11px;font-weight:700;margin-top:6px;margin-bottom:3px}
+.tl-name{font-family:'DM Serif Display',serif;font-size:14px;color:var(--navy);letter-spacing:-.01em;text-align:center;margin-bottom:5px}
+.tl-sub{font-size:11px;color:var(--text-muted);text-align:center;line-height:1.4;margin-bottom:8px}
+.tl-uc-pills{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}
+.tl-pill{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px}
+
+/* End state */
+.end-state{background:var(--navy);border-radius:10px;padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.es-label{grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.45);margin-bottom:6px}
+.es-card{background:rgb(79,62,62);border:2px solid #d4a830;border-radius:8px;padding:12px 14px}
+.es-icon{font-size:18px;margin-bottom:5px; color: white;}
+.es-title{font-family:'DM Serif Display',serif;font-size:13.5px;color:#fff;margin-bottom:4px;letter-spacing:-.01em}
+.es-desc{font-size:12px;color:rgba(255,255,255,.6);line-height:1.5}
+
+.footer-note{text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">AI in Financial Markets <span>/ FS Research </span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab" onclick="window.location.href='index.html';">Equity</button>
+    <button class="nav-tab" title="Fixed Income" onclick="window.location.href='fixed_income_matrix.html';" >Fixed Income</button>
+    <button class="nav-tab active" title="Forex" onclick="window.location.href='forex_matrix.html';">Forex</button>
+    <button class="nav-tab" title="Commodities" onclick="window.location.href='commodities_matrix.html';">Commodities</button>
+    <button class="nav-tab" title="Research Paper" style="color: #f15014;
+    font-weight: 800;" onclick="downloadWhitePaper()" >Download Research Paper</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- ASSET CLASS BANNER -->
+  <div class="asset-banner">
+    <div class="ab-icon">💱</div>
+    <div>
+      <div class="ab-label">Foreign Exchange Markets — AI Use Case Matrix</div>
+      <div class="ab-sub">FX · Spot · Forwards · NDFs · Cross-Currency</div>
+    </div>
+    <div class="ab-constraint">⚡ 90%+ algorithmic — innovation is context ingestion &amp; agent coordination</div>
+  </div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>Forex — AI Use Case Matrix</h1>
+      <p>Use cases organised by implementation horizon &nbsp;·&nbsp; Click any dot to explore &nbsp;·&nbsp; ⚖ = regulatory caution &nbsp;·&nbsp; ★ = proposed</p>
+    </div>
+    <div class="header-stats">
+      <div class="stat-chip"><div class="num">9</div><div class="lbl">Use Cases</div></div>
+      <div class="stat-chip"><div class="num">3</div><div class="lbl">Horizons</div></div>
+      <div class="stat-chip"><div class="num">2</div><div class="lbl">⚖ Caution</div></div>
+    </div>
+  </div>
+
+  <!-- SATURATION CALLOUT -->
+  <div class="saturation-bar">
+    <div class="sb-quote">"<em>Math-based trading is a solved problem.</em> Here's what isn't: Context ingestion at multimodal depth, and agent coordination at sovereign scale. The FX innovation frontier has moved from execution speed to <em>decision intelligence.</em>"</div>
+    <div class="sb-stat"><div class="sn">$7.5T</div><div class="sl">Daily FX Volume</div></div>
+    <div class="sb-stat"><div class="sn">90%+</div><div class="sl">Already Algorithmic</div></div>
+    <div class="sb-stat"><div class="sn">10%</div><div class="sl">The Frontier</div></div>
+  </div>
+
+  <!-- FILTER -->
+  <div class="filter-row">
+    <span class="filter-label">Filter by horizon:</span>
+    <button class="filter-btn active" data-filter="all">All Horizons</button>
+    <button class="filter-btn h1" data-filter="Horizon 1">Horizon 1 · Foundation (Yrs 1–2)</button>
+    <button class="filter-btn h2" data-filter="Horizon 2">Horizon 2 · Agentic (Yrs 3–5)</button>
+    <button class="filter-btn h3" data-filter="Horizon 3">Horizon 3 · Autonomous (Yrs 6–10)</button>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <span class="legend-label">Quadrant:</span>
+    <div class="legend-items">
+      <div class="legend-item"><span class="legend-dot" style="background:var(--stars-dot)"></span>Strategic Bets</div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--priority-dot)"></span>Immediate Priorities</div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--stakes-dot)"></span>Table Stakes</div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--monitor-dot)"></span>Monitor</div>
+    </div>
+    <div class="legend-badges">
+      <span class="leg-badge lb-legal">⚖ Regulatory Caution</span>
+      <span class="leg-badge lb-proposed">★ Proposed / Emerging</span>
+      <div class="legend-item"><span style="display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid var(--h1);vertical-align:middle;margin-right:4px;"></span><span style="font-size:11px;color:var(--h1);">H1</span></div>
+      <div class="legend-item"><span style="display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid var(--h2);vertical-align:middle;margin-right:4px;"></span><span style="font-size:11px;color:var(--h2);">H2</span></div>
+      <div class="legend-item"><span style="display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid var(--h3);vertical-align:middle;margin-right:4px;"></span><span style="font-size:11px;color:var(--h3);">H3</span></div>
+    </div>
+  </div>
+
+  <!-- MATRIX -->
+  <div class="matrix-wrapper">
+    <div class="y-axis-label">↑ Strategic Impact (Business Value + Novelty)</div>
+    <div class="matrix-col">
+      <div class="matrix-grid">
+        <div class="quadrant stars" id="q-stars">
+          <div class="q-label">Strategic Bets</div>
+          <div class="q-desc">High impact · harder to implement</div>
+          <div class="dots-area" id="dots-stars"></div>
+        </div>
+        <div class="quadrant priority" id="q-priority">
+          <div class="q-label">Immediate Priorities</div>
+          <div class="q-desc">High impact · feasible now</div>
+          <div class="dots-area" id="dots-priority"></div>
+        </div>
+        <div class="quadrant monitor" id="q-monitor">
+          <div class="q-label">Monitor &amp; Deprioritise</div>
+          <div class="q-desc">Low impact · low feasibility</div>
+          <div class="dots-area" id="dots-monitor"></div>
+        </div>
+        <div class="quadrant stakes" id="q-stakes">
+          <div class="q-label">Table Stakes</div>
+          <div class="q-desc">Lower impact · implement to stay competitive</div>
+          <div class="dots-area" id="dots-stakes"></div>
+        </div>
+      </div>
+      <div class="x-axis-label">Implementation Readiness (Feasibility + Data Readiness) →</div>
+    </div>
+  </div>
+
+  <!-- 10-YEAR VISION TIMELINE -->
+  <div class="vision-section">
+    <div class="vision-header">
+      <div class="vh-icon">🌐</div>
+      <div>
+        <div class="vh-title">The 10-Year Vision — The Fully AI-Augmented FX Market</div>
+        <div class="vh-sub">Three implementation horizons toward the autonomous macro ecosystem</div>
+      </div>
+    </div>
+    <div class="vision-body">
+
+      <div class="timeline-track">
+        <div class="tl-spine"></div>
+        <div class="tl-horizons">
+
+          <div class="tl-h">
+            <div class="tl-dot" style="background:var(--h1);"></div>
+            <div class="tl-years" style="color:var(--h1);">Years 1–2</div>
+            <div class="tl-name">Multimodal Data Foundation</div>
+            <div class="tl-sub">Fixing the Garbage In / Out problem — agent-ready data pipelines</div>
+            <div class="tl-uc-pills">
+              <span class="tl-pill" style="background:var(--h1-pale);color:var(--h1);">Hawk-Dove Parsing</span>
+              <span class="tl-pill" style="background:var(--h1-pale);color:var(--h1);">Last Look Sentry</span>
+              <span class="tl-pill" style="background:var(--h1-pale);color:var(--h1);">Supply Chain Nowcast</span>
+            </div>
+          </div>
+
+          <div class="tl-h">
+            <div class="tl-dot" style="background:var(--h2);"></div>
+            <div class="tl-years" style="color:var(--h2);">Years 3–5</div>
+            <div class="tl-name">Agentic Negotiation Networks</div>
+            <div class="tl-sub">Inter-agent settlement &amp; alpha — goal-oriented autonomous agents</div>
+            <div class="tl-uc-pills">
+              <span class="tl-pill" style="background:var(--h2-pale);color:var(--h2);">NDF Matching Agents</span>
+              <span class="tl-pill" style="background:var(--h2-pale);color:var(--h2);">Self-Healing Alpha</span>
+              <span class="tl-pill" style="background:var(--h2-pale);color:var(--h2);">Toxic Flow Routing</span>
+              <span class="tl-pill" style="background:var(--h2-pale);color:var(--h2);">Federated AML</span>
+              <span class="tl-pill" style="background:var(--h2-pale);color:var(--h2);">Basis Swap Optimisation</span>
+            </div>
+          </div>
+
+          <div class="tl-h">
+            <div class="tl-dot" style="background:var(--h3);"></div>
+            <div class="tl-years" style="color:var(--h3);">Years 6–10</div>
+            <div class="tl-name">Autonomous Macro Ecosystem</div>
+            <div class="tl-sub">Self-healing sovereign networks — shared AI infrastructure at global scale</div>
+            <div class="tl-uc-pills">
+              <span class="tl-pill" style="background:var(--h3-pale);color:var(--h3);">CB Intervention Digital Twin</span>
+              <span class="tl-pill" style="background:var(--h3-pale);color:var(--h3);">Smart Contract Settlement</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- End State -->
+      <div class="end-state">
+        <div class="es-label">The 2036 End State — Two Structural Shifts</div>
+        <div class="es-card">
+          <div class="es-icon">👤→🎯</div>
+          <div class="es-title">Human Role Shifts from Execution to Governance</div>
+          <div class="es-desc">Human intervention moves entirely from execution and active risk management to macro-governance and policy-setting. Global trade, corporate payrolls, and investment flows managed by interconnected AI agents settling cross-border transactions instantly.</div>
+        </div>
+        <div class="es-card">
+          <div class="es-icon">📊→🌊</div>
+          <div class="es-title">Volatility Smooths into Continuous Pricing</div>
+          <div class="es-desc">Exchange rate volatility smooths into a continuous pricing matrix driven by fundamental, real-time economic data rather than speculative sentiment or manual trading panics. The era of sentiment-driven currency crises ends.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Financial Services &nbsp;·&nbsp; AI in Foreign Exchange Markets &nbsp;·&nbsp; Strategic Roadmap 2026–2036 &nbsp;·&nbsp; ⚖ denotes regulatory caution — see individual popups for detail
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="overlay">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-badge" id="mBadge"></div>
+      <div class="modal-title" id="mTitle"></div>
+      <div class="modal-meta" id="mMeta"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+
+const VIEW_MORE_URLS = {
+  2: 'last_look_sentry.html',
+  9: 'basis_swap_optimiser.html',
+};
+
+const USE_CASES = [
+  {
+    id:1, name:'Hawk-Dove Vocal & Tonal Parsing',
+    horizon:'Horizon 1', x:6, y:8.5, reach:3, legal:false, proposed:true,
+    participants:'Quant Hedge Funds · Tier-1 Trading Desks',
+    tech:'Multimodal Audio/Video AI',
+    gap:'Traditional NLP reads text transcripts of central bank speeches — published minutes after delivery. The market has already moved.',
+    solution:'Multimodal AI analyses live press conference video — measuring vocal pitch, micro-hesitations, and facial tension to detect uncertainty in real time. A central banker saying "We believe inflation is transitory" with elevated micro-tension reads differently from the same words spoken with confidence.',
+    value:'Captures a 30–60 second execution advantage over firms waiting for the text transcript to hit the wires — in a market where microseconds matter.',
+    legal:'⚖ Regulatory Caution: Analysing involuntary physical responses from a speaker to extract trading signals is a regulatory frontier. Whether facial micro-expressions constitute "non-public information" under MAR (EU), FSMA (UK), or SEC rules is actively contested. Deploy only with explicit legal review and compliance sign-off. Framed in the white paper as technically feasible, regulatory status contested.',
+  },
+  {
+    id:2, name:'Last Look Latency Arbitrage Sentry',
+    horizon:'Horizon 1', x:8.5, y:9, reach:4, legal:false, proposed:false,
+    participants:'Buy-Side Asset Managers · Corporate Treasuries',
+    tech:'Predictive Rejection Modelling · Real-Time Streaming',
+    gap:'FX is OTC. Market-making banks use "Last Look" — a legal window to reject trades if the market moves against them after a quote is given. Large orders suffer significant slippage from repeated rejections that the buyer cannot predict.',
+    solution:'An AI monitor streams interbank data continuously and calculates a real-time Rejection Probability Score for each bank — based on current order book depth, recent rejection history, and prevailing market momentum. The execution router dynamically avoids banks with high rejection probability.',
+    value:'Minimises slippage on large currency blocks, reduces market impact, and turns a previously unpredictable execution cost into a manageable, quantified risk.',
+  },
+  {
+    id:3, name:'Supply Chain Nowcasting via Satellite',
+    horizon:'Horizon 1', x:5.5, y:7.5, reach:3, legal:false, proposed:false,
+    participants:'Macro Hedge Funds',
+    tech:'Satellite Imagery · Sensor Fusion · Nowcasting Models',
+    gap:'Official trade balance data for export-heavy currencies (AUD, CAD, JPY) is released monthly with a 4–6 week lag. By the time it confirms what satellite data already shows, the currency has moved.',
+    solution:'Real-time ingestion of container ship positions, port congestion metrics, and factory thermal signatures to calculate live trade balance deviations — generating a currency positioning signal days before official government data is published.',
+    value:'Allows macro funds to position for currency fluctuations ahead of the consensus, extracting alpha from the gap between physical economic reality and official statistical reporting.',
+  },
+  {
+    id:4, name:'Multi-Agent NDF Matching',
+    horizon:'Horizon 2', x:5, y:9, reach:3, legal:false, proposed:true,
+    participants:'Corporate Treasuries · Tier-1 Liquidity Providers',
+    tech:'Multi-Agent Systems · Game-Theoretic Protocols',
+    gap:'Non-Deliverable Forwards for restricted currencies (INR, BRL, KRW) still rely on manual voice-broking and high-friction bilateral RFQ processes. Execution windows are measured in hours; information leakage risk is high.',
+    solution:'A corporate treasury AI agent connects to an institutional broker network and negotiates NDF terms simultaneously with multiple bank liquidity agents — using game-theoretic protocols to balance execution speed against price impact while concealing trade intent.',
+    value:'Compresses NDF execution windows from hours to seconds. Protects corporate trade intent from front-running by eliminating the sequential, predictable RFQ structure that predatory algorithms exploit.',
+  },
+  {
+    id:5, name:'Self-Healing Alpha Engines',
+    horizon:'Horizon 2', x:4, y:8, reach:2, legal:false, proposed:true,
+    participants:'Elite Quant Hedge Funds',
+    tech:'Reinforcement Learning · Continuous Online Optimisation',
+    gap:'Quantitative trading strategies naturally lose profitability — "alpha decay" — over months as competitors reverse-engineer and replicate them. Human quant engineers must periodically rewrite strategies to adapt to new regimes.',
+    solution:'Reinforcement Learning with Continuous Online Optimisation allows the model to subtly warp its own feature weights daily to match shifting volatility regimes — extending strategy lifecycle without human rewriting. The model adapts rather than degrades.',
+    value:'Extends the lifecycle of a high-frequency trading strategy from weeks to years. Reduces the quant headcount required to maintain a profitable strategy portfolio.',
+    caveat:'⚠ Model Risk: Aggressive online learning solves alpha decay but introduces regime-shift fragility — the model can overfit the present regime and lose robustness to sudden reversals. The balance between adaptation speed and stability is an active research problem. This use case is genuinely frontier; position in the white paper as an emerging capability, not a deployable solution.',
+  },
+  {
+    id:6, name:'Toxic Flow Decoy Routing',
+    horizon:'Horizon 2', x:4.5, y:7, reach:3, legal:true, proposed:true,
+    participants:'Large Asset Managers · Sovereign Wealth Funds',
+    tech:'Order Fragmentation Algorithms · Agentic Orchestration',
+    gap:'Large multi-billion dollar currency swaps are visible to predatory HFT algorithms, which widen spreads ahead of the trade — imposing significant execution costs on the legitimate buyer.',
+    solution:'An orchestrator agent splits large orders into thousands of small fragments and routes them across venues with timing and size patterns designed to obscure the true directional position from predatory algorithms.',
+    value:'Reduces execution footprint and prevents spread-widening ahead of large trades — directly reducing transaction costs for large institutional participants.',
+    legal:'⚖ Regulatory Caution: Generating synthetic "noise" or "decoy" orders with no intention of filling them — even defensively — meets the legal definition of layering and spoofing under Dodd-Frank (US), MAR (EU), and SEBI market integrity rules. This use case must be reframed in any deployment as intelligent order fragmentation of real orders — genuine sub-orders that will be executed — rather than fake decoys. The defensive intent does not provide a legal defence. White paper should present this as order fragmentation intelligence, not decoy generation.',
+  },
+  {
+    id:7, name:'Federated AML Network',
+    horizon:'Horizon 2', x:6, y:9, reach:4, legal:false, proposed:false,
+    participants:'Global Compliance Operations · Central Banks',
+    tech:'Federated Learning · Encrypted Weight Sharing',
+    gap:'Cross-border money laundering exploits the jurisdictional fragmentation of AML systems — a suspicious pattern spanning five countries is invisible to each individual bank\'s domestic system. Sharing raw transaction data across borders violates GDPR and local privacy law.',
+    solution:'Federated Learning enables a consortium of international banks to train a global AML anomaly-detection model together. Each bank processes its local data on-premise and shares only encrypted mathematical weight updates — never raw customer records. The model learns cross-border patterns without any data leaving its jurisdiction.',
+    value:'Exponentially increases detection accuracy for sophisticated cross-border laundering while fully complying with GDPR and local financial privacy requirements. The first architecture that makes global AML collaboration legally feasible.',
+  },
+  {
+    id:8, name:'Central Bank Intervention Digital Twin',
+    horizon:'Horizon 3', x:3, y:9.5, reach:5, legal:false, proposed:true,
+    participants:'Central Banks (Fed · RBI · ECB)',
+    tech:'Digital Twin Simulation · Autonomous Policy Agents',
+    gap:'Traditional currency interventions — a central bank dumping billions into the market — are blunt, expensive, and telegraphed in advance. Speculative attacks persist because the intervention mechanism is predictable.',
+    solution:'A permanent Digital Twin of the global FX market enables central banks to simulate intervention scenarios before executing them. An autonomous policy agent deploys targeted micro-liquidity injections across decentralised ECNs to stabilise exchange rates surgically rather than through mass market-moving dumps.',
+    value:'Up to 60% less capital expenditure than traditional manual interventions. Surgical precision reduces signal-to-noise ratio in the intervention, making speculative attacks harder to mount profitably.',
+  },
+  {
+    id:9, name:'Cross-Currency Basis Swap Optimisation',
+    horizon:'Horizon 2', x:7, y:7, reach:3, legal:false, proposed:false,
+    participants:'Corporate Treasuries · Multinational Banks',
+    tech:'Optimisation Algorithms · Real-Time Basis Monitoring',
+    gap:'Corporate treasuries managing multi-currency balance sheets optimise their hedge books quarterly through manual review — missing intra-quarter basis spread opportunities and holding suboptimal cross-currency positions for extended periods.',
+    solution:'An AI agent monitors cross-currency basis spreads continuously across all major currency pairs and recommends real-time rebalancing of the corporate hedge book — identifying when rolling to a different tenor or currency pair reduces hedging costs without increasing risk.',
+    value:'Direct reduction in cross-currency hedging costs. Bridges the Fixed Income Collateral Optimisation use case into the FX context — the same optimisation logic applied to the hedge book rather than the collateral pool.',
+  },
+];
+
+function getQuadrant(x,y){
+  if(y>=7&&x>=7)return'priority';
+  if(y>=7&&x<7)return'stars';
+  if(y<7&&x>=7)return'stakes';
+  return'monitor';
+}
+
+function resolveCollisions(cases){
+  const pos=cases.map(uc=>({...uc,px:uc.x,py:uc.y}));
+  const MIN=20;
+  for(let i=0;i<150;i++){
+    for(let a=0;a<pos.length;a++){
+      for(let b=a+1;b<pos.length;b++){
+        if(getQuadrant(pos[a].x,pos[a].y)!==getQuadrant(pos[b].x,pos[b].y))continue;
+        const dx=pos[a].px-pos[b].px,dy=pos[a].py-pos[b].py;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<MIN&&dist>0){
+          const p=(MIN-dist)/2,nx=dx/dist,ny=dy/dist;
+          pos[a].px+=nx*p*.8;pos[a].py+=ny*p*.8;
+          pos[b].px-=nx*p*.8;pos[b].py-=ny*p*.8;
+        }
+      }
+    }
+  }
+  return pos;
+}
+
+function renderDots(filter='all'){
+  ['stars','priority','stakes','monitor'].forEach(q=>{
+    document.getElementById('dots-'+q).innerHTML='';
+  });
+  const filtered=filter==='all'?USE_CASES:USE_CASES.filter(uc=>uc.horizon===filter);
+  const pos=resolveCollisions(filtered);
+  pos.forEach(uc=>{
+    const q=getQuadrant(uc.x,uc.y);
+    const container=document.getElementById('dots-'+q);
+    if(!container)return;
+    let lx,ly;
+    if(q==='priority'){lx=((uc.px-7)/3)*.85+.08;ly=1-((uc.py-7)/3)*.85-.08;}
+    else if(q==='stars'){lx=((uc.px-1)/6)*.85+.05;ly=1-((uc.py-7)/3)*.85-.08;}
+    else if(q==='stakes'){lx=((uc.px-7)/3)*.85+.08;ly=1-((uc.py-1)/6)*.85-.05;}
+    else{lx=((uc.px-1)/6)*.85+.05;ly=1-((uc.py-1)/6)*.85-.05;}
+    lx=Math.max(.06,Math.min(.94,lx));
+    ly=Math.max(.06,Math.min(.94,ly));
+    const dotSize=14+(uc.reach-1)*5;
+    const wrapper=document.createElement('div');
+    wrapper.className='dot-wrapper';
+    wrapper.style.left=(lx*100)+'%';
+    wrapper.style.top=(ly*100)+'%';
+    wrapper.onclick=()=>openModal(uc.id);
+    const dot=document.createElement('div');
+    dot.className='dot';
+    dot.style.width=dotSize+'px';
+    dot.style.height=dotSize+'px';
+    dot.textContent=uc.id;
+    // Horizon ring
+    const ring=document.createElement('div');
+    const hClass={'Horizon 1':'hr-h1','Horizon 2':'hr-h2','Horizon 3':'hr-h3'}[uc.horizon]||'';
+    ring.className='horizon-ring '+hClass;
+    dot.appendChild(ring);
+    // Legal badge
+    if(uc.legal){
+      const lb=document.createElement('div');
+      lb.className='legal-badge-dot';lb.textContent='⚖';
+      dot.appendChild(lb);
+    }
+    // Proposed badge
+    if(uc.proposed&&!uc.legal){
+      const pb=document.createElement('div');
+      pb.className='proposed-badge-dot';pb.textContent='★';
+      dot.appendChild(pb);
+    }
+    const tip=document.createElement('div');
+    tip.className='dot-tip'+(ly<0.35?' tip-below':'');
+    tip.textContent=uc.name;
+    wrapper.appendChild(dot);
+    wrapper.appendChild(tip);
+    container.appendChild(wrapper);
+  });
+}
+
+function openModal(id){
+  const uc=USE_CASES.find(u=>u.id===id);
+  if(!uc)return;
+  const q=getQuadrant(uc.x,uc.y);
+  const qNames={priority:'Immediate Priority',stars:'Strategic Bet',stakes:'Table Stakes',monitor:'Monitor'};
+  const hClass={'Horizon 1':'h1','Horizon 2':'h2','Horizon 3':'h3'}[uc.horizon]||'';
+  const badgeClass={priority:'badge-priority',stars:'badge-stars',stakes:'badge-stakes',monitor:''}[q];
+  document.getElementById('mBadge').innerHTML=
+    `<span class="modal-badge ${badgeClass}" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;">${qNames[q]}</span>`;
+  document.getElementById('mTitle').textContent=uc.name;
+  document.getElementById('mMeta').innerHTML=
+    `<span class="meta-tag ${hClass}">${uc.horizon}</span>
+     <span class="meta-tag">${uc.tech}</span>
+     ${uc.legal?'<span class="meta-tag legal">⚖ Regulatory Caution</span>':''}
+     ${uc.proposed?'<span class="meta-tag" style="background:var(--fx-pale);border-color:var(--fx-border);color:var(--fx);">★ Proposed</span>':''}`;
+  const body=document.getElementById('mBody');
+  body.innerHTML='';
+  // Blocks
+  [{cls:'block-gap',lbl:'The Saturation Breakthrough',txt:uc.gap},
+   {cls:'block-sol',lbl:'AI Solution',txt:uc.solution},
+   {cls:'block-val',lbl:'Value Created',txt:uc.value}
+  ].forEach(b=>{
+    const el=document.createElement('div');
+    el.className='info-block '+b.cls;
+    el.innerHTML=`<div class="block-label">${b.lbl}</div><div class="block-text">${b.txt}</div>`;
+    body.appendChild(el);
+  });
+  // Legal warn
+  if(uc.legal){
+    const w=document.createElement('div');w.className='legal-warn';
+    w.innerHTML=uc.legal;body.appendChild(w);
+  }
+  if(uc.caveat){
+    const w=document.createElement('div');w.className='legal-warn';
+    w.style.borderLeftColor='var(--amber)';w.style.background='var(--amber-pale)';
+    w.innerHTML=uc.caveat;body.appendChild(w);
+  }
+  // Scores
+  const sc=document.createElement('div');sc.className='modal-scores';
+  sc.innerHTML=`
+    <div class="score-cell"><div class="sc-val">${uc.x}</div><div class="sc-lbl">Readiness</div></div>
+    <div class="score-cell"><div class="sc-val">${uc.y}</div><div class="sc-lbl">Impact</div></div>
+    <div class="score-cell"><div class="sc-val">${uc.horizon.replace('Horizon ','H')}</div><div class="sc-lbl">Horizon</div></div>
+  `;
+  body.appendChild(sc);
+  // Participants
+  const pt=document.createElement('div');
+  pt.style.cssText='font-size:11px;color:var(--text-muted);padding:4px 2px;';
+  pt.textContent='Primary participants: '+uc.participants;
+  body.appendChild(pt);
+
+  // View More button
+if (VIEW_MORE_URLS[uc.id]) {
+  const vmbtn = document.createElement('button');
+  vmbtn.style.cssText = 'display:block;width:100%;margin-top:8px;padding:9px;background:var(--fx-pale);color:var(--fx);border:1px solid var(--fx-border);border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:"DM Sans",sans-serif;transition:background .15s;text-align:center;';
+  vmbtn.textContent = 'View Full Process Flow →';
+  vmbtn.onmouseover = () => vmbtn.style.background = '#f5e8c0';
+  vmbtn.onmouseout  = () => vmbtn.style.background = 'var(--fx-pale)';
+  vmbtn.onclick = () => window.location.href = VIEW_MORE_URLS[uc.id];
+  document.getElementById('mBody').appendChild(vmbtn);
+}
+
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal(){document.getElementById('overlay').classList.remove('open')}
+
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderDots(btn.dataset.filter);
+  });
+});
+document.getElementById('overlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('overlay'))closeModal();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+// Update equity and FI nav tabs
+window.addEventListener('load',()=>renderDots('all'));
+window.addEventListener('resize',()=>{
+  const a=document.querySelector('.filter-btn.active');
+  renderDots(a?a.dataset.filter:'all');
+});
+
+function downloadWhitePaper() {
+  const link = document.createElement('a');
+  link.href = 'hexaware_ai_financial_markets_whitepaper.pdf';
+  link.download = 'hexaware_ai_financial_markets_whitepaper.pdf';
+  link.click();
+}
+</script>
+</body>
+</html>
